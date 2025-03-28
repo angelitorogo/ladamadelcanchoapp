@@ -8,6 +8,7 @@ class LocationDatasourceImpl implements LocationDatasource {
 
   @override
   Stream<LocationPoint> getLocationStream() {
+
     location.changeSettings(interval: 5000, distanceFilter: 5);
     return location.onLocationChanged.map((locData) => LocationPoint(
       latitude: locData.latitude!,

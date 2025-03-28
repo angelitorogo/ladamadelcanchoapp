@@ -65,10 +65,26 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     });
   }
 
-
+  /*
+  Future<bool> checkLocationPermission() async {
+    final locationStatus = await Permission.location.request();
+    return locationStatus.isGranted;
+  }
+  */
   Future<bool> checkLocationPermission() async {
   final locationStatus = await Permission.location.request();
-  return locationStatus.isGranted;
+
+  if (!locationStatus.isGranted) return false;
+
+  // ✅ AÑADIDO: pedir permiso para ubicación en segundo plano
+  final backgroundStatus = await Permission.locationAlways.request();
+
+  if (backgroundStatus.isPermanentlyDenied) {
+    openAppSettings(); // <<<<<<<<<<<<<<<<<<<<<< ABRE CONFIGURACIÓN
+    return false;
+  }
+
+  return backgroundStatus.isGranted;
 }
 
   @override
@@ -134,15 +150,17 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
             backgroundColor: trackState.isTracking ? Colors.red : Colors.green,
             onPressed: () async {
               if (!trackState.isTracking) {
-                final locationGranted = await Permission.location.request();
-                if (!locationGranted.isGranted) {
+
+                final locationGranted = await checkLocationPermission();
+                if (!locationGranted) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Debes otorgar permiso de ubicación")),
+                      const SnackBar(content: Text("Permiso de ubicación en segundo plano denegado")),
                     );
                   }
                   return;
                 }
+
                 trackNotifier.startTracking();
               } else {
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpx/gpx.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/location_repository_impl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -24,14 +25,21 @@ class TrackState {
 
 class TrackNotifier extends StateNotifier<TrackState> {
   final LocationRepositoryImpl locationRepository;
-  StreamSubscription<LocationPoint>? _locationSubscription;
+  //StreamSubscription<LocationPoint>? _locationSubscription;
+  StreamSubscription<dynamic>? _locationSubscription; // 👈 CAMBIADO
+  
 
   TrackNotifier(this.locationRepository) : super(TrackState());
 
   List<LatLng> get polylinePoints =>
       state.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
 
-  void startTracking() {
+  
+  void startTracking() async {
+     // ✅ Cast seguro para acceder al objeto `Location`
+    final location = (locationRepository.datasource as LocationDatasourceImpl).location;
+    
+    await location.enableBackgroundMode(enable: true); // <<<<<<<<<<<<<< AÑADIDO
     state = state.copyWith(isTracking: true, points: []);
     _locationSubscription =
         locationRepository.getLocationStream().listen((point) {
@@ -73,6 +81,8 @@ class TrackNotifier extends StateNotifier<TrackState> {
 
     return file;
   }
+  
+
 
   Future<void> saveGpxToPublicDocuments(File file) async {
     final downloadsDir = Directory('/storage/emulated/0/Download/GPX');

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/config/router/app_router.dart';
 import 'package:ladamadelcanchoapp/config/theme/app_theme.dart';
 
+
 Future main() async {
   await dotenv.load(fileName: '.env');
   runApp(
