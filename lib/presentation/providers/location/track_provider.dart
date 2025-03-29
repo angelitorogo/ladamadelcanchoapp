@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpx/gpx.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
@@ -8,7 +7,6 @@ import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasour
 import 'package:ladamadelcanchoapp/infraestructure/repositories/location_repository_impl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'location_repository_provider.dart';
 
 class TrackState {
