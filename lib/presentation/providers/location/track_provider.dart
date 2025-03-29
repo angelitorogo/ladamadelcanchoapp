@@ -70,19 +70,63 @@ class TrackNotifier extends StateNotifier<TrackState> {
     final track = Trk(name: "Track grabado");
     track.trksegs.add(
       Trkseg(
-        trkpts: state.points
-            .map((p) => Wpt(
-                  lat: p.latitude,
-                  lon: p.longitude,
-                  ele: p.elevation,
-                  time: p.timestamp,
-                ))
-            .toList(),
+        trkpts: state.points.map((p) {
+          final wpt = Wpt(lat: p.latitude, lon: p.longitude);
+          wpt.ele = p.elevation;
+          wpt.time = p.timestamp;
+          return wpt;
+        }).toList(),
       ),
     );
 
     gpx.trks.add(track);
-    final gpxString = GpxWriter().asString(gpx, pretty: true);
+    //final gpxString = GpxWriter().asString(gpx, pretty: true);
+
+    const name = 'Track grabado';
+    const author = 'Angel Rodriguez';
+    final firstPointTime = state.points.first.timestamp.toUtc().toIso8601String();
+
+    final buffer = StringBuffer();
+    buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+    buffer.writeln('<gpx version="1.1" creator="La Dama del Cancho App" '
+        'xmlns="http://www.topografix.com/GPX/1/1" '
+        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+        'xsi:schemaLocation="http://www.topografix.com/GPX/1/1 '
+        'http://www.topografix.com/GPX/1/1/gpx.xsd">');
+
+    buffer.writeln('  <metadata>');
+    buffer.writeln('    <name>$name</name>');
+    buffer.writeln('    <author>');
+    buffer.writeln('      <name>$author</name>');
+    buffer.writeln('    </author>');
+    buffer.writeln('    <link href="https://ladamadelcancho.argomez.com/">');
+    buffer.writeln('      <text>La Dama del Cancho</text>');
+    buffer.writeln('    </link>');
+    buffer.writeln('    <link href="https://ladamadelcancho.argomez.com/">');
+    buffer.writeln('      <text>$name</text>');
+    buffer.writeln('    </link>');
+    buffer.writeln('    <time>$firstPointTime</time>');
+    buffer.writeln('  </metadata>');
+
+    buffer.writeln('  <trk>');
+    buffer.writeln('    <name>$name</name>');
+    buffer.writeln('    <cmt>$name</cmt>');
+    buffer.writeln('    <desc>$name</desc>');
+    buffer.writeln('    <trkseg>');
+
+    for (final p in state.points) {
+      buffer.writeln('      <trkpt lat="${p.latitude}" lon="${p.longitude}">');
+      buffer.writeln('        <ele>${p.elevation}</ele>');
+      buffer.writeln('        <time>${p.timestamp.toUtc().toIso8601String()}</time>');
+      buffer.writeln('      </trkpt>');
+    }
+
+    buffer.writeln('    </trkseg>');
+    buffer.writeln('  </trk>');
+    buffer.writeln('</gpx>');
+
+    final gpxString = buffer.toString();
+
 
     final directory = await getApplicationDocumentsDirectory();
     final fileName = "track_${DateTime.now().millisecondsSinceEpoch}.gpx";
