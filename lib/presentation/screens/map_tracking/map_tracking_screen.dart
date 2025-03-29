@@ -37,6 +37,32 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
       return;
     }
 
+    final locationGranted = await checkLocationPermission();
+    if (!locationGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Debes otorgar permiso de ubicación")),
+        );
+      }
+      return;
+    }
+
+    // 🟡 Pedimos permiso para mostrar notificaciones (Android 13+)
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+      // ✅ Esperar unos ms para que Android aplique los permisos correctamente
+      await Future.delayed(const Duration(milliseconds: 500));
+      // Verificamos otra vez luego de pedir
+      if (await Permission.notification.isDenied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Debes permitir notificaciones para grabar correctamente")),
+          );
+        }
+        return;
+      }
+    }
+
     final currentLocation = await location.getLocation();
     setState(() {
       initialPosition = LatLng(
@@ -147,34 +173,28 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
           // Dentro del botón flotante trackingButton
           FloatingActionButton(
             heroTag: 'trackingButton',
-            backgroundColor: trackState.isTracking ? Colors.red : Colors.green,
-            onPressed: () async {
-              if (!trackState.isTracking) {
-
-                final locationGranted = await checkLocationPermission();
-                if (!locationGranted) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Permiso de ubicación en segundo plano denegado")),
-                    );
-                  }
-                  return;
-                }
-
-                trackNotifier.startTracking();
-              } else {
+            backgroundColor: !trackState.isTracking
+                ? (initialPosition == null ? Colors.grey : Colors.green)
+                : Colors.red,
+            onPressed: initialPosition == null
+                ? null // ⛔ deshabilitado si no hay posición inicial
+                : () async {
+                    if (!trackState.isTracking) {
+                      
+                      trackNotifier.startTracking();
 
 
-                await trackNotifier.stopTrackingAndSaveGpx();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Track guardado en carpeta GPX en Downloads")),
-                  );
-                }
-              }
-            },
+                    } else {
+                      await trackNotifier.stopTrackingAndSaveGpx();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Track guardado en carpeta GPX en Downloads ")),
+                        );
+                      }
+                    }
+                  },
             child: Icon(trackState.isTracking ? Icons.stop : Icons.play_arrow),
-          ),
+          )
 
         ],
       ),

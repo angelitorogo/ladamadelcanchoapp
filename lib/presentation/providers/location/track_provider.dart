@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpx/gpx.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
@@ -7,6 +8,7 @@ import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasour
 import 'package:ladamadelcanchoapp/infraestructure/repositories/location_repository_impl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'location_repository_provider.dart';
 
 class TrackState {
@@ -38,8 +40,20 @@ class TrackNotifier extends StateNotifier<TrackState> {
   void startTracking() async {
      // ✅ Cast seguro para acceder al objeto `Location`
     final location = (locationRepository.datasource as LocationDatasourceImpl).location;
-    
-    await location.enableBackgroundMode(enable: true); // <<<<<<<<<<<<<< AÑADIDO
+
+    // ✅ CONFIGURA LA NOTIFICACIÓN PERSISTENTE
+    await location.changeNotificationOptions(
+      title: 'Grabando ruta...',
+      subtitle: 'La Dama del Cancho está registrando tu recorrido.',
+      description: 'Tu posición se guarda en segundo plano.',
+      onTapBringToFront: true,
+      iconName: 'ic_flutter', // <<<<<<<<<<<<<<
+    );
+
+    // ✅ ACTIVAR MODO BACKGROUND
+    await location.enableBackgroundMode(enable: true);
+
+
     state = state.copyWith(isTracking: true, points: []);
     _locationSubscription =
         locationRepository.getLocationStream().listen((point) {
@@ -48,8 +62,10 @@ class TrackNotifier extends StateNotifier<TrackState> {
   }
 
   Future<File> stopTrackingAndSaveGpx() async {
-    state = state.copyWith(isTracking: false);
     await _locationSubscription?.cancel();
+
+    await (locationRepository.datasource as LocationDatasourceImpl).location.enableBackgroundMode(enable: false);
+
 
     final gpx = Gpx();
     gpx.creator = "La Dama del Cancho App";
@@ -78,6 +94,8 @@ class TrackNotifier extends StateNotifier<TrackState> {
     // Guardamos archivo GPX
     await saveGpxToPublicDocuments(file);
     //await saveGpxToAppDirectory(file);
+
+    state = state.copyWith(isTracking: false, points: []);
 
     return file;
   }
