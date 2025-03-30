@@ -1,10 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/track_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:location/location.dart';
 
@@ -185,12 +185,18 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
 
                     } else {
-                      await trackNotifier.stopTrackingAndSaveGpx();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Track guardado en carpeta GPX en Downloads ")),
+                      final file = await trackNotifier.stopTrackingAndSaveGpx();
+
+                      if (context.mounted) {
+                        context.pushNamed(
+                          TrackPreviewScreen.name,
+                          extra: {
+                            'trackFile': file,
+                            'points': trackState.points,
+                          },
                         );
                       }
+
                     }
                   },
             child: Icon(trackState.isTracking ? Icons.stop : Icons.play_arrow),

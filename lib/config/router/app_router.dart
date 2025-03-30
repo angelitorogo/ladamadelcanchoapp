@@ -1,12 +1,16 @@
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/login_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/views/config/config_view.dart';
 import 'package:ladamadelcanchoapp/presentation/views/home/home_view.dart';
 import 'package:ladamadelcanchoapp/presentation/views/map/map_view.dart';
@@ -91,6 +95,17 @@ final appRouter = GoRouter(
           }
 
           return const MapTrackingScreen(); // ✅ Si está autenticado, accede a la ruta
+        },
+      ),
+
+      GoRoute(
+        path: '/preview-track',
+        name: TrackPreviewScreen.name,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final File trackFile = extra['trackFile'];
+          final List<LocationPoint> points = extra['points'];
+          return TrackPreviewScreen(trackFile: trackFile, points: points);
         },
       ),
 

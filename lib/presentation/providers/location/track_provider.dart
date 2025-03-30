@@ -137,7 +137,7 @@ class TrackNotifier extends StateNotifier<TrackState> {
     await saveGpxToPublicDocuments(file);
     //await saveGpxToAppDirectory(file);
 
-    state = state.copyWith(isTracking: false, points: []);
+    state = state.copyWith(isTracking: false/*, points: []*/);
 
     return file;
   }
