@@ -14,7 +14,6 @@ import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapp
 import 'package:ladamadelcanchoapp/infraestructure/models/auth_verify_user_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 
 class AuthDatasourceImpl  extends AuthDatasource{
 

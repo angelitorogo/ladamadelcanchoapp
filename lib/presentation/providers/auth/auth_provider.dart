@@ -172,6 +172,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
   */
+  
 
   Future<void> verifyUser() async {
 
