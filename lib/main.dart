@@ -5,6 +5,9 @@ import 'package:ladamadelcanchoapp/config/router/app_router.dart';
 import 'package:ladamadelcanchoapp/config/theme/app_theme.dart';
 
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+
 Future main() async {
   await dotenv.load(fileName: '.env');
   runApp(

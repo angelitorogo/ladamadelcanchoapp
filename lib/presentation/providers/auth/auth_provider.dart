@@ -86,10 +86,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         language: ref.read(authProvider).user!.language,
       );
 
-      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser, context );
-
-      //print("📤 Respuesta del backend: ${userUpdated}");
-
+      final UserUpdatedResponse userUpdated = await authRepository.updateUser(updatedUser, context );
+      
       final UserEntity userTempUpdated = UserEntity(
         id: userUpdated.id,
         active: userUpdated.active,
@@ -103,10 +101,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       
       state = state.copyWith(isLoading: false, user: userTempUpdated);
+
+      
+
       ref.read(profileProvider.notifier).resetForm(userTempUpdated);
 
     } catch (error) {
-      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      state = state.copyWith(isLoading: false, errorMessage: 'Sesión expirada, inicia sesón de nuevo');
     }
 
   }

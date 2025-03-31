@@ -13,6 +13,7 @@ import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapp
 import 'package:ladamadelcanchoapp/infraestructure/models/auth_verify_user_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
+import 'package:ladamadelcanchoapp/main.dart';
 
 class AuthDatasourceImpl  extends AuthDatasource{
 
@@ -26,7 +27,10 @@ class AuthDatasourceImpl  extends AuthDatasource{
 
   AuthDatasourceImpl() {
     _dio.interceptors.add(CookieManager(_cookieJar)); // 📌 Agregamos el interceptor de cookies
+    
   }
+
+  
 
   @override
   Future<void> checkCookies() async {
@@ -199,6 +203,7 @@ Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) as
       };
 
   }
+
 
   if (_csrfToken == null) {
     // 🔐 Token ausente, redirigir a login
