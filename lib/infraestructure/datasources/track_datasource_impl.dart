@@ -3,8 +3,10 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 
 class TrackDatasourceImpl implements TrackDatasource {
+  
   final Dio _dio = Dio(BaseOptions(
     baseUrl: 'https://cookies.argomez.com/api/tracks',
     followRedirects: false,
@@ -49,6 +51,7 @@ class TrackDatasourceImpl implements TrackDatasource {
 
   @override
   Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile) async {
+    
     await _fetchCsrfToken(); // ✅ CSRF requerido
 
     final formData = FormData.fromMap({

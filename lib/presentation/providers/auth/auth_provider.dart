@@ -124,14 +124,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await prefs.setBool('isAuthenticated', false);
   }
 
-  Future<void> login(BuildContext context, String email, String password) async {
+  Future<void> login(BuildContext context, String email, String password, WidgetRef ref) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     email = 'angelitorogo@hotmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
     password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
     try {
-      final result = await authRepository.login(context, email, password);
+      final result = await authRepository.login(context, email, password, ref);
 
 
       if (result) {
@@ -161,15 +161,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /*
   Future<void> fetchCsrfToken() async {
     state = state.copyWith(isLoading: true);
     try {
-      await authRepository.fetchCsrfToken();
-      state = state.copyWith(isLoading: false, csrfToken: 'Token cargado correctamente');
+      final csrfToken = await authRepository.fetchCsrfToken();
+      state = state.copyWith(isLoading: false, csrfToken: csrfToken);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: 'Error al recuperar CSRF Token');
     }
   }
+  */
 
   Future<void> verifyUser() async {
 
@@ -200,14 +202,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = const AuthState();
 
       state = state.copyWith(isLoading: false, user: null, isAuthenticated: false);
-      /*
-      state = const AuthState(
-        isAuthenticated: false,
-        isLoading: false,
-        user: null,
-      );
-      */
-      //print("✅ Estado después de logout: ${state.user?.fullname}");
+
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: 'Error al verificar usuario');
     }

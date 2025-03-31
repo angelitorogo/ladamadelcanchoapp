@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/auth_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/domain/repositories/auth_repository.dart';
@@ -17,13 +18,13 @@ class AuthRepositoryImpl extends AuthRepository{
   }
 
   @override
-  Future<void> fetchCsrfToken() {
+  Future<String> fetchCsrfToken() {
     return datasource.fetchCsrfToken();
   }
 
   @override
-  Future<bool> login(BuildContext context, String email, String password) {
-    return datasource.login(context, email, password);
+  Future<bool> login(BuildContext context, String email, String password, WidgetRef ref) {
+    return datasource.login(context, email, password, ref);
   }
 
   @override

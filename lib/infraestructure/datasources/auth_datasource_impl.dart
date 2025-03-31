@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/auth_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
@@ -13,7 +14,7 @@ import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapp
 import 'package:ladamadelcanchoapp/infraestructure/models/auth_verify_user_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
-import 'package:ladamadelcanchoapp/main.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 
 class AuthDatasourceImpl  extends AuthDatasource{
 
@@ -39,29 +40,34 @@ class AuthDatasourceImpl  extends AuthDatasource{
   }
 
   @override
-  Future<void> fetchCsrfToken() async {
+  Future<String> fetchCsrfToken() async {
      try {
       final response = await _dio.get('/csrf-token');
 
       if (response.statusCode == 200) {
         _csrfToken = response.data['csrfToken'];
-        //print('CSRF Token obtenido: $_csrfToken');
 
         // 📌 Revisar si hay cookies almacenadas después de obtener el token
         await checkCookies();
+        return _csrfToken!;
 
       } else {
-        //print('Error al obtener CSRF Token: ${response.statusCode}');
+        throw Exception('Error al obtener CSRF Token');
       }
     } catch (e) {
-      //print('Error en fetchCsrfToken: $e');
+
+      throw Exception(e);
     }
   }
 
   @override
-  Future<bool> login(BuildContext context, String email, String password) async {
+  Future<bool> login(BuildContext context, String email, String password ,WidgetRef ref) async {
     try {
-      await fetchCsrfToken();
+
+      await fetchCsrfToken();  // cambiar por el de authProvider
+      //ref.read(authProvider.notifier).fetchCsrfToken();
+      //await checkCookies();
+
 
       final response = await _dio.post(
         '/login',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
@@ -33,14 +34,21 @@ class ProfileScreen extends ConsumerWidget {
 
     final colors = Theme.of(context).colorScheme;
 
-    ref.listen(authProvider, (previous, next) {
-      // Mostrar alerta si no se actualiza el user
+    ref.listen<AuthState>(authProvider, (previous, next) {
       if (previous?.errorMessage != next.errorMessage && next.errorMessage != null) {
-        mostrarAlerta(context, next.errorMessage!);
+        Future.microtask(() {
+          if (context.mounted && ModalRoute.of(context)?.isCurrent == true) {
+            mostrarAlerta(context, next.errorMessage!);
+          }
+        });
       }
-      // ✅ Mostrar alerta de éxito si se ha actualizado el usuario sin errores
+
       if (previous?.user != next.user && next.user != null) {
-        mostrarAlertaSuccess(context, "Perfil actualizado con éxito");
+        Future.microtask(() {
+          if (context.mounted && ModalRoute.of(context)?.isCurrent == true) {
+            mostrarAlertaSuccess(context, "Perfil actualizado con éxito");
+          }
+        });
       }
     });
 
@@ -246,54 +254,41 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog( // ⬅ Usamos `Dialog` para más control
+        return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          child: SizedBox(
-            width: 300, // ⬅ Define el ancho de la alerta
-            height: 300,
-            child: AlertDialog(
-              titlePadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 30),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 28),
-                  SizedBox(height: 10),
-                  Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: Text(
-                mensaje,
-                textAlign: TextAlign.center, // 🔥 Centra el texto
-                style: const TextStyle(fontSize: 17),
-              ),
-              actions: [
-                Center(
-                  child: SizedBox(
-                    width: 150,
-                    height: 50,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      child: const Text(
-                        'Aceptar',
-                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          title: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 28),
+              SizedBox(height: 10),
+              Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ],
           ),
+          content: Text(
+            mensaje,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 17),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            SizedBox(
+              width: 150,
+              height: 50,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+                child: const Text(
+                  'Aceptar',
+                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -303,58 +298,46 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog( // ⬅ Usamos `Dialog` para más control
+        return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          child: SizedBox(
-            width: 300, // ⬅ Define el ancho de la alerta
-            height: 300,
-            child: AlertDialog(
-              titlePadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 30),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 28),
-                  SizedBox(height: 10),
-                  Text('Hecho!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: Text(
-                mensaje,
-                textAlign: TextAlign.center, // 🔥 Centra el texto
-                style: const TextStyle(fontSize: 17),
-              ),
-              actions: [
-                Center(
-                  child: SizedBox(
-                    width: 150,
-                    height: 50,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      child: const Text(
-                        'Aceptar',
-                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          title: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 28),
+              SizedBox(height: 10),
+              Text('Hecho!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ],
           ),
+          content: Text(
+            mensaje,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 17),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            SizedBox(
+              width: 150,
+              height: 50,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+                child: const Text(
+                  'Aceptar',
+                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
   }
+
 
 }
 

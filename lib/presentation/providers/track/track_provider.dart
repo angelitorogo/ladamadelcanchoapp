@@ -68,7 +68,8 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
       }
 
 
-      repository2.fetchCsrfToken();
+      repository2.fetchCsrfToken(); //TODO: cogerlo si se puede del authState
+      
 
       final response = await repository.uploadTrack(name, uploadFile);
       state = const TrackUploadState(status: TrackUploadStatus.success);

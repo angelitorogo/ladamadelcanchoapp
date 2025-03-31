@@ -2,16 +2,17 @@
 
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 
 abstract class AuthDatasource {
 
-  Future<void> fetchCsrfToken();
+  Future<String> fetchCsrfToken();
 
   Future<void> checkCookies();
 
-  Future<bool> login(BuildContext context,String email, String password);
+  Future<bool> login(BuildContext context,String email, String password, WidgetRef ref);
 
   Future<UserEntity> authVerifyUser();
 
