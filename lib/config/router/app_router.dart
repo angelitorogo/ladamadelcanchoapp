@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/login_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
@@ -63,39 +64,26 @@ final appRouter = GoRouter(
       GoRoute(
         path: '/profile',
         name: ProfileScreen.name,
-        builder: (context, state) {
-          // ✅ Obtenemos el estado de autenticación usando ProviderScope.of()
-          final authState = ProviderScope.containerOf(context).read(authProvider);
+        redirect: (context, state) async {
+          final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+          final hasToken = cookies.any((c) => c.name == 'auth_token');
 
-          // 🔒 Si el usuario NO está autenticado, lo enviamos a /login
-          if (!authState.isAuthenticated) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              GoRouter.of(context).go('/login');
-            });
-            return const SizedBox(); // Devolvemos un widget vacío mientras redirige
-          }
-
-          return const ProfileScreen(); // ✅ Si está autenticado, accede a la ruta
+          return hasToken ? null : '/login'; // 🔐 Si no hay token, redirige
         },
+        builder: (context, state) => const ProfileScreen(),
       ),
+
 
       GoRoute(
         path: '/track-map',
         name: MapTrackingScreen.name,
-        builder: (context, state) {
-          // ✅ Obtenemos el estado de autenticación usando ProviderScope.of()
-          final authState = ProviderScope.containerOf(context).read(authProvider);
+        redirect: (context, state) async {
+          final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+          final hasToken = cookies.any((c) => c.name == 'auth_token');
 
-          // 🔒 Si el usuario NO está autenticado, lo enviamos a /login
-          if (!authState.isAuthenticated) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              GoRouter.of(context).go('/login');
-            });
-            return const SizedBox(); // Devolvemos un widget vacío mientras redirige
-          }
-
-          return const MapTrackingScreen(); // ✅ Si está autenticado, accede a la ruta
+          return hasToken ? null : '/login'; // 🔐 Si no hay token, redirige
         },
+        builder: (context, state) => const MapTrackingScreen(),
       ),
 
       GoRoute(
