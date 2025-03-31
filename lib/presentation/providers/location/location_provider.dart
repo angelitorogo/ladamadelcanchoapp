@@ -5,6 +5,7 @@ import 'package:gpx/gpx.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/location_repository_impl.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'location_repository_provider.dart';
@@ -25,11 +26,12 @@ class LocationState {
 
 class LocationNotifier extends StateNotifier<LocationState> {
   final LocationRepositoryImpl locationRepository;
+  final AuthState authState;
   //StreamSubscription<LocationPoint>? _locationSubscription;
   StreamSubscription<dynamic>? _locationSubscription; // 👈 CAMBIADO
   
 
-  LocationNotifier(this.locationRepository) : super(LocationState());
+  LocationNotifier(this.locationRepository, this.authState) : super(LocationState());
 
   List<LatLng> get polylinePoints =>
       state.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
@@ -83,7 +85,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     //final gpxString = GpxWriter().asString(gpx, pretty: true);
 
     final name = overrideName ?? 'track_${DateTime.now().millisecondsSinceEpoch}'; // ✅ usa nombre si se proporciona
-    const author = 'Angel Rodriguez';
+    String author = authState.user!.fullname;
     final firstPointTime = state.points.first.timestamp.toUtc().toIso8601String();
 
     final buffer = StringBuffer();
@@ -177,5 +179,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
 final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>((ref) {
   final locationRepository = ref.watch(locationRepositoryProvider);
-  return LocationNotifier(locationRepository);
+  final authState = ref.watch(authProvider);
+  return LocationNotifier(locationRepository, authState);
 });
