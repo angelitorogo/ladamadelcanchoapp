@@ -9,27 +9,27 @@ import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'location_repository_provider.dart';
 
-class TrackState {
+class LocationState {
   final bool isTracking;
   final List<LocationPoint> points;
 
-  TrackState({this.isTracking = false, this.points = const []});
+  LocationState({this.isTracking = false, this.points = const []});
 
-  TrackState copyWith({bool? isTracking, List<LocationPoint>? points}) {
-    return TrackState(
+  LocationState copyWith({bool? isTracking, List<LocationPoint>? points}) {
+    return LocationState(
       isTracking: isTracking ?? this.isTracking,
       points: points ?? this.points,
     );
   }
 }
 
-class TrackNotifier extends StateNotifier<TrackState> {
+class LocationNotifier extends StateNotifier<LocationState> {
   final LocationRepositoryImpl locationRepository;
   //StreamSubscription<LocationPoint>? _locationSubscription;
   StreamSubscription<dynamic>? _locationSubscription; // 👈 CAMBIADO
   
 
-  TrackNotifier(this.locationRepository) : super(TrackState());
+  LocationNotifier(this.locationRepository) : super(LocationState());
 
   List<LatLng> get polylinePoints =>
       state.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
@@ -59,7 +59,7 @@ class TrackNotifier extends StateNotifier<TrackState> {
     });
   }
 
-  Future<File> stopTrackingAndSaveGpx() async {
+  Future<File> stopTrackingAndSaveGpx({String? overrideName}) async {
     await _locationSubscription?.cancel();
 
     await (locationRepository.datasource as LocationDatasourceImpl).location.enableBackgroundMode(enable: false);
@@ -82,7 +82,7 @@ class TrackNotifier extends StateNotifier<TrackState> {
     gpx.trks.add(track);
     //final gpxString = GpxWriter().asString(gpx, pretty: true);
 
-    const name = 'Track grabado';
+    final name = overrideName ?? 'track_${DateTime.now().millisecondsSinceEpoch}'; // ✅ usa nombre si se proporciona
     const author = 'Angel Rodriguez';
     final firstPointTime = state.points.first.timestamp.toUtc().toIso8601String();
 
@@ -129,7 +129,7 @@ class TrackNotifier extends StateNotifier<TrackState> {
 
 
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = "track_${DateTime.now().millisecondsSinceEpoch}.gpx";
+    final fileName = "$name.gpx";
     final file = File("${directory.path}/$fileName");
     await file.writeAsString(gpxString);
 
@@ -175,7 +175,7 @@ class TrackNotifier extends StateNotifier<TrackState> {
   }
 }
 
-final trackProvider = StateNotifierProvider<TrackNotifier, TrackState>((ref) {
+final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>((ref) {
   final locationRepository = ref.watch(locationRepositoryProvider);
-  return TrackNotifier(locationRepository);
+  return LocationNotifier(locationRepository);
 });

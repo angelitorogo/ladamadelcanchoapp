@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/location/track_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:location/location.dart';
@@ -121,8 +121,8 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final trackState = ref.watch(trackProvider);
-    final trackNotifier = ref.read(trackProvider.notifier);
+    final locationState = ref.watch(locationProvider);
+    final locationNotifier = ref.read(locationProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Grabación Track')),
@@ -151,7 +151,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                   polylines: {
                     Polyline(
                       polylineId: const PolylineId('tracking_polyline'),
-                      points: trackNotifier.polylinePoints,
+                      points: locationNotifier.polylinePoints,
                       width: 5,
                       color: Colors.blue,
                     ),
@@ -173,33 +173,33 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
           // Dentro del botón flotante trackingButton
           FloatingActionButton(
             heroTag: 'trackingButton',
-            backgroundColor: !trackState.isTracking
+            backgroundColor: !locationState.isTracking
                 ? (initialPosition == null ? Colors.grey : Colors.green)
                 : Colors.red,
             onPressed: initialPosition == null
                 ? null // ⛔ deshabilitado si no hay posición inicial
                 : () async {
-                    if (!trackState.isTracking) {
+                    if (!locationState.isTracking) {
                       
-                      trackNotifier.startTracking();
+                      locationNotifier.startTracking();
 
 
                     } else {
-                      final file = await trackNotifier.stopTrackingAndSaveGpx();
+                      final file = await locationNotifier.stopTrackingAndSaveGpx();
 
                       if (context.mounted) {
                         context.pushNamed(
                           TrackPreviewScreen.name,
                           extra: {
                             'trackFile': file,
-                            'points': trackState.points,
+                            'points': locationState.points,
                           },
                         );
                       }
 
                     }
                   },
-            child: Icon(trackState.isTracking ? Icons.stop : Icons.play_arrow),
+            child: Icon(locationState.isTracking ? Icons.stop : Icons.play_arrow),
           )
 
         ],

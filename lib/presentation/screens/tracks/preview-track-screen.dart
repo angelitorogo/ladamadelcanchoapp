@@ -582,7 +582,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                           final name = _nameController.text.trim();
                           final file = widget.trackFile;
 
-                          final response = await uploader.uploadTrack(name, file);
+                          final response = await uploader.uploadTrack(name, file, ref);
 
                           if (response != null && context.mounted) {
                             await showDialog(

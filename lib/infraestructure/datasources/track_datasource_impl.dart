@@ -29,8 +29,7 @@ class TrackDatasourceImpl implements TrackDatasource {
       authDio.interceptors.add(CookieManager(_cookieJar));
 
       // 🔍 VERIFICAMOS cookies antes de llamar CSRF
-      final cookies = await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-      print('🍪 COOKIES actuales para dominio https://cookies.argomez.com: $cookies');
+      _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
 
       final response = await authDio.get('/csrf-token');
 
