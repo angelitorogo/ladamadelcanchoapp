@@ -42,8 +42,8 @@ class AuthRepositoryImpl extends AuthRepository{
   }
   
   @override
-  Future<UserUpdatedResponse> updateUser(UserEntity user) {
-    return datasource.updateUser(user);
+  Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) {
+    return datasource.updateUser(user, context);
   }
   
 }

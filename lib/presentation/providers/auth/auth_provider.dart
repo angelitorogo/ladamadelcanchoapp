@@ -70,7 +70,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> updateUser(ProfileFormState profileState, WidgetRef ref) async {
+  Future<void> updateUser(ProfileFormState profileState, WidgetRef ref, BuildContext context) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
      try {
@@ -86,7 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         language: ref.read(authProvider).user!.language,
       );
 
-      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser );
+      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser, context );
 
       //print("📤 Respuesta del backend: ${userUpdated}");
 

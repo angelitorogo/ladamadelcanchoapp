@@ -7,11 +7,13 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/auth_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapper.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/auth_verify_user_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 
 class AuthDatasourceImpl  extends AuthDatasource{
 
@@ -21,7 +23,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
     validateStatus: (status) => status != null && status < 500,
   ));
   String? _csrfToken; // Guardamos el CSRF token
-  final _cookieJar = CookieJar();
+  final _cookieJar = GlobalCookieJar.instance;
 
   AuthDatasourceImpl() {
     _dio.interceptors.add(CookieManager(_cookieJar)); // 📌 Agregamos el interceptor de cookies
@@ -156,7 +158,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
 
 
 @override
-Future<UserUpdatedResponse> updateUser(UserEntity user) async {
+Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) async {
 
   String? base64Image;
   dynamic data;
@@ -199,7 +201,13 @@ Future<UserUpdatedResponse> updateUser(UserEntity user) async {
 
   }
 
-  
+  if (_csrfToken == null) {
+    // 🔐 Token ausente, redirigir a login
+    if (context.mounted) {
+      context.go('/login');
+    }
+    
+  }
 
 
   final response = await _dio.put(

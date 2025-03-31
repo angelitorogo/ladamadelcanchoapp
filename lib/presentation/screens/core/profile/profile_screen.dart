@@ -205,7 +205,7 @@ class ProfileScreen extends ConsumerWidget {
                                 ? null
                                 : () async {
                                     await authNotifier.updateUser(
-                                      profileState, ref
+                                      profileState, ref, context
                                     );
                                   },
                                 child: const Text('Actualizar'),
