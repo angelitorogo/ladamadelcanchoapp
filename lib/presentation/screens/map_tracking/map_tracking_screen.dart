@@ -64,12 +64,15 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     }
 
     final currentLocation = await location.getLocation();
-    setState(() {
-      initialPosition = LatLng(
-        currentLocation.latitude!,
-        currentLocation.longitude!,
-      );
-    });
+    if(mounted) {
+      setState(() {
+        initialPosition = LatLng(
+          currentLocation.latitude!,
+          currentLocation.longitude!,
+        );
+      });
+    }
+    
 
     locationSubscription = location.onLocationChanged.listen((newLocation) {
       if (!mounted || mapController == null) return;
