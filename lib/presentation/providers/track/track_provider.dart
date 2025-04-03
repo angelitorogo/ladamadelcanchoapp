@@ -9,6 +9,7 @@ import 'track_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/track_repository_impl.dart';
 
+
 enum TrackUploadStatus { idle, loading, success, error }
 
 class TrackUploadState {
@@ -37,9 +38,10 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   TrackUploadNotifier(this.repository, this.repository2) : super(const TrackUploadState());
 
-  Future<Map<String, dynamic>?> uploadTrack(String name, File file, WidgetRef ref) async {
+  Future<Map<String, dynamic>?> uploadTrack(String name, File file, WidgetRef ref, String description, String distance, String elevationGain, { List<File> images = const [] } ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
+    images;
 
     try {
       
@@ -68,10 +70,10 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
       }
 
 
-      repository2.fetchCsrfToken(); //TODO: cogerlo si se puede del authState
+      repository2.fetchCsrfToken(); //cogerlo si se puede del authState
       
-
-      final response = await repository.uploadTrack(name, uploadFile);
+      //print('✅ Images2: $images');
+      final response = await repository.uploadTrack(name, uploadFile, description, distance, elevationGain, images: images );
       state = const TrackUploadState(status: TrackUploadStatus.success);
       return response;
     } catch (e) {

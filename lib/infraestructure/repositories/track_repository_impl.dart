@@ -12,8 +12,13 @@ class TrackRepositoryImpl extends TrackRepository {
   TrackRepositoryImpl(this.datasource);
 
   @override
-  Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile) {
-    return datasource.uploadTrack(name, gpxFile);
+  Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile, String description, String distance, String elevationGain, {List<File> images = const []}) {
+    return datasource.uploadTrack(name, gpxFile, description, distance, elevationGain, images: images);
+  }
+  
+  @override
+  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int offset = 0, String? userId}) {
+    return datasource.loadAllTracks(limit: limit, offset:offset, userId: userId);
   }
 
  

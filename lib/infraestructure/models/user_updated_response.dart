@@ -5,8 +5,8 @@ class UserUpdatedResponse {
     final String fullname;
     final String password;
     final String role;
-    final String telephone;
-    final String image;
+    final String? telephone;
+    final String? image;
     final bool active;
     final int theme;
     final DateTime createdAt;
@@ -19,8 +19,8 @@ class UserUpdatedResponse {
         required this.fullname,
         required this.password,
         required this.role,
-        required this.telephone,
-        required this.image,
+        this.telephone,
+        this.image,
         required this.active,
         required this.theme,
         required this.createdAt,

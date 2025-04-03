@@ -9,16 +9,21 @@ import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dar
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'location_repository_provider.dart';
+import 'dart:math';
 
 class LocationState {
   final bool isTracking;
+  final double distance;
+  final double elevationGain;
   final List<LocationPoint> points;
 
-  LocationState({this.isTracking = false, this.points = const []});
+  LocationState({this.distance = 0, this.elevationGain = 0, this.isTracking = false, this.points = const []});
 
-  LocationState copyWith({bool? isTracking, List<LocationPoint>? points}) {
+  LocationState copyWith({bool? isTracking, double? distance, double? elevationGain, List<LocationPoint>? points}) {
     return LocationState(
       isTracking: isTracking ?? this.isTracking,
+      distance: distance ?? this.distance,
+      elevationGain: elevationGain ?? this.elevationGain,
       points: points ?? this.points,
     );
   }
@@ -61,11 +66,55 @@ class LocationNotifier extends StateNotifier<LocationState> {
     });
   }
 
+  double _calculateDistanceMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const R = 6371000; // radio de la Tierra en metros
+    final dLat = _degToRad(lat2 - lat1);
+    final dLon = _degToRad(lon2 - lon1);
+    final a = 
+      (sin(dLat / 2) * sin(dLat / 2)) +
+      cos(_degToRad(lat1)) * cos(_degToRad(lat2)) *
+      (sin(dLon / 2) * sin(dLon / 2));
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
+
+double _degToRad(double deg) => deg * (pi / 180);
+
   Future<File> stopTrackingAndSaveGpx({String? overrideName}) async {
     await _locationSubscription?.cancel();
 
     await (locationRepository.datasource as LocationDatasourceImpl).location.enableBackgroundMode(enable: false);
 
+    double totalDistanceMeters = 0;
+    double totalElevationGain = 0;
+
+    for (int i = 1; i < state.points.length; i++) {
+      final prev = state.points[i - 1];
+      final curr = state.points[i];
+
+      // Distancia entre puntos (usa fórmula de Haversine)
+      final distance = _calculateDistanceMeters(
+        prev.latitude,
+        prev.longitude,
+        curr.latitude,
+        curr.longitude,
+      );
+      totalDistanceMeters += distance;
+
+      // Desnivel positivo (solo si se gana altitud)
+      final elevationDiff = curr.elevation - prev.elevation;
+      if (elevationDiff > 0) {
+        totalElevationGain += elevationDiff;
+      }
+    }
+
+
+    state = state.copyWith(distance: totalDistanceMeters, elevationGain: totalElevationGain);
 
     final gpx = Gpx();
     gpx.creator = "La Dama del Cancho App";
