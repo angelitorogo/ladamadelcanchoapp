@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -148,7 +149,7 @@ class TrackCard extends StatelessWidget {
       : 'https://upload.wikimedia.org/wikipedia/en/6/60/No_Picture.jpg';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
       child: Card(
         elevation: 4,
         shape: RoundedRectangleBorder(
@@ -159,19 +160,36 @@ class TrackCard extends StatelessWidget {
           child: Row(
             children: [
               // 📷 Imagen (30%)
-              Container(
-                width: MediaQuery.of(context).size.width * 0.3,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
-                  image: DecorationImage(
-                    image: NetworkImage(imageTrackUrl), // Puedes cambiar esto si tienes una lista de imágenes por ruta
+              ClipRRect(
+                borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: double.infinity, // o fija si sabes el alto
+                  child: Image.network(
+                    imageTrackUrl,
                     fit: BoxFit.cover,
-                    onError: (error, stackTrace) {}, // No mostrar error
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[300],
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.image_not_supported),
+                    ),
                   ),
                 ),
               ),
 
-              // 🧾 Info del track (70%)
+
+                            // 🧾 Info del track (70%)
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -208,11 +226,11 @@ class TrackCard extends StatelessWidget {
                         children: [
                           const Icon(Icons.straighten, size: 18, color: Colors.grey),
                           const SizedBox(width: 6),
-                          Text(track.distance), // Distancia se rellenará luego
-                          const SizedBox(width: 20,),
+                          Text('${((double.tryParse(track.distance) ?? 0.0) / 1000).toStringAsFixed(2)} km'),
+                          const SizedBox(width: 5,),
                           const Icon(Icons.terrain, size: 18, color: Colors.grey),
                           const SizedBox(width: 6),
-                          Text(track.elevationGain),
+                          Text('${((double.tryParse(track.elevationGain) ?? 0.0) / 1000).toStringAsFixed(2)} m'),
                         ],
                       ),
                     ],
