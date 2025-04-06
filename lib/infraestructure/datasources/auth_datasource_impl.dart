@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/auth_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapper.dart';
@@ -23,14 +23,27 @@ class AuthDatasourceImpl  extends AuthDatasource{
     validateStatus: (status) => status != null && status < 500,
   ));
   String? _csrfToken; // Guardamos el CSRF token
-  final _cookieJar = GlobalCookieJar.instance;
+  //final _cookieJar = GlobalCookieJar.instance;
+  late final CookieJar _cookieJar;
+
+
 
   AuthDatasourceImpl() {
+    GlobalCookieJar.instance.then((jar) {
+      _cookieJar = jar;
+      _dio.interceptors.add(CookieManager(_cookieJar));
+    });
+  }
+
+    /*
+    AuthDatasourceImpl() {
     _dio.interceptors.add(CookieManager(_cookieJar)); // 📌 Agregamos el interceptor de cookies
     
   }
 
-  
+  */
+
+
 
   @override
   Future<void> checkCookies() async {
@@ -63,9 +76,9 @@ class AuthDatasourceImpl  extends AuthDatasource{
   Future<bool> login(BuildContext context, String email, String password ,WidgetRef ref) async {
     try {
 
-      await fetchCsrfToken();  // cambiar por el de authProvider
-      //ref.read(authProvider.notifier).fetchCsrfToken();
-      //await checkCookies();
+      // ✅ Asegura tener CSRF Token antes de login
+      await fetchCsrfToken();
+
 
 
       final response = await _dio.post(
@@ -77,6 +90,10 @@ class AuthDatasourceImpl  extends AuthDatasource{
       );
 
       //print("📡 Respuesta del servidor: ${response.data}");
+
+      // 🧪 Log para debug
+      final cookies = await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+      print("🍪 Cookies después de login: $cookies");
 
       if (response.statusCode == 201 && response.data['message'] == 'Login exitoso') {
         return true;
@@ -96,6 +113,9 @@ class AuthDatasourceImpl  extends AuthDatasource{
   Future<UserEntity> authVerifyUser() async {
 
     try {
+
+      // ✅ Si no hay CSRF en memoria, intenta obtener uno nuevo automáticamente
+      await fetchCsrfToken();
 
       final response = await _dio.get(
         '/verify',
@@ -124,12 +144,16 @@ class AuthDatasourceImpl  extends AuthDatasource{
 
     try {
 
-      await _dio.post(
+      // ✅ Asegura tener CSRF Token antes de hacer logout
+      await fetchCsrfToken();
+
+      final response = await _dio.post(
         '/logout',
         options: Options(
           headers: {'X-CSRF-Token': _csrfToken},
         ),
       );
+
 
       // 🔥 Limpiar cookies después de hacer logout
       await _cookieJar.deleteAll();
@@ -210,13 +234,8 @@ Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) as
   }
 
 
-  if (_csrfToken == null) {
-    // 🔐 Token ausente, redirigir a login
-    if (context.mounted) {
-      context.go('/login');
-    }
-    
-  }
+  // ✅ Si no hay CSRF en memoria, intenta obtener uno nuevo automáticamente
+  await fetchCsrfToken();
 
 
   final response = await _dio.put(

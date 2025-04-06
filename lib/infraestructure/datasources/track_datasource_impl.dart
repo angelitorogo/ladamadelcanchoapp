@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
@@ -12,11 +13,15 @@ class TrackDatasourceImpl implements TrackDatasource {
     validateStatus: (status) => status != null && status < 500,
   ));
 
-  final _cookieJar = GlobalCookieJar.instance;
+  //final _cookieJar = GlobalCookieJar.instance;
+  late final CookieJar _cookieJar;
   String? _csrfToken;
 
   TrackDatasourceImpl() {
-    _dio.interceptors.add(CookieManager(_cookieJar));
+    GlobalCookieJar.instance.then((jar) {
+      _cookieJar = jar;
+      _dio.interceptors.add(CookieManager(_cookieJar));
+    });
   }
 
   /// ✅ Obtener CSRF token (reutilizable)

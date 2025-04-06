@@ -21,10 +21,25 @@ class _CheckAuthScreenState extends ConsumerState<CheckAuthScreen> {
     super.didChangeDependencies();
 
     if (!_initialized) {
-      _checkAuth();
-      _checkAuthExpired();
+      _verifySessionOnStartup();
       _initialized = true;
     }
+
+  }
+
+  Future<void> _verifySessionOnStartup() async {
+    //final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    final jar = await GlobalCookieJar.instance;
+    final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    final hasToken = cookies.any((c) => c.name == 'auth_token');
+
+    if (hasToken) {
+      // 👍 Cookie válida, dejamos pasar sin tocar el estado
+      return;
+    }
+
+    _checkAuth(); // ⚠️ Esto sigue validando si `authState` está autenticado
+    _checkAuthExpired(); // 🔁 Y esto seguirá lanzando el dialog si aún así no hay token
   }
 
   Future<void> _checkAuth() async {
@@ -42,7 +57,9 @@ class _CheckAuthScreenState extends ConsumerState<CheckAuthScreen> {
   }
 
   Future<void> _checkAuthExpired() async {
-    final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    //final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    final jar = await GlobalCookieJar.instance;
+    final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
     final hasToken = cookies.any((c) => c.name == 'auth_token');
 
 
