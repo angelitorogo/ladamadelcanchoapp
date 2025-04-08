@@ -38,14 +38,15 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   TrackUploadNotifier(this.repository, this.repository2) : super(const TrackUploadState());
 
-  Future<Map<String, dynamic>?> uploadTrack(String name, File file, WidgetRef ref, String description, String distance, String elevationGain, { List<File> images = const [] } ) async {
+  Future<Map<String, dynamic>?> uploadTrack(String name, File file, WidgetRef ref, String description, String distance, String elevationGain, File captureMap, { List<File> images = const [] } ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
-    images;
+    images.insert(0, captureMap);
+  
 
     try {
       
-      final originalFileName = '/storage/emulated/0/Download/GPX/${file.uri.pathSegments.last}';
+      final originalFileName = '/storage/emulated/0/Download/GPX/tracks/${file.uri.pathSegments.last}';
       File uploadFile;
 
       if( file.uri.pathSegments.last.replaceAll('.gpx', '') == name) {

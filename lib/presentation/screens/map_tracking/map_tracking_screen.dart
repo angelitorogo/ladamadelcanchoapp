@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -101,20 +103,21 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
   }
   */
   Future<bool> checkLocationPermission() async {
-  final locationStatus = await Permission.location.request();
+    final locationStatus = await Permission.location.request();
 
-  if (!locationStatus.isGranted) return false;
+    if (!locationStatus.isGranted) return false;
 
-  // ✅ AÑADIDO: pedir permiso para ubicación en segundo plano
-  final backgroundStatus = await Permission.locationAlways.request();
+    // ✅ AÑADIDO: pedir permiso para ubicación en segundo plano
+    final backgroundStatus = await Permission.locationAlways.request();
 
-  if (backgroundStatus.isPermanentlyDenied) {
-    openAppSettings(); // <<<<<<<<<<<<<<<<<<<<<< ABRE CONFIGURACIÓN
-    return false;
+    if (backgroundStatus.isPermanentlyDenied) {
+      openAppSettings(); // <<<<<<<<<<<<<<<<<<<<<< ABRE CONFIGURACIÓN
+      return false;
+    }
+
+    return backgroundStatus.isGranted;
   }
 
-  return backgroundStatus.isGranted;
-}
 
   @override
   void dispose() {

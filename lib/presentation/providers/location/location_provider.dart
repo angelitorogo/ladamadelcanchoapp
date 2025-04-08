@@ -135,7 +135,10 @@ double _degToRad(double deg) => deg * (pi / 180);
 
     final name = overrideName ?? 'track_${DateTime.now().millisecondsSinceEpoch}'; // ✅ usa nombre si se proporciona
     String author = authState.user!.fullname;
-    final firstPointTime = state.points.first.timestamp.toUtc().toIso8601String();
+    var firstPointTime = '';
+    if(state.points.isNotEmpty) {
+      firstPointTime = state.points.first.timestamp.toUtc().toIso8601String();
+    }
 
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
@@ -196,7 +199,7 @@ double _degToRad(double deg) => deg * (pi / 180);
 
 
   Future<void> saveGpxToPublicDocuments(File file) async {
-    final downloadsDir = Directory('/storage/emulated/0/Download/GPX');
+    final downloadsDir = Directory('/storage/emulated/0/Download/GPX/tracks');
 
     if (!(await downloadsDir.exists())) {
       await downloadsDir.create(recursive: true);

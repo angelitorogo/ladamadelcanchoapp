@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -126,6 +127,25 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     );
   }
 
+  Future<File> captureMap() async {
+    final Uint8List? bytes = await mapController?.takeSnapshot();
+
+    final imagePath = '/storage/emulated/0/Download/GPX/captures/map_snapshot_${DateTime.now().millisecondsSinceEpoch}.png';
+    final imageFile = File(imagePath);
+    
+
+    final downloadsDir = Directory('/storage/emulated/0/Download/GPX/captures');
+
+    if (!(await downloadsDir.exists())) {
+      await downloadsDir.create(recursive: true);
+    }
+
+
+    await imageFile.writeAsBytes(bytes!);
+    return imageFile;
+
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -201,6 +221,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                       infoWindow: const InfoWindow(title: 'Inicio'),
                     ),
                   },
+                  mapType: MapType.satellite,
                   zoomGesturesEnabled: false,
                   scrollGesturesEnabled: false,
                   rotateGesturesEnabled: false,
@@ -347,7 +368,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                     );
 
                     if (confirm == true) {
-                      final path = '/storage/emulated/0/Download/GPX/${widget.trackFile.uri.pathSegments.last}';
+                      final path = '/storage/emulated/0/Download/GPX/tracks/${widget.trackFile.uri.pathSegments.last}';
                       final file = File(path);
                       if (await file.exists()) await file.delete();
                       if (context.mounted) Navigator.pop(context);
@@ -376,8 +397,15 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                           final description = descriptionController.text;
                           final file = widget.trackFile;
 
+                          captureMap();
+                          Map<String, dynamic>? response;
+
                           //print('✅ Images1: $selectedImages');
-                          final response = await uploader.uploadTrack(name, file, ref, description, locationState.distance.toString(), locationState.elevationGain.toString(), images: selectedImages);
+
+                          final File fileCaptureMap = await captureMap();
+
+                          response = await uploader.uploadTrack(name, file, ref, description, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, images: selectedImages);
+                          
 
                           if (response != null && context.mounted) {
                             await showDialog(

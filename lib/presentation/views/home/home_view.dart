@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -28,6 +30,52 @@ class HomeView extends ConsumerWidget {
     if (trackState.status == TrackListStatus.initial) {
       Future.microtask(() => trackNotifier.loadTracks(userId: auth.user?.id));
     }
+
+
+    Future<void> _showDebugDialog(BuildContext context) async {
+      final prefs = await SharedPreferences.getInstance();
+      final prefsKeys = prefs.getKeys();
+
+      final prefsInfo = prefsKeys.isEmpty
+          ? 'No hay preferencias guardadas.'
+          : prefsKeys.map((k) => '• $k: ${prefs.get(k)}').join('\n');
+
+      final jar = await GlobalCookieJar.instance;
+      final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+
+      final cookiesInfo = cookies.isEmpty
+          ? 'No hay cookies guardadas.'
+          : cookies.map((c) => '• ${c.name} = ${c.value}').join('\n');
+
+      // Mostramos todo en un AlertDialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Debug info'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('🔑 SharedPreferences:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(prefsInfo),
+                  const SizedBox(height: 12),
+                  const Text('🍪 Cookies:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(cookiesInfo),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                child: const Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
 
     return Scaffold(
       appBar: AppBar(
@@ -124,6 +172,12 @@ class HomeView extends ConsumerWidget {
           },
         ),
       ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showDebugDialog(context),
+        child: const Icon(Icons.bug_report),
+      ),
+
     );
   }
 
@@ -204,7 +258,7 @@ class TrackCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              track.name,
+                              track.name.split('.').first,
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -242,6 +296,8 @@ class TrackCard extends StatelessWidget {
         ),
       ),
     );
+
+    
 
   }
 }
