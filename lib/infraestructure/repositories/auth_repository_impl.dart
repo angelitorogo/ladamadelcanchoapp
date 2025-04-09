@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/auth_datasource.dart';
@@ -46,5 +47,11 @@ class AuthRepositoryImpl extends AuthRepository{
   Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) {
     return datasource.updateUser(user, context);
   }
-  
+
+  @override
+  PersistCookieJar cookieJar() {
+    return datasource.cookieJar();
+  }
+
+
 }

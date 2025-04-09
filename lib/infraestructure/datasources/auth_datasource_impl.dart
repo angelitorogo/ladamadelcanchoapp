@@ -24,7 +24,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
   ));
   String? _csrfToken; // Guardamos el CSRF token
   //final _cookieJar = GlobalCookieJar.instance;
-  late final CookieJar _cookieJar;
+  late final PersistCookieJar _cookieJar;
 
 
 
@@ -33,22 +33,19 @@ class AuthDatasourceImpl  extends AuthDatasource{
       _cookieJar = jar;
       _dio.interceptors.add(CookieManager(_cookieJar));
     });
+
+
   }
 
-    /*
-    AuthDatasourceImpl() {
-    _dio.interceptors.add(CookieManager(_cookieJar)); // 📌 Agregamos el interceptor de cookies
-    
+  @override
+  PersistCookieJar cookieJar() {
+    return _cookieJar;
   }
-
-  */
-
-
-
+  
   @override
   Future<void> checkCookies() async {
     /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-    //print('Cookies guardadas: $cookies');
+    //print('🍪 Cookies guardadas: $cookies');
   }
 
   @override
@@ -92,8 +89,8 @@ class AuthDatasourceImpl  extends AuthDatasource{
       //print("📡 Respuesta del servidor: ${response.data}");
 
       // 🧪 Log para debug
-      final cookies = await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-      print("🍪 Cookies después de login: $cookies");
+      /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+      //print("🍪 Cookies después de login: $cookies");
 
       if (response.statusCode == 201 && response.data['message'] == 'Login exitoso') {
         return true;
@@ -147,7 +144,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
       // ✅ Asegura tener CSRF Token antes de hacer logout
       await fetchCsrfToken();
 
-      final response = await _dio.post(
+      /*final response = */await _dio.post(
         '/logout',
         options: Options(
           headers: {'X-CSRF-Token': _csrfToken},

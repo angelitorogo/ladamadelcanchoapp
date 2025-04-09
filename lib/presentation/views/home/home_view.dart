@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
-import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +22,8 @@ class HomeView extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final imageUrl = "${Environment.apiUrl}/files/${auth.user?.image}";
 
+    
+
     final trackState = ref.watch(trackListProvider);
     final trackNotifier = ref.read(trackListProvider.notifier);
 
@@ -32,7 +33,7 @@ class HomeView extends ConsumerWidget {
     }
 
 
-    Future<void> _showDebugDialog(BuildContext context) async {
+    Future<void> showDebugDialog(BuildContext context) async {
       final prefs = await SharedPreferences.getInstance();
       final prefsKeys = prefs.getKeys();
 
@@ -40,12 +41,13 @@ class HomeView extends ConsumerWidget {
           ? 'No hay preferencias guardadas.'
           : prefsKeys.map((k) => '• $k: ${prefs.get(k)}').join('\n');
 
-      final jar = await GlobalCookieJar.instance;
-      final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+      final jar = ref.read(authProvider.notifier).jar();
+      final cookies = await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
 
-      final cookiesInfo = cookies.isEmpty
-          ? 'No hay cookies guardadas.'
-          : cookies.map((c) => '• ${c.name} = ${c.value}').join('\n');
+
+      final cookiesInfo = cookies?.isEmpty ?? true
+        ? 'No hay cookies guardadas.'
+        : cookies!.map((c) => '• ${c.name} = ${c.value}').join('\n');
 
       // Mostramos todo en un AlertDialog
       if (context.mounted) {
@@ -174,7 +176,7 @@ class HomeView extends ConsumerWidget {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showDebugDialog(context),
+        onPressed: () => showDebugDialog(context),
         child: const Icon(Icons.bug_report),
       ),
 

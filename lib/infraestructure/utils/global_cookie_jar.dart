@@ -14,7 +14,7 @@ import 'package:path_provider/path_provider.dart';
 class GlobalCookieJar {
   static PersistCookieJar? _jar;
 
-  static Future<CookieJar> get instance async {
+  static Future<PersistCookieJar> get instance async {
     if (_jar == null) {
       final appDocDir = await getApplicationDocumentsDirectory();
       _jar = PersistCookieJar(
@@ -24,4 +24,6 @@ class GlobalCookieJar {
     }
     return _jar!;
   }
+
+  static bool get isInitialized => _jar != null; // ✅ método útil
 }

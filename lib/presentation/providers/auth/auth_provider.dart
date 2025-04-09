@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,6 +68,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = UserEntity.fromJson(jsonDecode(userJson)); // Asegúrate de que `UserEntity` tenga un método `fromJson`
       state = state.copyWith(isAuthenticated: true, user: user);
     }
+
   }
 
   Future<void> updateUser(ProfileFormState profileState, WidgetRef ref, BuildContext context) async {
@@ -124,6 +125,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await prefs.setBool('isAuthenticated', false);
   }
 
+  PersistCookieJar? jar() {
+    return authRepository.cookieJar();
+  }
+
   Future<void> login(BuildContext context, String email, String password, WidgetRef ref) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -164,19 +169,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
-
-  /*
-  Future<void> fetchCsrfToken() async {
-    state = state.copyWith(isLoading: true);
-    try {
-      final csrfToken = await authRepository.fetchCsrfToken();
-      state = state.copyWith(isLoading: false, csrfToken: csrfToken);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Error al recuperar CSRF Token');
-    }
-  }
-  */
-  
 
   Future<void> verifyUser() async {
 

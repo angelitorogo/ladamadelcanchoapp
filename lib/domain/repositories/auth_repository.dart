@@ -1,5 +1,6 @@
 
 import 'dart:typed_data';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
@@ -20,5 +21,7 @@ abstract class AuthRepository {
   Future<Uint8List?> fetchUserImage(String imagePath);
 
   Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context);
+
+  PersistCookieJar cookieJar();
 
 }
