@@ -42,6 +42,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       state.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
 
   
+  
   void startTracking() async {
      // ✅ Cast seguro para acceder al objeto `Location`
     final location = (locationRepository.datasource as LocationDatasourceImpl).location;
@@ -83,7 +84,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     return R * c;
   }
 
-double _degToRad(double deg) => deg * (pi / 180);
+  double _degToRad(double deg) => deg * (pi / 180);
 
   Future<File> stopTrackingAndSaveGpx({String? overrideName}) async {
     await _locationSubscription?.cancel();
@@ -220,6 +221,11 @@ double _degToRad(double deg) => deg * (pi / 180);
 
     final targetFile = File('${gpxDir.path}/${file.uri.pathSegments.last}');
     await file.copy(targetFile.path);
+  }
+
+  void resetState() {
+    _locationSubscription?.cancel(); // Por si acaso
+    state = LocationState(); // Estado por defecto
   }
 
   @override

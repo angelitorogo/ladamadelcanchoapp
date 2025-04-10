@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -22,6 +24,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
   LatLng? initialPosition;
   StreamSubscription<LocationData>? locationSubscription;
   MapType currentMapType = MapType.satellite;
+  bool hasCenteredInitially = false;
 
   @override
   void initState() {
@@ -77,13 +80,18 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     locationSubscription = location.onLocationChanged.listen((newLocation) {
       if (!mounted || mapController == null) return;
 
-      final newLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
-      mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: newLatLng, zoom: 16),
-        ),
-      );
+      // 🔁 Solo centrar una vez al principio
+      if (!hasCenteredInitially) {
+        final newLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
+        mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: newLatLng, zoom: 16),
+          ),
+        );
+        hasCenteredInitially = true; // ✅ Ya centrado
+      }
     });
+
   }
 
   void toggleMapType() {
@@ -135,29 +143,88 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                 ],
               ),
             )
-          : SizedBox(
-              height: 400,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-                child: GoogleMap(
-                  mapType: currentMapType,
-                  initialCameraPosition: CameraPosition(
-                    target: initialPosition!,
-                    zoom: 16,
-                  ),
-                  myLocationEnabled: true,
-                  polylines: {
-                    Polyline(
-                      polylineId: const PolylineId('tracking_polyline'),
-                      points: locationNotifier.polylinePoints,
-                      width: 5,
-                      color: Colors.blue,
+          : Column(
+            children: [
+              SizedBox(
+                height: 400,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                  child: GoogleMap(
+                    mapType: currentMapType,
+                    initialCameraPosition: CameraPosition(
+                      target: initialPosition!,
+                      zoom: 16,
                     ),
-                  },
-                  onMapCreated: (controller) => mapController = controller,
+                    myLocationEnabled: true,
+                    polylines: {
+                      Polyline(
+                        polylineId: const PolylineId('tracking_polyline'),
+                        points: locationNotifier.polylinePoints,
+                        width: 5,
+                        color: Colors.blue,
+                      ),
+                    },
+                    onMapCreated: (controller) => mapController = controller,
+                  ),
                 ),
               ),
-            ),
+
+              // 📍 Lista de puntos
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Builder(
+                    builder: (context) {
+                      final reversedPoints = locationState.points.reversed.toList();
+
+                      return ListView.builder(
+
+                        itemCount: reversedPoints.length,
+                        itemBuilder: (context, index) {
+                          final point = reversedPoints[index];
+
+                          double distance = 0;
+                          double elevationDiff = 0;
+
+                          if (index < reversedPoints.length - 1) {
+                            final prev = reversedPoints[index + 1];
+                            distance = _calculateDistance(point, prev);
+                            elevationDiff = point.elevation - prev.elevation;
+                          }
+
+                          Color? textColor;
+                          if (elevationDiff.abs() > 15) {
+                            textColor = Colors.red;
+                          } else if (distance > 25) {
+                            textColor = Colors.orange;
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            child: Text(
+                              '${locationState.points.length - index}. '
+                              'ele: ${point.elevation.toStringAsFixed(0)} m, '
+                              'dist: ${distance.toStringAsFixed(1)} m, '
+                              'desnivel: ${elevationDiff.toStringAsFixed(1)} m',
+                              style: TextStyle(fontSize: 14, color: textColor),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                                      )
+
+
+
+
+
+                ),
+              ),
+
+
+
+            ],
+          ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -204,6 +271,24 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
       ),
     );
   }
+
+  double _calculateDistance(LocationPoint a, LocationPoint b) {
+    const R = 6371000; // Radio de la Tierra en metros
+    final dLat = _degToRad(b.latitude - a.latitude);
+    final dLon = _degToRad(b.longitude - a.longitude);
+    final lat1 = _degToRad(a.latitude);
+    final lat2 = _degToRad(b.latitude);
+
+    final aCalc = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+
+    final c = 2 * atan2(sqrt(aCalc), sqrt(1 - aCalc));
+    return R * c;
+  }
+
+  double _degToRad(double deg) => deg * pi / 180;
+
+
 }
 
 

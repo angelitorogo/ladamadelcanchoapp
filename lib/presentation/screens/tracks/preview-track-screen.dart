@@ -12,6 +12,9 @@ import 'package:ladamadelcanchoapp/presentation/providers/location/location_prov
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+
 
 class TrackPreviewScreen extends ConsumerStatefulWidget {
   final File trackFile;
@@ -33,7 +36,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
   late final TextEditingController _nameController;
   final TextEditingController descriptionController = TextEditingController();
   late final List<LatLng> polylinePoints;
-  late final LatLngBounds bounds;
+  late final LatLngBounds? bounds;
 
   GoogleMapController? mapController;
 
@@ -67,17 +70,27 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     }
   }
 
-  LatLngBounds _calculateBounds(List<LatLng> points) {
-    final latitudes = points.map((p) => p.latitude);
-    final longitudes = points.map((p) => p.longitude);
+  LatLngBounds? _calculateBounds(List<LatLng> points) {
 
-    final southwest = LatLng(latitudes.reduce(min), longitudes.reduce(min));
-    final northeast = LatLng(latitudes.reduce(max), longitudes.reduce(max));
+    if (points.isNotEmpty) {
+      final latitudes = points.map((p) => p.latitude);
+      final longitudes = points.map((p) => p.longitude);
 
-    return LatLngBounds(southwest: southwest, northeast: northeast);
+      final southwest = LatLng(latitudes.reduce(min), longitudes.reduce(min));
+      final northeast = LatLng(latitudes.reduce(max), longitudes.reduce(max));
+
+      return LatLngBounds(southwest: southwest, northeast: northeast);
+    
+    }
+
+    return null;
+
+    
   }
 
   void _calculateTrackStats() {
+    if (widget.points.isEmpty) return; // ⛔️ Salir si no hay puntos
+
     double total = 0;
     double gain = 0;
     double loss = 0;
@@ -104,6 +117,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     endTimeStr = DateFormat.Hm().format(endTime);
   }
 
+
   double _distanceBetween(LatLng a, LatLng b) {
     const earthRadius = 6371; // km
     final dLat = _deg2rad(b.latitude - a.latitude);
@@ -128,23 +142,33 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
   }
 
   Future<File> captureMap() async {
+    if (mapController == null || bounds == null) {
+      throw Exception('Mapa no disponible para captura');
+    }
+
+    // 1. Centra el mapa en todos los puntos
+    await mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds!, 50),
+    );
+
+    // 2. Espera un poco para que se renderice correctamente
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // 3. Captura del mapa
     final Uint8List? bytes = await mapController?.takeSnapshot();
 
-    final imagePath = '/storage/emulated/0/Download/GPX/captures/map_snapshot_${DateTime.now().millisecondsSinceEpoch}.png';
-    final imageFile = File(imagePath);
-    
-
     final downloadsDir = Directory('/storage/emulated/0/Download/GPX/captures');
-
     if (!(await downloadsDir.exists())) {
       await downloadsDir.create(recursive: true);
     }
 
+    final imagePath = '${downloadsDir.path}/map_snapshot_${DateTime.now().millisecondsSinceEpoch}.png';
+    final imageFile = File(imagePath);
 
     await imageFile.writeAsBytes(bytes!);
     return imageFile;
-
   }
+
 
   @override
   void dispose() {
@@ -182,30 +206,15 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: GoogleMap(
-                  onMapCreated: (controller) {
-                    mapController = controller;
-                    Future.delayed(const Duration(milliseconds: 300), () async {
-                      await controller.animateCamera(
-                        CameraUpdate.newLatLngBounds(bounds, 50),
-                      );
-
-                      // Espera un poco y luego aplica el zoom manualmente
-                      await Future.delayed(const Duration(milliseconds: 200));
-                      await controller.animateCamera(
-                        CameraUpdate.newCameraPosition(
-                          CameraPosition(
-                            target: polylinePoints.first,
-                            zoom: 15, // Aquí fuerzas el zoom
-                          ),
-                        ),
-                      );
-                    });
-                  },
-
+                  mapType: MapType.satellite,
                   initialCameraPosition: CameraPosition(
                     target: polylinePoints.first,
-                    zoom: 1,
+                    zoom: 16,
                   ),
+                  myLocationEnabled: true,
+                  
+
+                  
                   polylines: {
                     Polyline(
                       polylineId: const PolylineId('preview_polyline'),
@@ -220,15 +229,34 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                       position: polylinePoints.first,
                       infoWindow: const InfoWindow(title: 'Inicio'),
                     ),
+                    Marker(
+                      markerId: const MarkerId('end'),
+                      position: polylinePoints.last,
+                      infoWindow: const InfoWindow(title: 'Fin'),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                    ),
                   },
-                  mapType: MapType.satellite,
-                  zoomGesturesEnabled: false,
-                  scrollGesturesEnabled: false,
-                  rotateGesturesEnabled: false,
-                  tiltGesturesEnabled: false,
-                  myLocationEnabled: false,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
+                  zoomGesturesEnabled: true,
+                  scrollGesturesEnabled: true,
+                  rotateGesturesEnabled: true,
+                  tiltGesturesEnabled: true,
+
+                  onMapCreated: (controller) {
+                    mapController = controller;
+                    Future.delayed(const Duration(milliseconds: 300), () async {
+                      await controller.animateCamera(
+                        CameraUpdate.newLatLngBounds(bounds!, 50),
+                      );
+
+                    });
+                  },
+
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+
                 ),
               ),
             ),
@@ -371,6 +399,10 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                       final path = '/storage/emulated/0/Download/GPX/tracks/${widget.trackFile.uri.pathSegments.last}';
                       final file = File(path);
                       if (await file.exists()) await file.delete();
+
+                      // 🔁 REINICIA el estado
+                      ref.read(locationProvider.notifier).resetState();
+                      
                       if (context.mounted) Navigator.pop(context);
                     }
                   },
@@ -408,6 +440,10 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                           
 
                           if (response != null && context.mounted) {
+
+                            // 🔁 Reinicia el estado de ubicación
+                            ref.read(locationProvider.notifier).resetState();
+
                             await showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
