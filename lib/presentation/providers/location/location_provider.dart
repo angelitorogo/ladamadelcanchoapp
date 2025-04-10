@@ -13,15 +13,29 @@ import 'dart:math';
 
 class LocationState {
   final bool isTracking;
+  final bool isPaused;
   final double distance;
   final double elevationGain;
   final List<LocationPoint> points;
 
-  LocationState({this.distance = 0, this.elevationGain = 0, this.isTracking = false, this.points = const []});
+  LocationState({
+    this.distance = 0, 
+    this.elevationGain = 0, 
+    this.isTracking = false,
+    this.isPaused = false,
+    this.points = const []
+  });
 
-  LocationState copyWith({bool? isTracking, double? distance, double? elevationGain, List<LocationPoint>? points}) {
+  LocationState copyWith({
+    bool? isTracking,
+    bool? isPaused,
+    double? distance, 
+    double? elevationGain, 
+    List<LocationPoint>? points
+  }) {
     return LocationState(
       isTracking: isTracking ?? this.isTracking,
+      isPaused: isPaused ?? this.isPaused,
       distance: distance ?? this.distance,
       elevationGain: elevationGain ?? this.elevationGain,
       points: points ?? this.points,
@@ -44,7 +58,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
   
   
   void startTracking() async {
-     // ✅ Cast seguro para acceder al objeto `Location`
     final location = (locationRepository.datasource as LocationDatasourceImpl).location;
 
     // ✅ CONFIGURA LA NOTIFICACIÓN PERSISTENTE
@@ -53,18 +66,58 @@ class LocationNotifier extends StateNotifier<LocationState> {
       subtitle: 'La Dama del Cancho está registrando tu recorrido.',
       description: 'Tu posición se guarda en segundo plano.',
       onTapBringToFront: true,
-      iconName: 'ic_flutter', // <<<<<<<<<<<<<<
+      iconName: 'ic_flutter',
     );
 
     // ✅ ACTIVAR MODO BACKGROUND
     await location.enableBackgroundMode(enable: true);
 
+    // 🔁 Inicializamos estado limpio
+    state = state.copyWith(
+      isTracking: true,
+      isPaused: false,
+      points: [],
+      distance: 0,
+      elevationGain: 0,
+    );
 
-    state = state.copyWith(isTracking: true, points: []);
-    _locationSubscription =
-        locationRepository.getLocationStream().listen((point) {
-      state = state.copyWith(points: [...state.points, point]);
+    _locationSubscription = locationRepository.getLocationStream().listen((point) {
+      if (state.isPaused) return;
+
+      final updatedPoints = [...state.points, point];
+
+      double addedDistance = 0;
+      double addedElevation = 0;
+
+      if (state.points.isNotEmpty) {
+        final last = state.points.last;
+
+        // Distancia entre el último punto y el nuevo
+        addedDistance = _calculateDistanceMeters(
+          last.latitude, last.longitude,
+          point.latitude, point.longitude,
+        );
+
+        // Desnivel positivo (solo si sube)
+        final elevationDiff = point.elevation - last.elevation;
+        if (elevationDiff > 0) addedElevation = elevationDiff;
+      }
+
+      state = state.copyWith(
+        points: updatedPoints,
+        distance: state.distance + addedDistance,
+        elevationGain: state.elevationGain + addedElevation,
+      );
     });
+  }
+
+
+  void pauseTracking() {
+    state = state.copyWith(isPaused: true);
+  }
+
+  void resumeTracking() {
+    state = state.copyWith(isPaused: false);
   }
 
   double _calculateDistanceMeters(

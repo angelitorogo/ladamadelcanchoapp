@@ -148,7 +148,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
               SizedBox(
                 height: 400,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                  padding: const EdgeInsets.all(20),
                   child: GoogleMap(
                     mapType: currentMapType,
                     initialCameraPosition: CameraPosition(
@@ -169,10 +169,39 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                 ),
               ),
 
+              // 📊 Estadísticas en tiempo real
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        const Text('Distancia', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${(locationState.distance / 1000).toStringAsFixed(2)} km'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('Desnivel +', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${locationState.elevationGain.toStringAsFixed(0)} m'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('Velocidad', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${_calculateSpeed(locationState).toStringAsFixed(1)} km/h'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+
               // 📍 Lista de puntos
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Builder(
                     builder: (context) {
                       final reversedPoints = locationState.points.reversed.toList();
@@ -234,8 +263,28 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
             onPressed: toggleMapType,
             child: const Icon(Icons.layers),
           ),
+
           const SizedBox(height: 12),
           // Dentro del botón flotante trackingButton
+
+          if (locationState.isTracking)
+            FloatingActionButton(
+              heroTag: 'pauseResumeButton',
+              backgroundColor: locationState.isPaused ? Colors.orange : Colors.blue,
+              onPressed: () {
+                if (locationState.isPaused) {
+                  locationNotifier.resumeTracking();
+                } else {
+                  locationNotifier.pauseTracking();
+                }
+              },
+              child: Icon(locationState.isPaused ? Icons.play_arrow : Icons.pause),
+            ),
+
+
+          const SizedBox(height: 12),
+          // Dentro del botón flotante trackingButton
+
           FloatingActionButton(
             heroTag: 'trackingButton',
             backgroundColor: !locationState.isTracking
@@ -287,6 +336,21 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
   }
 
   double _degToRad(double deg) => deg * pi / 180;
+
+  double _calculateSpeed(LocationState state) {
+    if (state.points.length < 2) return 0;
+
+    final start = state.points.first.timestamp;
+    final end = state.points.last.timestamp;
+    final seconds = end.difference(start).inSeconds;
+
+    if (seconds == 0) return 0;
+
+    final hours = seconds / 3600;
+    final distanceKm = state.distance / 1000;
+
+    return distanceKm / hours;
+  }
 
 
 }

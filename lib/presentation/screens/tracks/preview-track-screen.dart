@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -443,6 +444,9 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                             // 🔁 Reinicia el estado de ubicación
                             ref.read(locationProvider.notifier).resetState();
+
+                            // 🔁 Recarga el listado de tracks
+                            ref.read(trackListProvider.notifier).loadTracks();
 
                             await showDialog(
                               context: context,
