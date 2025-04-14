@@ -8,12 +8,13 @@ import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.da
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/wellcome/wellcome_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/views/config/config_view.dart';
 import 'package:ladamadelcanchoapp/presentation/views/home/home_view.dart';
 import 'package:ladamadelcanchoapp/presentation/views/map/map_view.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/', 
+  initialLocation: '/wellcome', 
   routes: [
     // State-Preserving
     StatefulShellRoute.indexedStack(
@@ -50,6 +51,12 @@ final appRouter = GoRouter(
             )
         ]),
       ]),
+      
+      GoRoute(
+        path: '/wellcome',
+        name: WellcomeScreen.name,
+        builder: (context, state) => const WellcomeScreen(),
+      ),
 
       GoRoute(
         path: '/login',

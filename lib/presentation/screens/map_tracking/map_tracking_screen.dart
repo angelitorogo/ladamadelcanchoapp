@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/infraestructure/datasources/elevation_datasource_impl.dart';
+import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
+import 'package:ladamadelcanchoapp/infraestructure/repositories/elevation_repository_impl.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -21,25 +25,30 @@ class MapTrackingScreen extends ConsumerStatefulWidget {
 
 class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
   GoogleMapController? mapController;
-  LatLng? initialPosition;
+  LocationPoint? initialPosition;
   StreamSubscription<LocationData>? locationSubscription;
   MapType currentMapType = MapType.satellite;
   bool hasCenteredInitially = false;
+  bool followUser = false;
+  LocationData? _lastPosition;
+  TrackingMode selectedMode = TrackingMode.walking; // 🚶 Modo por defecto
+  
 
   @override
   void initState() {
     super.initState();
+
+    if( !ref.read(authProvider).isAuthenticated) {
+      return;
+    }
+
     getInitialLocation();
   }
 
   Future<void> getInitialLocation() async {
     final location = Location();
 
-    final permissionGranted = await Permission.location.request();
-    if (!permissionGranted.isGranted) {
-      return;
-    }
-
+    
     final locationGranted = await checkLocationPermission();
     if (!locationGranted) {
       if (mounted) {
@@ -67,11 +76,35 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     }
 
     final currentLocation = await location.getLocation();
-    if(mounted) {
+
+    if(currentLocation.isMock!) {
+      print("⚠️ Ubicación simulada detectada");
+    }
+
+     // 🟡 Corregimos la altitud ANTES de usar el punto
+    final elevationRepository = ElevationRepositoryImpl(ElevationDatasourceImpl());
+    final  LocationPoint pointToCorrect = LocationPoint(latitude: currentLocation.latitude!, longitude: currentLocation.longitude!, elevation: currentLocation.altitude!, timestamp: DateTime(currentLocation.time!.toInt()));
+    final response = await elevationRepository.getElevationForPoint(pointToCorrect);
+
+
+
+
+    if(mounted && !response.corrected) {
       setState(() {
-        initialPosition = LatLng(
-          currentLocation.latitude!,
-          currentLocation.longitude!,
+        initialPosition = LocationPoint(
+          latitude: currentLocation.latitude!,
+          longitude: currentLocation.longitude!,
+          elevation: currentLocation.altitude!,
+          timestamp: DateTime(currentLocation.time!.toInt()
+        ));
+      });
+    } else {
+      setState(() {
+        initialPosition = LocationPoint(
+          latitude: response.point.latitude,
+          longitude: response.point.longitude,
+          elevation: response.point.elevation,
+          timestamp: response.point.timestamp
         );
       });
     }
@@ -80,26 +113,30 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     locationSubscription = location.onLocationChanged.listen((newLocation) {
       if (!mounted || mapController == null) return;
 
-      // 🔁 Solo centrar una vez al principio
-      if (!hasCenteredInitially) {
-        final newLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
+      final currentLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
+
+      if (followUser) {
+        final previousLatLng = _lastPosition != null
+            ? LatLng(_lastPosition!.latitude!, _lastPosition!.longitude!)
+            : currentLatLng;
+
+        final bearing = _calculateBearing(previousLatLng, currentLatLng);
+
         mapController!.animateCamera(
           CameraUpdate.newCameraPosition(
-            CameraPosition(target: newLatLng, zoom: 16),
+            CameraPosition(
+              target: currentLatLng,
+              zoom: 16,
+              bearing: bearing,
+            ),
           ),
         );
-        hasCenteredInitially = true; // ✅ Ya centrado
       }
+
+      _lastPosition = newLocation;
     });
 
-  }
 
-  void toggleMapType() {
-    setState(() {
-      currentMapType = currentMapType == MapType.satellite
-          ? MapType.normal
-          : MapType.satellite;
-    });
   }
 
   Future<bool> checkLocationPermission() async {
@@ -118,6 +155,39 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     return backgroundStatus.isGranted;
   }
 
+  
+
+
+
+  void toggleMapType() {
+    setState(() {
+      currentMapType = currentMapType == MapType.satellite
+          ? MapType.normal
+          : MapType.satellite;
+    });
+  }
+
+  void toggleTrackingMode() {
+    setState(() {
+      switch (selectedMode) {
+        case TrackingMode.walking:
+          selectedMode = TrackingMode.cycling; // 🚴
+          break;
+        case TrackingMode.cycling:
+          selectedMode = TrackingMode.driving; // 🚗
+          break;
+        case TrackingMode.driving:
+          selectedMode = TrackingMode.walking; // 🔁
+          break;
+      }
+
+      ref.read(locationProvider.notifier).setTrackingMode(selectedMode);
+    });
+
+  }
+
+  
+
 
   @override
   void dispose() {
@@ -130,8 +200,15 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     final locationState = ref.watch(locationProvider);
     final locationNotifier = ref.read(locationProvider.notifier);
 
+    final String typeMode = switch (selectedMode) {
+    TrackingMode.walking => 'Senderismo',
+    TrackingMode.cycling => 'Ciclismo',
+    TrackingMode.driving => 'Conduciendo',
+
+  };
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Grabación Track')),
+      appBar: AppBar(title: Text(typeMode)),
       body: initialPosition == null
           ? const Center(
               child: Column(
@@ -152,7 +229,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                   child: GoogleMap(
                     mapType: currentMapType,
                     initialCameraPosition: CameraPosition(
-                      target: initialPosition!,
+                      target: LatLng(initialPosition!.latitude, initialPosition!.longitude),
                       zoom: 16,
                     ),
                     myLocationEnabled: true,
@@ -170,32 +247,53 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
               ),
 
               // 📊 Estadísticas en tiempo real
+              // 📊 Estadísticas en tiempo real
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Column(
-                      children: [
-                        const Text('Distancia', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('${(locationState.distance / 1000).toStringAsFixed(2)} km'),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Puntos', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('${locationState.points.length}'),
+                        ],
+                      ),
                     ),
-                    Column(
-                      children: [
-                        const Text('Desnivel +', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('${locationState.elevationGain.toStringAsFixed(0)} m'),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Distancia', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('${(locationState.distance / 1000).toStringAsFixed(2)} km'),
+                        ],
+                      ),
                     ),
-                    Column(
-                      children: [
-                        const Text('Velocidad', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('${_calculateSpeed(locationState).toStringAsFixed(1)} km/h'),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Desnivel +', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('${locationState.elevationGain.toStringAsFixed(0)} m'),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Altitud', style: TextStyle(fontWeight: FontWeight.bold)),
+                          locationState.points.isNotEmpty 
+                          ? Text('${locationState.points.last.elevation.toStringAsFixed(0)} m')
+                          : Text('${initialPosition!.elevation} m')
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
+
 
 
               // 📍 Lista de puntos
@@ -204,28 +302,28 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Builder(
                     builder: (context) {
-                      final reversedPoints = locationState.points.reversed.toList();
+                      final discardedPoints = locationState.points.reversed.toList();
 
                       return ListView.builder(
 
-                        itemCount: reversedPoints.length,
+                        itemCount: discardedPoints.length,
                         itemBuilder: (context, index) {
-                          final point = reversedPoints[index];
+                          final point = discardedPoints[index];
 
                           double distance = 0;
                           double elevationDiff = 0;
 
-                          if (index < reversedPoints.length - 1) {
-                            final prev = reversedPoints[index + 1];
+                          if (index < discardedPoints.length - 1) {
+                            final prev = discardedPoints[index + 1];
                             distance = _calculateDistance(point, prev);
                             elevationDiff = point.elevation - prev.elevation;
                           }
 
                           Color? textColor;
-                          if (elevationDiff.abs() > 15) {
-                            textColor = Colors.red;
-                          } else if (distance > 25) {
+                          if (elevationDiff.abs() >= 15 && elevationDiff.abs() < 30  && distance >= 15 && distance < 30) {
                             textColor = Colors.orange;
+                          } else if (elevationDiff.abs() >= 30  && distance >= 30) {
+                            textColor = Colors.red;
                           }
 
                           return Padding(
@@ -254,70 +352,107 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
             ],
           ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: 'mapTypeButton',
-            backgroundColor: Colors.grey[800],
-            onPressed: toggleMapType,
-            child: const Icon(Icons.layers),
-          ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.fromLTRB(32, 0, 0, 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
 
-          const SizedBox(height: 12),
-          // Dentro del botón flotante trackingButton
+            /// 🔹 Zona izquierda: tipo de mapa + seguir orientación
+            Row(
+              children: [
+                FloatingActionButton(
+                  heroTag: 'mapTypeButton',
+                  backgroundColor: Colors.grey[800],
+                  onPressed: toggleMapType,
+                  child: const Icon(Icons.layers),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton(
+                  heroTag: 'followButton',
+                  backgroundColor: followUser ? Colors.blueAccent : Colors.grey,
+                  onPressed: () {
+                    setState(() {
+                      followUser = !followUser;
+                    });
+                  },
+                  tooltip: followUser
+                      ? 'Orientado al movimiento (pulsar para liberar mapa)'
+                      : 'Modo libre (pulsar para seguir orientación)',
+                  child: Icon(
+                    followUser ? Icons.navigation : Icons.explore_off, // 👈 icono más claro
+                  ),
+                ),
 
-          if (locationState.isTracking)
-            FloatingActionButton(
-              heroTag: 'pauseResumeButton',
-              backgroundColor: locationState.isPaused ? Colors.orange : Colors.blue,
-              onPressed: () {
-                if (locationState.isPaused) {
-                  locationNotifier.resumeTracking();
-                } else {
-                  locationNotifier.pauseTracking();
-                }
-              },
-              child: Icon(locationState.isPaused ? Icons.play_arrow : Icons.pause),
+                const SizedBox(width: 12),
+
+                if (!locationState.isTracking)
+                  FloatingActionButton(
+                    heroTag: 'modeToggleButton',
+                    backgroundColor: Colors.deepPurple,
+                    onPressed: toggleTrackingMode,
+                    tooltip: 'Cambiar modo: ${selectedMode.name.toUpperCase()}',
+                    child: Icon(
+                      selectedMode == TrackingMode.walking
+                          ? Icons.directions_walk
+                          : selectedMode == TrackingMode.cycling
+                              ? Icons.directions_bike
+                              : Icons.directions_car,
+                    ),
+                  ),
+                const SizedBox(width: 12),
+
+              ],
             ),
 
-
-          const SizedBox(height: 12),
-          // Dentro del botón flotante trackingButton
-
-          FloatingActionButton(
-            heroTag: 'trackingButton',
-            backgroundColor: !locationState.isTracking
-                ? (initialPosition == null ? Colors.grey : Colors.green)
-                : Colors.red,
-            onPressed: initialPosition == null
-                ? null // ⛔ deshabilitado si no hay posición inicial
-                : () async {
-                    if (!locationState.isTracking) {
-                      
-                      locationNotifier.startTracking();
-
-
-                    } else {
-                      final file = await locationNotifier.stopTrackingAndSaveGpx();
-
-                      if (context.mounted) {
-                        context.pushNamed(
-                          TrackPreviewScreen.name,
-                          extra: {
-                            'trackFile': file,
-                            'points': locationState.points,
-                          },
-                        );
+            /// 🔹 Zona derecha: pausar / parar / grabar
+            Row(
+              children: [
+                if (locationState.isTracking)
+                  FloatingActionButton(
+                    heroTag: 'pauseResumeButton',
+                    backgroundColor: locationState.isPaused ? Colors.orange : Colors.blue,
+                    onPressed: () {
+                      if (locationState.isPaused) {
+                        locationNotifier.resumeTracking();
+                      } else {
+                        locationNotifier.pauseTracking();
                       }
-
-                    }
-                  },
-            child: Icon(locationState.isTracking ? Icons.stop : Icons.play_arrow),
-          )
-
-        ],
+                    },
+                    child: Icon(locationState.isPaused ? Icons.play_arrow : Icons.pause),
+                  ),
+                const SizedBox(width: 12),
+                FloatingActionButton(
+                  heroTag: 'trackingButton',
+                  backgroundColor: !locationState.isTracking
+                      ? (initialPosition == null ? Colors.grey : Colors.green)
+                      : Colors.red,
+                  onPressed: initialPosition == null
+                      ? null
+                      : () async {
+                          if (!locationState.isTracking) {
+                            locationNotifier.startTracking(mode: selectedMode); // ✅ PASAMOS MODO SELECCIONADO
+                          } else {
+                            final result = await locationNotifier.stopTrackingAndSaveGpx();
+                            if (context.mounted) {
+                              context.pushNamed(
+                                TrackPreviewScreen.name,
+                                extra: {
+                                  'trackFile': result.gpxFile,
+                                  'points': result.correctedPoints,
+                                },
+                              );
+                            }
+                          }
+                        },
+                  child: Icon(locationState.isTracking ? Icons.stop : Icons.play_arrow),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+
     );
   }
 
@@ -335,22 +470,38 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     return R * c;
   }
 
-  double _degToRad(double deg) => deg * pi / 180;
+  double _calculateBearing(LatLng start, LatLng end) {
+    final startLat = _degToRad(start.latitude);
+    final startLng = _degToRad(start.longitude);
+    final endLat = _degToRad(end.latitude);
+    final endLng = _degToRad(end.longitude);
 
-  double _calculateSpeed(LocationState state) {
+    final dLng = endLng - startLng;
+    final y = sin(dLng) * cos(endLat);
+    final x = cos(startLat) * sin(endLat) - sin(startLat) * cos(endLat) * cos(dLng);
+    final bearing = atan2(y, x);
+    return (_radToDeg(bearing) + 360) % 360;
+  }
+
+  double _calculateCurrentSpeed(LocationState state) {
     if (state.points.length < 2) return 0;
 
-    final start = state.points.first.timestamp;
-    final end = state.points.last.timestamp;
-    final seconds = end.difference(start).inSeconds;
+    final last = state.points.last;
+    final previous = state.points[state.points.length - 2];
 
+    final seconds = last.timestamp.difference(previous.timestamp).inSeconds;
     if (seconds == 0) return 0;
 
-    final hours = seconds / 3600;
-    final distanceKm = state.distance / 1000;
+    final distanceMeters = _calculateDistance(last, previous);
+    final speedMs = distanceMeters / seconds;
 
-    return distanceKm / hours;
+    final speedKmh = speedMs * 3.6; // m/s → km/h
+    return speedKmh;
   }
+
+
+  double _degToRad(double deg) => deg * pi / 180;
+  double _radToDeg(double rad) => rad * 180 / pi;
 
 
 }

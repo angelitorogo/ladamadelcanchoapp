@@ -19,10 +19,9 @@ class HomeView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
+
     final auth = ref.watch(authProvider);
     final imageUrl = "${Environment.apiUrl}/files/${auth.user?.image}";
-
-    
 
     final trackState = ref.watch(trackListProvider);
     final trackNotifier = ref.read(trackListProvider.notifier);
@@ -147,15 +146,19 @@ class HomeView extends ConsumerWidget {
             
             return RefreshIndicator(
               onRefresh: () async {
-                await ref.read(trackListProvider.notifier).loadTracks(userId: auth.user?.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Rutas actualizadas'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
+                
+                  await ref.read(trackListProvider.notifier).loadTracks(userId: auth.user?.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Rutas actualizadas'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                
+
+
               },
               child: ListView.builder(
                 itemCount: trackState.tracks.length,
@@ -196,6 +199,12 @@ class TrackCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
+    final icon = switch (track.type) {
+      'Senderismo' => Icons.directions_walk,
+      'Ciclismo' => Icons.directions_bike,
+      'Conduciendo' => Icons.directions_car,
+      _ => Icons.help_outline, // por si acaso
+    };
 
     //const imageTrackUrl = 'https://upload.wikimedia.org/wikipedia/en/6/60/No_Picture.jpg';
     //final imageTrackUrl = "${Environment.apiUrl}/files/${track.images.first}";
@@ -256,7 +265,7 @@ class TrackCard extends StatelessWidget {
                       // 🏷 Nombre
                       Row(
                         children: [
-                          const Icon(Icons.route, size: 18, color: Colors.grey),
+                          const Icon(Icons.route, size: 16, color: Colors.grey),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -271,7 +280,7 @@ class TrackCard extends StatelessWidget {
                       // ⏱ Time ago
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 18, color: Colors.grey),
+                          const Icon(Icons.access_time, size: 16, color: Colors.grey),
                           const SizedBox(width: 6),
                           Text(timeago.format(track.createdAt, locale: 'es')),
                         ],
@@ -280,13 +289,15 @@ class TrackCard extends StatelessWidget {
                       // 📏 Distancia (de momento vacío)
                       Row(
                         children: [
-                          const Icon(Icons.straighten, size: 18, color: Colors.grey),
+                          const Icon(Icons.straighten, size: 16, color: Colors.grey),
                           const SizedBox(width: 6),
                           Text('${((double.tryParse(track.distance) ?? 0.0) / 1000).toStringAsFixed(2)} km'),
                           const SizedBox(width: 15,),
-                          const Icon(Icons.terrain, size: 18, color: Colors.grey),
+                          const Icon(Icons.terrain, size: 16, color: Colors.grey),
                           const SizedBox(width: 6),
                           Text('${((double.tryParse(track.elevationGain) ?? 0.0)).toStringAsFixed(0)} m'),
+                          const SizedBox(width: 15,),
+                          Icon(icon, size: 16, color: Colors.grey),
                         ],
                       ),
                     ],

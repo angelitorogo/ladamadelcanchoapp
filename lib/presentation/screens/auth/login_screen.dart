@@ -129,13 +129,15 @@ class _LoginForm extends ConsumerWidget {
 
               //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
               onPressed: () async {
-                      await authNotifier.login(
-                        context,
-                        loginState.email.value,
-                        loginState.password.value,
-                        ref
-                      );
-                    },
+
+                await authNotifier.login(
+                  context,
+                  loginState.email.value,
+                  loginState.password.value,
+                  ref
+                );
+              
+              },
 
               /*
               onPressed: authState.isLoading ||

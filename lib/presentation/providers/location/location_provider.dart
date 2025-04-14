@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gpx/gpx.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/infraestructure/datasources/elevation_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
+import 'package:ladamadelcanchoapp/infraestructure/models/gpx_result.dart';
+import 'package:ladamadelcanchoapp/infraestructure/repositories/elevation_repository_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/location_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,27 +13,35 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'location_repository_provider.dart';
 import 'dart:math';
 
+
+
 class LocationState {
   final bool isTracking;
   final bool isPaused;
   final double distance;
   final double elevationGain;
   final List<LocationPoint> points;
+  final List<LocationPoint> discardedPoints;
+  final TrackingMode mode; // 🆕 Estado actual del modo
 
   LocationState({
-    this.distance = 0, 
-    this.elevationGain = 0, 
+    this.distance = 0,
+    this.elevationGain = 0,
     this.isTracking = false,
     this.isPaused = false,
-    this.points = const []
+    this.points = const [],
+    this.discardedPoints = const [],
+    this.mode = TrackingMode.walking, // 🆕 Modo por defecto
   });
 
   LocationState copyWith({
     bool? isTracking,
     bool? isPaused,
-    double? distance, 
-    double? elevationGain, 
-    List<LocationPoint>? points
+    double? distance,
+    double? elevationGain,
+    List<LocationPoint>? points,
+    List<LocationPoint>? discardedPoints,
+    TrackingMode? mode, // 🆕 Añadido
   }) {
     return LocationState(
       isTracking: isTracking ?? this.isTracking,
@@ -39,9 +49,12 @@ class LocationState {
       distance: distance ?? this.distance,
       elevationGain: elevationGain ?? this.elevationGain,
       points: points ?? this.points,
+      discardedPoints: discardedPoints ?? this.discardedPoints,
+      mode: mode ?? this.mode, // 🆕
     );
   }
 }
+
 
 class LocationNotifier extends StateNotifier<LocationState> {
   final LocationRepositoryImpl locationRepository;
@@ -55,61 +68,100 @@ class LocationNotifier extends StateNotifier<LocationState> {
   List<LatLng> get polylinePoints =>
       state.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
 
-  
-  
-  void startTracking() async {
-    final location = (locationRepository.datasource as LocationDatasourceImpl).location;
+  void setTrackingMode(TrackingMode newMode) {
+    state = state.copyWith(mode: newMode);
+    final datasource = locationRepository.datasource;
 
-    // ✅ CONFIGURA LA NOTIFICACIÓN PERSISTENTE
-    await location.changeNotificationOptions(
-      title: 'Grabando ruta...',
-      subtitle: 'La Dama del Cancho está registrando tu recorrido.',
-      description: 'Tu posición se guarda en segundo plano.',
-      onTapBringToFront: true,
-      iconName: 'ic_flutter',
-    );
 
-    // ✅ ACTIVAR MODO BACKGROUND
-    await location.enableBackgroundMode(enable: true);
 
-    // 🔁 Inicializamos estado limpio
-    state = state.copyWith(
-      isTracking: true,
-      isPaused: false,
-      points: [],
-      distance: 0,
-      elevationGain: 0,
-    );
-
-    _locationSubscription = locationRepository.getLocationStream().listen((point) {
-      if (state.isPaused) return;
-
-      final updatedPoints = [...state.points, point];
-
-      double addedDistance = 0;
-      double addedElevation = 0;
-
-      if (state.points.isNotEmpty) {
-        final last = state.points.last;
-
-        // Distancia entre el último punto y el nuevo
-        addedDistance = _calculateDistanceMeters(
-          last.latitude, last.longitude,
-          point.latitude, point.longitude,
-        );
-
-        // Desnivel positivo (solo si sube)
-        final elevationDiff = point.elevation - last.elevation;
-        if (elevationDiff > 0) addedElevation = elevationDiff;
-      }
-
-      state = state.copyWith(
-        points: updatedPoints,
-        distance: state.distance + addedDistance,
-        elevationGain: state.elevationGain + addedElevation,
-      );
-    });
+    if (datasource is LocationDatasourceImpl) {
+      datasource.setTrackingMode(newMode); // 🆕 Informa al datasource
+    }
   }
+  
+  void startTracking({required TrackingMode mode}) async {
+  final datasource = locationRepository.datasource as LocationDatasourceImpl;
+  final location = datasource.location;
+  LocationPoint? lastCorrectedPoint;
+
+   // 🆕 Establecer el modo activo antes de iniciar
+  datasource.setTrackingMode(state.mode);
+
+
+  await location.changeNotificationOptions(
+    title: 'Grabando ruta...',
+    subtitle: 'La Dama del Cancho está registrando tu recorrido.',
+    description: 'Tu posición se guarda en segundo plano.',
+    onTapBringToFront: true,
+    iconName: 'ic_flutter',
+  );
+
+  await location.enableBackgroundMode(enable: true);
+
+  state = state.copyWith(
+    isTracking: true,
+    isPaused: false,
+    points: [],
+    distance: 0,
+    elevationGain: 0,
+    discardedPoints: [],
+  );
+
+  _locationSubscription = locationRepository.getLocationStream().listen((point) async {
+    if (state.isPaused) return;
+
+    // 🟡 Corregimos la altitud ANTES de usar el punto
+    final elevationRepository = ElevationRepositoryImpl(ElevationDatasourceImpl());
+    final response = await elevationRepository.getElevationForPoint(point);
+
+    if (!response.corrected) {
+      if (lastCorrectedPoint != null) {
+        // Copiamos la altitud del último punto corregido
+        point = LocationPoint(
+          latitude: point.latitude,
+          longitude: point.longitude,
+          elevation: lastCorrectedPoint!.elevation,
+          timestamp: point.timestamp,
+        );
+      } else {
+        // Si aún no tenemos uno corregido, descartamos el punto
+        return;
+      }
+    } else {
+      lastCorrectedPoint = response.point;
+      point = response.point;
+    }
+    
+    // quitar este bloque para que no corrija punto a punto
+
+    final updatedPoints = [...state.points, point];
+    double addedDistance = 0;
+    double addedElevation = 0;
+
+    if (state.points.isNotEmpty) {
+      final last = state.points.last;
+      addedDistance = _calculateDistanceMeters(
+        last.latitude, last.longitude,
+        point.latitude, point.longitude,
+      );
+      final elevationDiff = point.elevation - last.elevation;
+      if (elevationDiff > 0) addedElevation = elevationDiff;
+    }
+
+    state = state.copyWith(
+      points: updatedPoints,
+      distance: state.distance + addedDistance,
+      elevationGain: state.elevationGain + addedElevation,
+    );
+  });
+
+  // 👇 Suscripción a puntos descartados
+  datasource.discardedPointsStream.listen((discardedPoint) {
+    state = state.copyWith(
+      discardedPoints: [...state.discardedPoints, discardedPoint],
+    );
+  });
+}
 
 
   void pauseTracking() {
@@ -139,61 +191,59 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   double _degToRad(double deg) => deg * (pi / 180);
 
-  Future<File> stopTrackingAndSaveGpx({String? overrideName}) async {
+  Future<GpxResult> stopTrackingAndSaveGpx({String? overrideName, String? overrideDescription}) async {
     await _locationSubscription?.cancel();
+    await (locationRepository.datasource as LocationDatasourceImpl)
+        .location.enableBackgroundMode(enable: false);
 
-    await (locationRepository.datasource as LocationDatasourceImpl).location.enableBackgroundMode(enable: false);
-
+    // ✅ Calculamos distancia y desnivel originales
     double totalDistanceMeters = 0;
     double totalElevationGain = 0;
 
     for (int i = 1; i < state.points.length; i++) {
       final prev = state.points[i - 1];
       final curr = state.points[i];
-
-      // Distancia entre puntos (usa fórmula de Haversine)
       final distance = _calculateDistanceMeters(
-        prev.latitude,
-        prev.longitude,
-        curr.latitude,
-        curr.longitude,
+        prev.latitude, prev.longitude,
+        curr.latitude, curr.longitude,
       );
       totalDistanceMeters += distance;
-
-      // Desnivel positivo (solo si se gana altitud)
       final elevationDiff = curr.elevation - prev.elevation;
-      if (elevationDiff > 0) {
-        totalElevationGain += elevationDiff;
-      }
+      if (elevationDiff > 0) totalElevationGain += elevationDiff;
     }
 
-
+    // ✅ Guardamos el estado original antes de corrección
     state = state.copyWith(distance: totalDistanceMeters, elevationGain: totalElevationGain);
 
-    final gpx = Gpx();
-    gpx.creator = "La Dama del Cancho App";
-    final track = Trk(name: "Track grabado");
-    track.trksegs.add(
-      Trkseg(
-        trkpts: state.points.map((p) {
-          final wpt = Wpt(lat: p.latitude, lon: p.longitude);
-          wpt.ele = p.elevation;
-          wpt.time = p.timestamp;
-          return wpt;
-        }).toList(),
-      ),
-    );
+    // ✅ Corregimos elevaciones usando Open-Elevation
+    final elevationRepository = ElevationRepositoryImpl(ElevationDatasourceImpl());
+    List<LocationPoint> correctedPoints;
 
-    gpx.trks.add(track);
-    //final gpxString = GpxWriter().asString(gpx, pretty: true);
-
-    final name = overrideName ?? 'track_${DateTime.now().millisecondsSinceEpoch}'; // ✅ usa nombre si se proporciona
-    String author = authState.user!.fullname;
-    var firstPointTime = '';
-    if(state.points.isNotEmpty) {
-      firstPointTime = state.points.first.timestamp.toUtc().toIso8601String();
+    //Si queremos corregir al terminar
+    /*
+    try {
+      correctedPoints = await elevationRepository.getCorrectedElevations(state.points);
+    } catch (e) {
+      // 🚨 Si falla la corrección, usamos los puntos originales
+      correctedPoints = state.points;
     }
+    */
+    correctedPoints = state.points;
 
+    // ✅ Determinamos nombre y modo
+    final name = overrideName ?? 'track_${DateTime.now().millisecondsSinceEpoch}';
+    final mode = switch (state.mode) {
+      TrackingMode.walking => 'Senderismo',
+      TrackingMode.cycling => 'Ciclismo',
+      TrackingMode.driving => 'Conduciendo',
+    };
+    final description = overrideDescription ?? mode;
+    final author = authState.user!.fullname;
+    final firstPointTime = correctedPoints.isNotEmpty
+        ? correctedPoints.first.timestamp.toUtc().toIso8601String()
+        : '';
+
+    // ✅ Construimos GPX manualmente
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
     buffer.writeln('<gpx version="1.1" creator="La Dama del Cancho App" '
@@ -204,9 +254,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
     buffer.writeln('  <metadata>');
     buffer.writeln('    <name>$name</name>');
-    buffer.writeln('    <author>');
-    buffer.writeln('      <name>$author</name>');
-    buffer.writeln('    </author>');
+    buffer.writeln('    <author><name>$author</name></author>');
     buffer.writeln('    <link href="https://ladamadelcancho.argomez.com/">');
     buffer.writeln('      <text>La Dama del Cancho</text>');
     buffer.writeln('    </link>');
@@ -219,10 +267,11 @@ class LocationNotifier extends StateNotifier<LocationState> {
     buffer.writeln('  <trk>');
     buffer.writeln('    <name>$name</name>');
     buffer.writeln('    <cmt>$name</cmt>');
-    buffer.writeln('    <desc>$name</desc>');
+    buffer.writeln('    <desc>$description</desc>');
+    buffer.writeln('    <type>$mode</type>');
     buffer.writeln('    <trkseg>');
 
-    for (final p in state.points) {
+    for (final p in correctedPoints) {
       buffer.writeln('      <trkpt lat="${p.latitude}" lon="${p.longitude}">');
       buffer.writeln('        <ele>${p.elevation}</ele>');
       buffer.writeln('        <time>${p.timestamp.toUtc().toIso8601String()}</time>');
@@ -233,23 +282,22 @@ class LocationNotifier extends StateNotifier<LocationState> {
     buffer.writeln('  </trk>');
     buffer.writeln('</gpx>');
 
+    // ✅ Guardamos el archivo GPX
     final gpxString = buffer.toString();
-
-
     final directory = await getApplicationDocumentsDirectory();
     final fileName = "$name.gpx";
     final file = File("${directory.path}/$fileName");
     await file.writeAsString(gpxString);
 
-    // Guardamos archivo GPX
+    // ✅ Copia a carpeta pública también
     await saveGpxToPublicDocuments(file);
-    //await saveGpxToAppDirectory(file);
 
-    state = state.copyWith(isTracking: false/*, points: []*/);
+    state = state.copyWith(isTracking: false, points: correctedPoints);
 
-    return file;
+    return GpxResult(gpxFile: file, correctedPoints: correctedPoints);
   }
-  
+
+    
 
 
   Future<void> saveGpxToPublicDocuments(File file) async {
@@ -278,12 +326,22 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   void resetState() {
     _locationSubscription?.cancel(); // Por si acaso
+    // 🧼 Cerramos el controlador de descartados tambien por si acaso
+    final datasource = locationRepository.datasource;
+    if (datasource is LocationDatasourceImpl) {
+      datasource.dispose();
+    }
     state = LocationState(); // Estado por defecto
   }
 
   @override
   void dispose() {
     _locationSubscription?.cancel();
+    // 🧼 Cerramos el controlador de descartados
+    final datasource = locationRepository.datasource;
+    if (datasource is LocationDatasourceImpl) {
+      datasource.dispose();
+    }
     super.dispose();
   }
 }

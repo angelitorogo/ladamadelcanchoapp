@@ -50,6 +50,7 @@ class Track {
     final String distance;
     final String elevationGain;
     final String? description;
+    final String type;
     final List<String>? images;
     final DateTime createdAt;
     final DateTime updatedAt;
@@ -61,6 +62,7 @@ class Track {
         required this.distance,
         required this.elevationGain,
         this.description,
+        required this.type,
         this.images,
         required this.createdAt,
         required this.updatedAt,
@@ -73,6 +75,7 @@ class Track {
         distance: json["distance"],
         elevationGain: json["elevation_gain"],
         description: json["description"],
+        type: json['type'],
         images: json["images"] == null ? [] : List<String>.from(json["images"]!.map((x) => x)),
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: DateTime.parse(json["updated_at"]),
@@ -85,6 +88,7 @@ class Track {
         "distance": distance,
         "elevation_gain": elevationGain,
         "description": description,
+        "type": type,
         "images": images == null ? [] : List<dynamic>.from(images!.map((x) => x)),
         "created_at": createdAt.toIso8601String(),
         "updated_at": updatedAt.toIso8601String(),

@@ -7,6 +7,7 @@ import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart'
 
 class TrackDatasourceImpl implements TrackDatasource {
   
+  
   final Dio _dio = Dio(BaseOptions(
     baseUrl: 'https://cookies.argomez.com/api/tracks',
     followRedirects: false,
@@ -26,7 +27,10 @@ class TrackDatasourceImpl implements TrackDatasource {
 
   /// ✅ Obtener CSRF token (reutilizable)
   Future<void> _fetchCsrfToken() async {
+
+
     try {
+
       final authDio = Dio(BaseOptions(
         baseUrl: 'https://cookies.argomez.com/api/auth',
         validateStatus: (status) => status != null && status < 500,
@@ -54,7 +58,7 @@ class TrackDatasourceImpl implements TrackDatasource {
 
 
   @override
-  Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile, String description, String distance, String elevationGain, {List<File> images = const[]}) async {
+  Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile, String description, String type, String distance, String elevationGain, {List<File> images = const[]}) async {
     
     await _fetchCsrfToken(); // ✅ CSRF requerido
 
@@ -65,6 +69,7 @@ class TrackDatasourceImpl implements TrackDatasource {
       'distance': distance,
       'elevation_gain': elevationGain,
       'description': description,
+      'type': type,
       'gpx': await MultipartFile.fromFile(
         gpxFile.path,
         filename: gpxFile.uri.pathSegments.last,
