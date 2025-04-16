@@ -7,6 +7,7 @@ import 'package:ladamadelcanchoapp/presentation/screens/auth/login_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/pending_tracks/pending_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/wellcome/wellcome_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/views/config/config_view.dart';
@@ -80,35 +81,11 @@ final appRouter = GoRouter(
         },
       ),
 
-
-      /*
       GoRoute(
-        path: '/profile',
-        name: ProfileScreen.name,
-        redirect: (context, state) async {
-          final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-          final hasToken = cookies.any((c) => c.name == 'auth_token');
-
-          return hasToken ? null : '/login'; // 🔐 Si no hay token, redirige
-        },
-        builder: (context, state) => const ProfileScreen(),
+        path: '/pending-tracks',
+        name: PendingTracksScreen.name,
+        builder: (context, state) => const PendingTracksScreen(),
       ),
-      */
-
-      /*
-      GoRoute(
-        path: '/track-map',
-        name: MapTrackingScreen.name,
-        redirect: (context, state) async {
-          final cookies = await GlobalCookieJar.instance.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-          final hasToken = cookies.any((c) => c.name == 'auth_token');
-
-          return hasToken ? null : '/login'; // 🔐 Si no hay token, redirige
-        },
-        builder: (context, state) => const MapTrackingScreen(),
-      ),
-      */
-
       
       GoRoute(
         path: '/preview-track',

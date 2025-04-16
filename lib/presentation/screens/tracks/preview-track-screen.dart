@@ -253,7 +253,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                     target: polylinePoints.first,
                     zoom: 16,
                   ),
-                  myLocationEnabled: true,
+                  myLocationEnabled: false,  //no se muestra mi ubicacion actual en el preview
                   
 
                   
@@ -508,8 +508,8 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
 
                           
-
-                          response = await uploader.uploadTrack(name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, images: selectedImages);
+                          // ignore: use_build_context_synchronously
+                          response = await uploader.uploadTrack(context, name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, images: selectedImages);
                           
 
                           if (response != null && context.mounted) {

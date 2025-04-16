@@ -122,7 +122,18 @@ class TrackDatasourceImpl implements TrackDatasource {
         throw Exception('Error');
       }
     } catch (e) {
-      throw Exception('❌ Error: $e');
+      if( e is DioException) {
+        throw DioException.connectionError(
+          requestOptions: RequestOptions(
+            path: '/', // la ruta que falló
+            baseUrl: _dio.options.baseUrl, // opcional
+          ),
+          reason: e.toString(),
+        );
+      } else {
+        throw Exception('❌ Error: $e');
+      } 
+      
     }
 
     

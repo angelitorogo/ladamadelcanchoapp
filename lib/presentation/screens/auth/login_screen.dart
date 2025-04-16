@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/login_notifier.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/widgets.dart';
@@ -130,12 +131,20 @@ class _LoginForm extends ConsumerWidget {
               //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
               onPressed: () async {
 
-                await authNotifier.login(
-                  context,
-                  loginState.email.value,
-                  loginState.password.value,
-                  ref
-                );
+                final hasInternet = await checkAndWarnIfNoInternet(context);
+                if(hasInternet) {
+
+                  await authNotifier.login(
+                    // ignore: use_build_context_synchronously
+                    context,
+                    loginState.email.value,
+                    loginState.password.value,
+                    ref
+                  );
+
+                }
+
+                
               
               },
 

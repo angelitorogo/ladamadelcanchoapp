@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/menu/menu_items.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
 
@@ -45,8 +47,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       ),
 
       const MenuItem(
-        title: 'Subir Track',
-        link: '/upload-track',
+        title: 'Tracks Pendientes',
+        link: '/pending-tracks',
         icon: Icons.track_changes
       ),
 
@@ -78,8 +80,12 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       MenuItem(
         title: 'Salir',
         icon: Icons.logout,
-        onTap: (ref) { // ✅ Pasa `ref` correctamente
-          ref.read(authProvider.notifier).logout();
+        onTap: (ref) async { // ✅ Pasa `ref` correctamente
+          final hasInternet = await checkAndWarnIfNoInternet(context);
+          if(hasInternet) {
+            ref.read(authProvider.notifier).logout();
+          }
+          
         },
       ) :
 
@@ -137,16 +143,51 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           child: const Text('Tracks'),
         ),
 
-        ...appMenuItems
-        .sublist(3,5)
-          .map( (item) => NavigationDrawerDestination(
+        ...appMenuItems.sublist(3, 5).map((item) {
+          if (item.title == 'Tracks Pendientes') {
+            final pendingTracks = ref.watch(pendingTracksProvider);
+            final hasPendings = pendingTracks.isNotEmpty;
+
+            return NavigationDrawerDestination(
+              icon: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Icon(item.icon),
+              ),
+              label: Row(
+                children: [
+                  Text(item.title),
+                  const SizedBox(width: 6),
+                  if (hasPendings)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        pendingTracks.length.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }
+
+          // Otros ítems normales
+          return NavigationDrawerDestination(
             icon: Padding(
               padding: const EdgeInsets.only(left: 10),
               child: Icon(item.icon),
             ),
-            label: Text(item.title)
-          ),
-        ),
+            label: Text(item.title),
+          );
+        }),
+
+
 
         const Padding(
           padding: EdgeInsets.fromLTRB(28, 5, 28, 0),

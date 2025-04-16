@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/inputs/custom_text_form_filed.dart';
@@ -207,13 +208,19 @@ class ProfileScreen extends ConsumerWidget {
                                   await authNotifier.updateUser(profileState, ref);
                                 },
                                 */
-                                onPressed:  authState.isLoading ||
-                                    profileState.status != FormzSubmissionStatus.success
+                                onPressed: authState.isLoading ||
+                                  profileState.status != FormzSubmissionStatus.success
                                 ? null
                                 : () async {
-                                    await authNotifier.updateUser(
-                                      profileState, ref, context
-                                    );
+                                    final hasInternet = await checkAndWarnIfNoInternet(context);
+                                    if(hasInternet) {
+                                      await authNotifier.updateUser(
+                                        // ignore: use_build_context_synchronously
+                                        profileState, ref, context
+                                      );
+                                    }
+
+                                    
                                   },
                                 child: const Text('Actualizar'),
                               ),

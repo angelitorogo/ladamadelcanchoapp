@@ -70,3 +70,4 @@ class NetworkInfoNotifier extends StateNotifier<NetworkInfo> {
     super.dispose();
   }
 }
+

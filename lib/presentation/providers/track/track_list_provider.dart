@@ -1,4 +1,5 @@
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/track_repository_impl.dart';
@@ -47,6 +48,10 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
 
   TrackListNotifier(this.trackListRepository) : super(const TrackListState());
 
+  TrackListState reset() {
+    return const TrackListState(); // Estado inicial
+  }
+
   Future<void> loadTracks({int limit = 10, int page = 1, String? userId}) async {
     state = state.copyWith(status: TrackListStatus.loading);
 
@@ -72,16 +77,22 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
         totalPages: metadata['lastPage'],
       );
     } catch (e) {
-      state = state.copyWith(
+
+      if(e is DioException) {
+        state = state.copyWith(
         status: TrackListStatus.error,
-        errorMessage: e.toString(),
-      );
+        errorMessage: 'Error de conexión');
+      } else {
+        state = state.copyWith(
+          status: TrackListStatus.error,
+          errorMessage: e.toString(),
+        );
+      }
+
+      
     }
   }
 
-  void reset() {
-    state = const TrackListState();
-  }
 }
 
 

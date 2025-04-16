@@ -27,4 +27,15 @@ class LocationPoint {
       timestamp: timestamp ?? this.timestamp,
     );
   }
+
+  // ✅ Método para exportar a Map
+  Map<String, dynamic> toMap() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'elevation': elevation,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+  
 }

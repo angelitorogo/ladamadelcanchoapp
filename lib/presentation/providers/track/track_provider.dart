@@ -1,6 +1,7 @@
 
 
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/gpx_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_provider.dart';
@@ -39,7 +40,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   TrackUploadNotifier(this.repository, this.repository2) : super(const TrackUploadState());
 
-  Future<Map<String, dynamic>?> uploadTrack(String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<File> images = const [] } ) async {
+  Future<Map<String, dynamic>?> uploadTrack(BuildContext context, String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<File> images = const []} ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
     images.insert(0, captureMap);
@@ -53,8 +54,8 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       if(file.uri.pathSegments.last.replaceAll('.gpx', '') != name && description.isNotEmpty){
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(overrideName: name, overrideDescription: description);
-        uploadFile = result.gpxFile;
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, overrideDescription: description, cancel: false);
+        uploadFile = result.gpxFile!;
 
         final oldFilePath = originalFileName;
         final oldFile = File(oldFilePath);
@@ -69,8 +70,8 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       } else if(description.isNotEmpty) {
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(overrideDescription: description);
-        uploadFile = result.gpxFile;
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideDescription: description, cancel: false);
+        uploadFile = result.gpxFile!;
 
         final oldFilePath = originalFileName;
         final oldFile = File(oldFilePath);
@@ -85,8 +86,8 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       } else if (file.uri.pathSegments.last.replaceAll('.gpx', '') != name) {
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(overrideName: name);
-        uploadFile = result.gpxFile;
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, cancel: false);
+        uploadFile = result.gpxFile!;
 
         final oldFilePath = originalFileName;
         final oldFile = File(oldFilePath);

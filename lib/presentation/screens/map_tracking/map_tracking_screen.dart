@@ -10,6 +10,7 @@ import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasour
 import 'package:ladamadelcanchoapp/infraestructure/repositories/elevation_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:location/location.dart';
@@ -286,7 +287,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                           const Text('Altitud', style: TextStyle(fontWeight: FontWeight.bold)),
                           locationState.points.isNotEmpty 
                           ? Text('${locationState.points.last.elevation.toStringAsFixed(0)} m')
-                          : Text('${initialPosition!.elevation} m')
+                          : Text('${initialPosition!.elevation.toStringAsFixed(0)} m')
                         ],
                       ),
                     ),
@@ -414,7 +415,10 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                     backgroundColor: locationState.isPaused ? Colors.orange : Colors.blue,
                     onPressed: () {
                       if (locationState.isPaused) {
+                        
                         locationNotifier.resumeTracking();
+                      
+                        
                       } else {
                         locationNotifier.pauseTracking();
                       }
@@ -433,16 +437,98 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                           if (!locationState.isTracking) {
                             locationNotifier.startTracking(mode: selectedMode); // ✅ PASAMOS MODO SELECCIONADO
                           } else {
-                            final result = await locationNotifier.stopTrackingAndSaveGpx();
-                            if (context.mounted) {
-                              context.pushNamed(
-                                TrackPreviewScreen.name,
-                                extra: {
-                                  'trackFile': result.gpxFile,
-                                  'points': result.correctedPoints,
-                                },
-                              );
+                            if(locationState.points.isNotEmpty) {
+                              final result = await locationNotifier.stopTrackingAndSaveGpx(context: context, ref: ref, cancel: false);
+
+                              if (context.mounted && result.cancel!) {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                    title: const Row(
+                                      children: [
+                                        Icon(Icons.cloud_off, color: Colors.orange),
+                                        SizedBox(width: 10),
+                                        Text('Sin conexión'),
+                                      ],
+                                    ),
+                                    content: const Text(
+                                      '🔌 Track guardado offline (sin conexión).\nRevisa el menu lateral cuando tengas conexión.',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    actionsAlignment: MainAxisAlignment.center,
+                                    actions: [
+                                      SizedBox(
+                                        width: 160,
+                                        child: TextButton(
+                                          onPressed: () async {
+                                            await ref.read(pendingTracksProvider.notifier).loadTracks();
+                                            if(context.mounted) {
+                                              Navigator.of(context).pop();
+                                              GoRouter.of(context).go('/');
+                                            }
+                                          }, 
+                                          style: TextButton.styleFrom(
+                                            backgroundColor: Colors.green,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                          ),
+                                          child: const Text(
+                                            'Aceptar',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else if (context.mounted && !result.cancel!) {
+                                context.pushNamed(
+                                  TrackPreviewScreen.name,
+                                  extra: {
+                                    'trackFile': result.gpxFile,
+                                    'points': result.correctedPoints,
+                                  },
+                                );
+                              } 
+                            } else {
+                              if (context.mounted) {
+                                
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('¿Cancelar grabacion del track?'),
+                                    content: const Text('No se ha registrado ni un punto.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, false),
+                                        child: const Text('No'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          await locationNotifier.stopTrackingAndSaveGpx(context: context, ref: ref, cancel: true);
+                                          // ignore: use_build_context_synchronously
+                                          Navigator.pop(context, true);
+                                        } ,
+                                        child: const Text('Sí, cancelar'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirm == true) {
+
+                                  // 🔁 REINICIA el estado
+                                  ref.read(locationProvider.notifier).resetState();
+                                  
+                                  if (context.mounted) Navigator.pop(context);
+                                }
+
+
+
+
+                              }
                             }
+                            
                           }
                         },
                   child: Icon(locationState.isTracking ? Icons.stop : Icons.play_arrow),
@@ -483,7 +569,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
     return (_radToDeg(bearing) + 360) % 360;
   }
 
-  double _calculateCurrentSpeed(LocationState state) {
+  double calculateCurrentSpeed(LocationState state) {
     if (state.points.length < 2) return 0;
 
     final last = state.points.last;

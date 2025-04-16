@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 
 class GpxResult {
-  final File gpxFile;
-  final List<LocationPoint> correctedPoints;
+  final File? gpxFile;
+  final List<LocationPoint>? correctedPoints;
+  final bool? cancel;
 
-  GpxResult({required this.gpxFile, required this.correctedPoints});
+  GpxResult({this.gpxFile, this.correctedPoints, this.cancel});
 }
