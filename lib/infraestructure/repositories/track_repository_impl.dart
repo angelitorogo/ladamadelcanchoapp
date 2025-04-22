@@ -20,6 +20,11 @@ class TrackRepositoryImpl extends TrackRepository {
   Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int offset = 0, String? userId}) {
     return datasource.loadAllTracks(limit: limit, offset:offset, userId: userId);
   }
+  
+  @override
+  Future<bool> existsTrack(String name) {
+    return datasource.existsTrack(name);
+  }
 
  
 

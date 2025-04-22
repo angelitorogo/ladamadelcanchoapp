@@ -9,7 +9,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,11 +23,13 @@ import 'package:flutter/gestures.dart';
 class TrackPreviewScreen extends ConsumerStatefulWidget {
   final File trackFile;
   final List<LocationPoint> points;
+  final int? index;
 
   const TrackPreviewScreen({
     super.key,
     required this.trackFile,
     required this.points,
+    required this.index
   });
 
   static const name = 'track-preview-screen';
@@ -449,8 +453,8 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('¿Cancelar y eliminar track?'),
-                        content: const Text('El archivo .gpx será eliminado del dispositivo.'),
+                        title: const Text('¿Cancelar subida del track?'),
+                        content: const Text('Si existe el archivo .gpx, será eliminado del dispositivo.'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
@@ -458,21 +462,27 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                           ),
                           ElevatedButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Sí, eliminar'),
+                            child: const Text('Sí, cancelar'),
                           ),
                         ],
                       ),
                     );
 
-                    if (confirm == true) {
+                    if (confirm == true)  {
                       final path = '/storage/emulated/0/Download/GPX/tracks/${widget.trackFile.uri.pathSegments.last}';
                       final file = File(path);
                       if (await file.exists()) await file.delete();
 
+                      //eliminar track pending del prefs
+                      if(widget.index != null) {
+                        await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                      }
+                      
+
                       // 🔁 REINICIA el estado
                       ref.read(locationProvider.notifier).resetState();
                       
-                      if (context.mounted) Navigator.pop(context);
+                      if (context.mounted) Navigator.of(context).pop('cancelled');
                     }
                   },
                   label: const Text('Cancelar'),
@@ -494,64 +504,84 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                   onPressed: uploadState.status == TrackUploadStatus.loading
                       ? null
                       : () async {
-                          final name = _nameController.text.trim();
-                          final description = descriptionController.text;
-                          final file = widget.trackFile;
+
+                          //comprobar si hay o no internet
+                          final hasInternet = await checkAndWarnIfNoInternet(context);
+
+                          if(hasInternet) {
+
+                            final name = _nameController.text.trim();
+                            final description = descriptionController.text;
+                            final file = widget.trackFile;
 
 
-                          captureMap();
-                          Map<String, dynamic>? response;
+                            captureMap();
+                            Map<String, dynamic>? response;
 
-                          //print('✅ Images1: $selectedImages');
+                            //print('✅ Images1: $selectedImages');
 
-                          final File fileCaptureMap = await captureMap();
+                            final File fileCaptureMap = await captureMap();
 
 
-                          
-                          // ignore: use_build_context_synchronously
-                          response = await uploader.uploadTrack(context, name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, images: selectedImages);
-                          
+                            
+                            // ignore: use_build_context_synchronously
+                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, images: selectedImages);
+                            
 
-                          if (response != null && context.mounted) {
+                            if (response != null && context.mounted) {
 
-                            // 🔁 Reinicia el estado de ubicación
-                            ref.read(locationProvider.notifier).resetState();
+                              // 🔁 Reinicia el estado de ubicación
+                              ref.read(locationProvider.notifier).resetState();
 
-                            // 🔁 Recarga el listado de tracks
-                            ref.read(trackListProvider.notifier).loadTracks();
+                              // 🔁 Recarga el listado de tracks
+                              ref.read(trackListProvider.notifier).loadTracks();
 
-                            await showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Row(
-                                  children: [
-                                    Icon(Icons.check_circle, color: Colors.green),
-                                    SizedBox(width: 8),
-                                    Text('Track subido'),
+                              await showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.check_circle, color: Colors.green),
+                                      SizedBox(width: 8),
+                                      Text('Track subido'),
+                                    ],
+                                  ),
+                                  content: const Text('El track se ha guardado correctamente en el servidor.'),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () async {
+
+                                        //eliminar track pending del prefs
+                                        if(widget.index != null) {
+                                          await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                                        }
+
+                                        if(context.mounted) {
+                                          Navigator.of(context).pop('uploaded');
+                                          GoRouter.of(context).go('/');
+                                        }
+
+                                      },
+                                      child: const Text('Aceptar'),
+                                    ),
                                   ],
                                 ),
-                                content: const Text('El track se ha guardado correctamente en el servidor.'),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pop(context); // cierra dialog
-                                      GoRouter.of(context).go('/');
-                                    },
-                                    child: const Text('Aceptar'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          } else {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('❌ Error al subir el track'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
                               );
+                            } else {
+                              if (context.mounted) {
+                                selectedImages = [];
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('❌ ${ref.watch(trackUploadProvider).message}'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
                             }
+
                           }
+
+                          
                         },
                   label: Text(
                     uploadState.status == TrackUploadStatus.loading

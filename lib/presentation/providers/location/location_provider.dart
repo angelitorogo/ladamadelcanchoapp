@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/elevation_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
@@ -230,7 +229,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       };
 
       await saveSnapshotToPrefs(snapshot);
-      print('📦 Guardado snapshot offline!!! ');
+      //print('📦 Guardado snapshot offline!!! ');
 
       resetState();
 

@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 
 class PendingTracksScreen extends ConsumerStatefulWidget {
   static const name = 'pending-tracks-screen';
@@ -18,13 +23,12 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(pendingTracksProvider.notifier).loadTracks(); // 👈 Aquí se cargan
+      ref.read(pendingTracksProvider.notifier).loadTracks(); // 👈 Cargar al iniciar
     });
   }
 
-  String _formatTimestamp(String rawTimestamp) {
-    final date = DateTime.parse(rawTimestamp).toLocal();
-    return DateFormat('dd/MM/yyyy - HH:mm').format(date);
+  String _formatTimestamp(DateTime date) {
+    return DateFormat('dd/MM/yyyy - HH:mm').format(date.toLocal());
   }
 
   @override
@@ -40,13 +44,11 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
               itemCount: tracks.length,
               itemBuilder: (context, index) {
                 final track = tracks[index];
-                final timestamp = track['timestamp'];
-                final distance = track['state']['distance'];
 
                 return ListTile(
                   leading: const Icon(Icons.route),
-                  title: Text(_formatTimestamp(timestamp)),
-                  subtitle: Text('📏 ${(distance / 1000).toStringAsFixed(2)} km'),
+                  title: Text(_formatTimestamp(track.timestamp)),
+                  subtitle: Text('📏 ${(track.distance / 1000).toStringAsFixed(2)} km'),
                   trailing: IconButton(
                     icon: const Icon(Icons.cancel, color: Colors.red),
                     onPressed: () {
@@ -88,7 +90,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('❌ Track eliminado'),
+                                        content: Text('✅ Track eliminado'),
                                         duration: Duration(seconds: 2),
                                       ),
                                     );
@@ -102,6 +104,32 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                       );
                     },
                   ),
+                  onTap: () async {
+
+                    //comprobar si hay o no internet
+                    final hasInternet = await checkAndWarnIfNoInternet(context);
+
+                    if(hasInternet && context.mounted) {
+
+                      final result = await context.pushNamed(
+                        TrackPreviewScreen.name, // o TrackPreviewScreen.name
+                        extra: {
+                          'trackFile': File('offline.gpx'), // puedes cambiar por un File real si lo necesitas
+                          'points': track.points,
+                          'index': index
+                        },
+                      );
+
+                      if (result == 'uploaded') {
+                        // Track subido, eliminarlo
+                        await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                      }
+
+                    } 
+
+                    
+                    
+                  },
                 );
               },
             ),

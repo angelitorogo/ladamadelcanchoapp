@@ -1,32 +1,53 @@
-// pending_tracks_provider.dart
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ladamadelcanchoapp/domain/entities/pending_track.dart';
 
-final pendingTracksProvider = StateNotifierProvider<PendingTracksNotifier, List<Map<String, dynamic>>>(
+final pendingTracksProvider =
+    StateNotifierProvider<PendingTracksNotifier, List<PendingTrack>>(
   (ref) => PendingTracksNotifier(),
 );
 
-class PendingTracksNotifier extends StateNotifier<List<Map<String, dynamic>>> {
+class PendingTracksNotifier extends StateNotifier<List<PendingTrack>> {
   PendingTracksNotifier() : super([]) {
     loadTracks();
   }
 
-  Future<List<Map<String, dynamic>>> loadTracks() async {
+  /// Cargar los tracks desde SharedPreferences
+  Future<void> loadTracks() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = prefs.getStringList('offline_snapshots') ?? [];
-    final tracks = jsonList.map((json) => jsonDecode(json) as Map<String, dynamic>).toList();
+
+    final tracks = jsonList
+        .map((json) => PendingTrack.fromMap(jsonDecode(json)))
+        .toList();
+
     state = tracks;
-    return state;
   }
 
-  Future<List<Map<String, dynamic>>> removeTrack(int index) async {
+  /// Eliminar un track por índice y actualizar SharedPreferences
+  Future<void> removeTrack(int index) async {
     final prefs = await SharedPreferences.getInstance();
+
     final updatedList = [...state];
-    updatedList.removeAt(index);
-    final jsonList = updatedList.map((track) => jsonEncode(track)).toList();
+    if (index >= 0 && index < updatedList.length) {
+      updatedList.removeAt(index);
+    }
+
+    final jsonList = updatedList.map((track) => jsonEncode(track.toMap())).toList();
     await prefs.setStringList('offline_snapshots', jsonList);
+
     state = updatedList;
-    return state;
+  }
+
+  /// Añadir un nuevo track (por si lo quieres en el futuro)
+  Future<void> addTrack(PendingTrack track) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final updatedList = [...state, track];
+    final jsonList = updatedList.map((t) => jsonEncode(t.toMap())).toList();
+    await prefs.setStringList('offline_snapshots', jsonList);
+
+    state = updatedList;
   }
 }

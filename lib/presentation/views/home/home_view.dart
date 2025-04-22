@@ -192,7 +192,7 @@ class HomeView extends ConsumerWidget {
                     if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Rutas actualizadas'),
+                        content: Text('✅ Rutas actualizadas'),
                         duration: Duration(seconds: 2),
                       ),
                     );
@@ -223,10 +223,12 @@ class HomeView extends ConsumerWidget {
         ),
       ),
 
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDebugDialog(context),
         child: const Icon(Icons.bug_report),
       ),
+      */
 
     );
   }

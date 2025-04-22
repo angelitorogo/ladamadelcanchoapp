@@ -94,7 +94,8 @@ final appRouter = GoRouter(
           final extra = state.extra as Map<String, dynamic>;
           final File trackFile = extra['trackFile'];
           final List<LocationPoint> points = extra['points'];
-          return TrackPreviewScreen(trackFile: trackFile, points: points);
+          final int? index = extra['index'];
+          return TrackPreviewScreen(trackFile: trackFile, points: points, index: index);
         },
       ),
 

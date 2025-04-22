@@ -37,5 +37,14 @@ class LocationPoint {
       'timestamp': timestamp.toIso8601String(),
     };
   }
+
+  factory LocationPoint.fromMap(Map<String, dynamic> map) {
+    return LocationPoint(
+      latitude: (map['latitude'] as num).toDouble(),
+      longitude: (map['longitude'] as num).toDouble(),
+      elevation: (map['elevation'] as num).toDouble(),
+      timestamp: DateTime.parse(map['timestamp']),
+    );
+  }
   
 }

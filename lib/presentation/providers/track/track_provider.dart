@@ -40,6 +40,23 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   TrackUploadNotifier(this.repository, this.repository2) : super(const TrackUploadState());
 
+  Future<bool> existsTrackForName(String name) async {
+
+    try {
+
+      final result = await repository.existsTrack(name);
+      return result ? true: false;
+
+    } catch (e) {
+      state = const TrackUploadState(
+        status: TrackUploadStatus.error,
+        message: 'Error al subir el track',
+      );
+      return false;
+    }
+
+  }
+
   Future<Map<String, dynamic>?> uploadTrack(BuildContext context, String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<File> images = const []} ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
@@ -100,7 +117,12 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
           }
         }
         
-      }  else {
+      } else if( name == 'offline') {
+
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, cancel: false);
+        uploadFile = result.gpxFile!;
+    
+       } else {
 
         uploadFile = File(originalFileName);
 
@@ -108,11 +130,24 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
 
       repository2.fetchCsrfToken(); //cogerlo si se puede del authState
+
+      //SABER SI YA HAY UN TRACK CON ESE NAME Peticion a back track:name
+      final exitsTrack = await existsTrackForName(name);
+
+      if( !exitsTrack) {
+
+        final response = await repository.uploadTrack(name, uploadFile, description, type, distance, elevationGain, images: images );
+        state = const TrackUploadState(status: TrackUploadStatus.success);
+        return response;
+
+      } else {
+        state = const TrackUploadState(
+          status: TrackUploadStatus.error,
+          message: 'Ya existe un track con ese nombre.',
+        );
+        return null;
+      }
       
-      //print('✅ Images2: $images');
-      final response = await repository.uploadTrack(name, uploadFile, description, type, distance, elevationGain, images: images );
-      state = const TrackUploadState(status: TrackUploadStatus.success);
-      return response;
     } catch (e) {
       state = const TrackUploadState(
         status: TrackUploadStatus.error,

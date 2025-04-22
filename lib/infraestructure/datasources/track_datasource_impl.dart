@@ -138,6 +138,45 @@ class TrackDatasourceImpl implements TrackDatasource {
 
     
   }
+  
+  @override
+  Future<bool> existsTrack(String name) async {
+
+    //try {
+      final response = await _dio.get(
+        '/track/$name' ,
+        options: Options(
+          headers: {
+            'X-CSRF-Token': _csrfToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final isAvailable = response.data.toString().toLowerCase() == 'true';
+        return isAvailable;
+      } else{ 
+        return false;
+      }
+
+    /*
+    } catch (e) {
+      if( e is DioException) {
+        throw DioException.connectionError(
+          requestOptions: RequestOptions(
+            path: '/', // la ruta que falló
+            baseUrl: _dio.options.baseUrl, // opcional
+          ),
+          reason: e.toString(),
+        );
+      } else {
+        throw Exception('❌ Error: $e');
+      } 
+      
+    }
+    */
+
+  }
 
 
   //https://cookies.argomez.com/api/tracks?limit=10&page=1&userId=23235555
