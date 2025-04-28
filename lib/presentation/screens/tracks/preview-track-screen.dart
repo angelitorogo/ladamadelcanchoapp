@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
@@ -525,7 +526,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                             
                             // ignore: use_build_context_synchronously
-                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, images: selectedImages);
+                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, points: widget.points, images: selectedImages);
                             
 
                             if (response != null && context.mounted) {
@@ -594,6 +595,13 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
           ),
         ),
       ),
+    
+      //Debug
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showDebugDialog(context, ref),
+        child: const Icon(Icons.bug_report),
+      ),
+    
     );
   }
 

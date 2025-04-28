@@ -3,6 +3,8 @@
 import 'dart:io';
 
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
+import 'package:ladamadelcanchoapp/domain/entities/track.dart';
+
 import 'package:ladamadelcanchoapp/domain/repositories/track_repository.dart';
 
 class TrackRepositoryImpl extends TrackRepository {
@@ -24,6 +26,11 @@ class TrackRepositoryImpl extends TrackRepository {
   @override
   Future<bool> existsTrack(String name) {
     return datasource.existsTrack(name);
+  }
+
+  @override
+  Future<Track> loadTrack(String id) {
+    return datasource.loadTrack(id);
   }
 
  

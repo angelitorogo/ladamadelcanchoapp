@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timeago/timeago.dart' as timeago;
@@ -38,50 +40,7 @@ class HomeView extends ConsumerWidget {
     }
 
 
-    Future<void> showDebugDialog(BuildContext context) async {
-      final prefs = await SharedPreferences.getInstance();
-      final prefsKeys = prefs.getKeys();
-
-      final prefsInfo = prefsKeys.isEmpty
-          ? 'No hay preferencias guardadas.'
-          : prefsKeys.map((k) => '• $k: ${prefs.get(k)}').join('\n');
-
-      final jar = ref.read(authProvider.notifier).jar();
-      final cookies = await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-
-
-      final cookiesInfo = cookies?.isEmpty ?? true
-        ? 'No hay cookies guardadas.'
-        : cookies!.map((c) => '• ${c.name} = ${c.value}').join('\n');
-
-      // Mostramos todo en un AlertDialog
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('Debug info'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('🔑 SharedPreferences:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(prefsInfo),
-                  const SizedBox(height: 12),
-                  const Text('🍪 Cookies:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(cookiesInfo),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-                child: const Text('Cerrar'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
+    
 
 
     return Scaffold(
@@ -211,11 +170,22 @@ class HomeView extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final track = trackState.tracks[index];
                   timeago.setLocaleMessages('es', timeago.EsMessages());
-                  return TrackCard(
-                    image: (track.images != null && track.images!.isNotEmpty) ? track.images!.first : null,
-                    track: track,
+                  return GestureDetector(
+                    onTap: () {
+                      context.pushNamed(
+                        TrackScreen.name,
+                        extra: {
+                          'trackId': track.id,
+                        },
+                      );
+                    },
+                    child: TrackCard(
+                      image: (track.images != null && track.images!.isNotEmpty) ? track.images!.first : null,
+                      track: track,
+                    ),
                   );
                 },
+                
               ),
             );
 
@@ -223,12 +193,12 @@ class HomeView extends ConsumerWidget {
         ),
       ),
 
-      /*
+      
       floatingActionButton: FloatingActionButton(
-        onPressed: () => showDebugDialog(context),
+        onPressed: () => showDebugDialog(context, ref),
         child: const Icon(Icons.bug_report),
       ),
-      */
+      
 
     );
   }
@@ -275,7 +245,7 @@ class TrackCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.3,
+                  width: MediaQuery.of(context).size.width * 0.29,
                   height: double.infinity, // o fija si sabes el alto
                   child: Image.network(
                     imageTrackUrl,

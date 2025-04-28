@@ -9,6 +9,7 @@ import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_scr
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/pending_tracks/pending_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/wellcome/wellcome_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/views/config/config_view.dart';
 import 'package:ladamadelcanchoapp/presentation/views/home/home_view.dart';
@@ -96,6 +97,17 @@ final appRouter = GoRouter(
           final List<LocationPoint> points = extra['points'];
           final int? index = extra['index'];
           return TrackPreviewScreen(trackFile: trackFile, points: points, index: index);
+        },
+      ),
+
+
+      GoRoute(
+        path: '/track',
+        name: TrackScreen.name,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final String trackId = extra['trackId'];
+          return TrackScreen(trackId: trackId);
         },
       ),
 

@@ -29,22 +29,18 @@ class LocationPoint {
   }
 
   // ✅ Método para exportar a Map
-  Map<String, dynamic> toMap() {
-    return {
-      'latitude': latitude,
-      'longitude': longitude,
-      'elevation': elevation,
-      'timestamp': timestamp.toIso8601String(),
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'latitude': latitude,
+    'longitude': longitude,
+    'elevation': elevation,
+    'time': timestamp.toIso8601String(),
+  };
 
-  factory LocationPoint.fromMap(Map<String, dynamic> map) {
-    return LocationPoint(
-      latitude: (map['latitude'] as num).toDouble(),
-      longitude: (map['longitude'] as num).toDouble(),
-      elevation: (map['elevation'] as num).toDouble(),
-      timestamp: DateTime.parse(map['timestamp']),
-    );
-  }
+  factory LocationPoint.fromMap(Map<String, dynamic> json) => LocationPoint(
+    latitude: (json['latitude'] as num).toDouble(),
+    longitude: (json['longitude'] as num).toDouble(),
+    elevation: (json['elevation'] as num).toDouble(),
+    timestamp: DateTime.parse(json['time']),
+  );
   
 }

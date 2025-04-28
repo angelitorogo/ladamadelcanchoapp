@@ -44,8 +44,8 @@ class AuthDatasourceImpl  extends AuthDatasource{
   
   @override
   Future<void> checkCookies() async {
-    /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-    //print('🍪 Cookies guardadas: $cookies');
+    /*final cookies =*/await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    //print('🍪 Cookies guardadas auth: $cookies');
   }
 
   @override

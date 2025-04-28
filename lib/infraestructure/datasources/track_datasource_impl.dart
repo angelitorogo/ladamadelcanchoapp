@@ -3,6 +3,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
+import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 
 class TrackDatasourceImpl implements TrackDatasource {
@@ -15,7 +16,7 @@ class TrackDatasourceImpl implements TrackDatasource {
   ));
 
   //final _cookieJar = GlobalCookieJar.instance;
-  late final CookieJar _cookieJar;
+  late final PersistCookieJar _cookieJar;
   String? _csrfToken;
 
   TrackDatasourceImpl() {
@@ -23,6 +24,11 @@ class TrackDatasourceImpl implements TrackDatasource {
       _cookieJar = jar;
       _dio.interceptors.add(CookieManager(_cookieJar));
     });
+  }
+
+  Future<void> checkCookies() async {
+    /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    //print('🍪 Cookies guardadas track: $cookies');
   }
 
   /// ✅ Obtener CSRF token (reutilizable)
@@ -45,6 +51,7 @@ class TrackDatasourceImpl implements TrackDatasource {
 
       if (response.statusCode == 200) {
         _csrfToken = response.data['csrfToken'];
+        await checkCookies();
         return;
       }
 
@@ -176,6 +183,25 @@ class TrackDatasourceImpl implements TrackDatasource {
     }
     */
 
+  }
+
+  @override
+  Future<Track> loadTrack(String id) async {
+
+    
+
+    final response = await _dio.get(
+      '/$id' ,
+      options: Options(
+        headers: {
+          'X-CSRF-Token': _csrfToken,
+        },
+      ),
+    );
+
+    final track = Track.fromJson(response.data);
+
+    return track;
   }
 
 

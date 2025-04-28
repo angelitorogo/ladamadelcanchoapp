@@ -40,7 +40,7 @@ Future<void> saveGpxToPublicDocuments(File file) async {
   await file.copy(publicFile.path);
 }
 
-Future<File> saveGpxFile (StringBuffer buffer, String name) async {
+Future<File> saveGpxFile(StringBuffer buffer, String name) async {
   // ✅ Guardamos el archivo GPX
   final gpxString = buffer.toString();
   final directory = await getApplicationDocumentsDirectory();

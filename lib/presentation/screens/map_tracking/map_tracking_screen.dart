@@ -84,7 +84,14 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
      // 🟡 Corregimos la altitud ANTES de usar el punto
     final elevationRepository = ElevationRepositoryImpl(ElevationDatasourceImpl());
-    final  LocationPoint pointToCorrect = LocationPoint(latitude: currentLocation.latitude!, longitude: currentLocation.longitude!, elevation: currentLocation.altitude!, timestamp: DateTime(currentLocation.time!.toInt()));
+    LocationPoint pointToCorrect;
+
+    try {
+      pointToCorrect = LocationPoint(latitude: currentLocation.latitude!, longitude: currentLocation.longitude!, elevation: currentLocation.altitude!, timestamp: DateTime(currentLocation.time!.toInt()));
+    } catch (e) {
+      return;
+    }  
+    
     final response = await elevationRepository.getElevationForPoint(pointToCorrect);
 
 
@@ -276,7 +283,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('Desnivel +', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('${locationState.elevationGain.toStringAsFixed(0)} m'),
+                          Text('${locationState.elevationGain.toStringAsFixed(1)} m'),
                         ],
                       ),
                     ),
@@ -287,7 +294,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                           const Text('Altitud', style: TextStyle(fontWeight: FontWeight.bold)),
                           locationState.points.isNotEmpty 
                           ? Text('${locationState.points.last.elevation.toStringAsFixed(0)} m')
-                          : Text('${initialPosition!.elevation.toStringAsFixed(0)} m')
+                          : Text('${initialPosition!.elevation.toStringAsFixed(1)} m')
                         ],
                       ),
                     ),
@@ -331,9 +338,9 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                             child: Text(
                               '${locationState.points.length - index}. '
-                              'ele: ${point.elevation.toStringAsFixed(0)} m, '
-                              'dist: ${distance.toStringAsFixed(1)} m, '
-                              'desnivel: ${elevationDiff.toStringAsFixed(1)} m',
+                              'ele: ${point.elevation.toStringAsFixed(2)} m, '
+                              'dist: ${distance.toStringAsFixed(2)} m, '
+                              'desnivel: ${elevationDiff.toStringAsFixed(2)} m',
                               style: TextStyle(fontSize: 14, color: textColor),
                             ),
                           );

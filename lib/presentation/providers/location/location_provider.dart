@@ -157,11 +157,13 @@ class LocationNotifier extends StateNotifier<LocationState> {
     });
 
     // 👇 Suscripción a puntos descartados
+    /*
     datasource.discardedPointsStream.listen((discardedPoint) {
       state = state.copyWith(
         discardedPoints: [...state.discardedPoints, discardedPoint],
       );
     });
+    */
   }
 
 
@@ -175,9 +177,14 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   
 
-  Future<GpxResult> stopTrackingAndSaveGpx({required BuildContext context, required WidgetRef ref, required bool cancel, String? overrideName, String? overrideDescription}) async {
+  Future<GpxResult> stopTrackingAndSaveGpx({required BuildContext context, required WidgetRef ref, required bool cancel, String? overrideName, String? overrideDescription, List<LocationPoint>? points}) async {
 
     state = state.copyWith(isTracking: false);
+
+    if (points != null && points.isNotEmpty) {
+      // ✅ Hay puntos recibidos
+      state = state.copyWith(points: points);
+    }
 
     //comenzamos a escuchar los puntos que nos envia el datasource
     await _locationSubscription?.cancel();

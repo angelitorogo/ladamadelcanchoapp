@@ -2,6 +2,8 @@
 
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/gpx_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_provider.dart';
@@ -57,7 +59,14 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   }
 
-  Future<Map<String, dynamic>?> uploadTrack(BuildContext context, String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<File> images = const []} ) async {
+  Future<Track> loadTrackForId(String id) async {
+
+    final result = await repository.loadTrack(id);
+    return result;
+
+  }
+
+  Future<Map<String, dynamic>?> uploadTrack(BuildContext context, String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<LocationPoint> points = const[], List<File> images = const []} ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
     images.insert(0, captureMap);
@@ -71,7 +80,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       if(file.uri.pathSegments.last.replaceAll('.gpx', '') != name && description.isNotEmpty){
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, overrideDescription: description, cancel: false);
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, overrideDescription: description, cancel: false, points: points);
         uploadFile = result.gpxFile!;
 
         final oldFilePath = originalFileName;
@@ -87,7 +96,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       } else if(description.isNotEmpty) {
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideDescription: description, cancel: false);
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideDescription: description, cancel: false, points: points);
         uploadFile = result.gpxFile!;
 
         final oldFilePath = originalFileName;
@@ -103,7 +112,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       } else if (file.uri.pathSegments.last.replaceAll('.gpx', '') != name) {
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, cancel: false);
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, cancel: false, points: points);
         uploadFile = result.gpxFile!;
 
         final oldFilePath = originalFileName;
@@ -119,7 +128,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
         
       } else if( name == 'offline') {
 
-        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, cancel: false);
+        result = await ref.read(locationProvider.notifier).stopTrackingAndSaveGpx(context: context, ref: ref, overrideName: name, cancel: false, points: points);  // <---
         uploadFile = result.gpxFile!;
     
        } else {

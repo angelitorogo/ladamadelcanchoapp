@@ -48,7 +48,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                 return ListTile(
                   leading: const Icon(Icons.route),
                   title: Text(_formatTimestamp(track.timestamp)),
-                  subtitle: Text('📏 ${(track.distance / 1000).toStringAsFixed(2)} km'),
+                  subtitle: Text('📏 ${(track.distance / 1000).toStringAsFixed(3)} km'),
                   trailing: IconButton(
                     icon: const Icon(Icons.cancel, color: Colors.red),
                     onPressed: () {
