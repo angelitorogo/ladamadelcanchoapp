@@ -298,6 +298,7 @@ class _Perfil extends ConsumerWidget {
     final minElevation = elevations.reduce(min);
     final maxElevation = elevations.reduce(max);
     final double interval = maxElevation - minElevation < 600 ? 100 : 200;
+    final points = track.points!;
 
     return SizedBox(
       height: 275,
@@ -346,9 +347,10 @@ class _Perfil extends ConsumerWidget {
                       touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
                         if (response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty) {
                           final index = response.lineBarSpots!.first.spotIndex;
-                          ref.read(hoveredPointIndexProvider.notifier).state = index;
+                          final p = points[index];
+                          ref.read(hoveredPointLatLngProvider.notifier).setPoint(LatLng(p.latitude, p.longitude));
                         } else {
-                          ref.read(hoveredPointIndexProvider.notifier).state = null;
+                          ref.read(hoveredPointLatLngProvider.notifier).clear();
                         }
                       },
                       handleBuiltInTouches: true, // activa el comportamiento por defecto
@@ -463,7 +465,6 @@ class _Perfil extends ConsumerWidget {
   }
 } 
 
-
 class _Map extends ConsumerStatefulWidget {
   final Track track;
 
@@ -480,7 +481,7 @@ class _MapState extends ConsumerState<_Map> {
   @override
   Widget build(BuildContext context) {
 
-    final hoveredIndex = ref.watch(hoveredPointIndexProvider);
+    final hoveredLatLng = ref.watch(hoveredPointLatLngProvider);
 
     final List<LatLng> polylinePoints = widget.track.points!
         .map((p) => LatLng(p.latitude, p.longitude))
@@ -503,15 +504,12 @@ class _MapState extends ConsumerState<_Map> {
 
 
     // 👉 Añadir marcador dinámico según índice tocado
-    if (hoveredIndex != null &&
-        hoveredIndex >= 0 &&
-        hoveredIndex < widget.track.points!.length) {
-      final hoveredPoint = widget.track.points![hoveredIndex];
+    if (hoveredLatLng != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('hovered'),
-          position: LatLng(hoveredPoint.latitude, hoveredPoint.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
+          position: hoveredLatLng,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
         ),
       );
     }
