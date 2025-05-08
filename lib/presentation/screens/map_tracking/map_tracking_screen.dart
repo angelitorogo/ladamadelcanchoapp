@@ -305,6 +305,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
 
               // 📍 Lista de puntos
+              /*
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -355,7 +356,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
                 ),
               ),
-
+              */
 
 
             ],

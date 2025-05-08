@@ -52,6 +52,11 @@ class AuthRepositoryImpl extends AuthRepository{
   PersistCookieJar cookieJar() {
     return datasource.cookieJar();
   }
+  
+  @override
+  Future<UserEntity> getUser(String userId) {
+    return datasource.getUser(userId);
+  }
 
 
 }

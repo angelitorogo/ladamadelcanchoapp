@@ -204,20 +204,20 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     final locationState = ref.watch(locationProvider);
 
     final modeState = ref.watch(locationProvider).mode;
-                          String mode;
+    String mode;
 
-                          switch (modeState) {
-                            case TrackingMode.walking:
-                              mode = 'Senderismo';
-                              break;
-                            case TrackingMode.cycling:
-                              mode = 'Ciclismo';
-                              break;
-                            case TrackingMode.driving:
-                              mode = 'Conduciendo';
-                              break;
-                            
-                          }
+    switch (modeState) {
+      case TrackingMode.walking:
+        mode = 'Senderismo';
+        break;
+      case TrackingMode.cycling:
+        mode = 'Ciclismo';
+        break;
+      case TrackingMode.driving:
+        mode = 'Conduciendo';
+        break;
+      
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vista previa del track')),
@@ -275,6 +275,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                       markerId: const MarkerId('start'),
                       position: polylinePoints.first,
                       infoWindow: const InfoWindow(title: 'Inicio'),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
                     ),
                     Marker(
                       markerId: const MarkerId('end'),

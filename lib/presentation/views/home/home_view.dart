@@ -9,7 +9,6 @@ import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -175,7 +174,7 @@ class HomeView extends ConsumerWidget {
                       context.pushNamed(
                         TrackScreen.name,
                         extra: {
-                          'trackId': track.id,
+                          'trackIndex': index, //
                         },
                       );
                     },

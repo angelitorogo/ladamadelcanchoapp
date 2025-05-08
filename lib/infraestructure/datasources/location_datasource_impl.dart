@@ -28,45 +28,79 @@ class LocationDatasourceImpl implements LocationDatasource {
   @override
   Stream<LocationPoint> getLocationStream() {
     final interval = getIntervalForMode(_mode);
+    final distanceFilter = getMinDistanceForMode(_mode);
 
     location.changeSettings(
       accuracy: LocationAccuracy.navigation,
       interval: interval,
-      distanceFilter: 1,
+      distanceFilter: distanceFilter,
     );
 
     return location.onLocationChanged.map((locData) {
+      final currentLat = locData.latitude!;
+      final currentLon = locData.longitude!;
       double correctedElevation = locData.altitude ?? 0;
 
-      // Si hay un punto anterior, se evalúa la diferencia de elevación
+      final now = DateTime.fromMillisecondsSinceEpoch(locData.time!.toInt());
+
+      // 🟡 Si hay un punto anterior, aplicar filtros
       if (_lastPoint != null) {
-        final elevationDiff = correctedElevation - _lastPoint!.elevation;
+        final dist = calculateDistanceMeters(
+          _lastPoint!.latitude,
+          _lastPoint!.longitude,
+          currentLat,
+          currentLon,
+        );
 
-        // 🟡 Si la diferencia de elevación es exagerada, la corregimos
-        if (elevationDiff.abs() > _getMaxAllowedElevationDiff(_mode)) {
-          correctedElevation = _lastPoint!.elevation;
+        final minDistance = getMinDistanceForMode(_mode);
 
-          // Opcional: almacenar el punto descartado para debug
+        if (dist < minDistance) {
+          // Opcional: emitir punto descartado para debug
           final discarded = LocationPoint(
-            latitude: locData.latitude!,
-            longitude: locData.longitude!,
-            elevation: locData.altitude ?? 0,
-            timestamp: DateTime.fromMillisecondsSinceEpoch(locData.time!.toInt()),
+            latitude: currentLat,
+            longitude: currentLon,
+            elevation: correctedElevation,
+            timestamp: now,
           );
           _discardedController.add(discarded);
+          return null; // ❌ No emitir el punto
+        }
+
+        final elevationDiff = correctedElevation - _lastPoint!.elevation;
+        if (elevationDiff.abs() > _getMaxAllowedElevationDiff(_mode)) {
+          correctedElevation = _lastPoint!.elevation;
+          _discardedController.add(LocationPoint(
+            latitude: currentLat,
+            longitude: currentLon,
+            elevation: locData.altitude ?? 0,
+            timestamp: now,
+          ));
         }
       }
 
       final point = LocationPoint(
-        latitude: locData.latitude!,
-        longitude: locData.longitude!,
+        latitude: currentLat,
+        longitude: currentLon,
         elevation: correctedElevation,
-        timestamp: DateTime.fromMillisecondsSinceEpoch(locData.time!.toInt()),
+        timestamp: now,
       );
 
       _lastPoint = point;
       return point;
-    });
+    }).where((point) => point != null).cast<LocationPoint>();
+
+    
+  }
+
+  double getMinDistanceForMode(TrackingMode mode) {
+    switch (mode) {
+      case TrackingMode.walking:
+        return 5.0;
+      case TrackingMode.cycling:
+        return 9.0;
+      case TrackingMode.driving:
+        return 15.0;
+    }
   }
 
   // 🆕 Devuelve el máximo desnivel aceptable por modo, solo para corrección de altitud

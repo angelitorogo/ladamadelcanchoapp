@@ -268,6 +268,34 @@ Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) as
   return userUpdated;
 
   }
+  
+  @override
+  Future<UserEntity> getUser(String userId) async {
+
+    try {
+
+      // ✅ Si no hay CSRF en memoria, intenta obtener uno nuevo automáticamente
+      await fetchCsrfToken();
+
+      final response = await _dio.get(
+        '/user/$userId',
+        options: Options(
+          headers: {'X-CSRF-Token': _csrfToken},
+        ),
+      );
+
+      final authVerifiedUser = AuthVerifyUserResponse.fromJson(response.data);
+
+      final user = AuthVerifyUserMapper.responseToAuth(authVerifiedUser);
+
+      
+      return user;
+      
+    } catch (e) {
+      throw Exception('Error en login: $e');
+    }
+    
+  }
 
 
 

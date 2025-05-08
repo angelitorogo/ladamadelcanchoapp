@@ -184,6 +184,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   }
 
+  Future<UserEntity?> getUser(String userId) async {
+
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final user = await authRepository.getUser(userId);
+      state = state.copyWith(isLoading: false);
+      return user;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Error al cargar usuario');
+      return null;
+    }
+    
+
+  }
+
   Future<void> logout() async {
 
     state = state.copyWith(isLoading: true);

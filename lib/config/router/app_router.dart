@@ -106,8 +106,8 @@ final appRouter = GoRouter(
         name: TrackScreen.name,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
-          final String trackId = extra['trackId'];
-          return TrackScreen(trackId: trackId);
+          final int trackIndex = extra['trackIndex'];
+          return TrackScreen(trackIndex: trackIndex);
         },
       ),
 

@@ -1,4 +1,5 @@
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 
 class Track {
   final String id;
@@ -12,6 +13,7 @@ class Track {
   final List<LocationPoint>? points;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final UserEntity user;
 
   Track({
     required this.id,
@@ -25,6 +27,7 @@ class Track {
     this.points,
     required this.createdAt,
     required this.updatedAt,
+    required this.user,
   });
 
   factory Track.fromJson(Map<String, dynamic> json) => Track(
@@ -39,6 +42,7 @@ class Track {
     points: (json['points'] as List?)?.map((p) => LocationPoint.fromMap(p)).toList(),
     createdAt: DateTime.parse(json['created_at']),
     updatedAt: DateTime.parse(json['updated_at']),
+    user: UserEntity.fromJson(json['user']),
   );
 
   Map<String, dynamic> toJson() => {
@@ -53,5 +57,6 @@ class Track {
         'points': points?.map((p) => p.toMap()).toList(),
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt.toIso8601String(),
+        'user': user.toJson(),
       };
 }

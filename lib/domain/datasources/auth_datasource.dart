@@ -19,6 +19,8 @@ abstract class AuthDatasource {
 
   Future<void> logout(); 
 
+  Future<UserEntity> getUser(String userId);
+
   Future<Uint8List?> fetchUserImage(String imagePath);
 
   Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context);

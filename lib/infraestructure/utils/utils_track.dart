@@ -9,6 +9,8 @@ import 'package:ladamadelcanchoapp/infraestructure/models/response_calculates.da
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:fl_chart/fl_chart.dart';
+
 double calculateDistanceMeters(
     double lat1,
     double lon1,
@@ -95,4 +97,36 @@ Future<List<Map<String, dynamic>>> loadOfflineSnapshots() async {
   final storedList = prefs.getStringList('offline_snapshots') ?? [];
 
   return storedList.map((json) => jsonDecode(json) as Map<String, dynamic>).toList();
+}
+
+
+// Método para construir los datos del gráfico
+List<FlSpot> buildElevationProfile(List<LocationPoint> points) {
+  double totalDistance = 0.0;
+  List<FlSpot> spots = [];
+
+  for (int i = 0; i < points.length; i++) {
+    if (i > 0) {
+      totalDistance += calculateDistance(points[i - 1], points[i]); // en metros
+    }
+
+    spots.add(FlSpot(totalDistance, points[i].elevation));
+  }
+
+  return spots;
+}
+
+// Calcula distancia entre dos coordenadas (en metros)
+double calculateDistance(LocationPoint p1, LocationPoint p2) {
+  const double R = 6371000; // radio de la Tierra en metros
+  final double dLat = (p2.latitude - p1.latitude) * (pi / 180);
+  final double dLon = (p2.longitude - p1.longitude) * (pi / 180);
+
+  final double a = sin(dLat / 2) * sin(dLat / 2) +
+      cos(p1.latitude * (pi / 180)) *
+          cos(p2.latitude * (pi / 180)) *
+          sin(dLon / 2) *
+          sin(dLon / 2);
+  final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  return R * c;
 }

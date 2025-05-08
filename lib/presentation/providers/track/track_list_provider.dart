@@ -64,9 +64,13 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
         userId: userId,
       );
 
+      //print(response);
+
       final tracks = (response['tracks'] as List)
-          .map((trackJson) => Track.fromJson(trackJson))
-          .toList();
+        .map((trackJson) {
+          return Track.fromJson(trackJson);
+        })
+        .toList();
 
       final metadata = response['metadata'];
 

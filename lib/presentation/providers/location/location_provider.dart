@@ -156,14 +156,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
       );
     });
 
-    // 👇 Suscripción a puntos descartados
-    /*
-    datasource.discardedPointsStream.listen((discardedPoint) {
-      state = state.copyWith(
-        discardedPoints: [...state.discardedPoints, discardedPoint],
-      );
-    });
-    */
   }
 
 
