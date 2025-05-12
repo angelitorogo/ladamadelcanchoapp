@@ -17,11 +17,8 @@ import 'package:fl_chart/fl_chart.dart';
 
 class TrackScreen extends ConsumerStatefulWidget {
   final int trackIndex;
-
   static const name = 'track-screen';
-
   const TrackScreen({super.key, required this.trackIndex});
-
   @override
   ConsumerState<TrackScreen> createState() => _TrackScreenState();
 }
@@ -29,6 +26,7 @@ class TrackScreen extends ConsumerStatefulWidget {
 class _TrackScreenState extends ConsumerState<TrackScreen> {
   Track? _track;
   bool _isLoading = true;
+  
 
   @override
   void didChangeDependencies() {
@@ -48,9 +46,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -62,42 +58,33 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
     }
   }
 
-
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(_track != null ? _track!.name.split('.').first : 'Cargando...'),
-    ),
-    body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _track == null
-            ? const Center(child: Text('No se pudo cargar el track.'))
-            : ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // DATOS
-                  _DatosWidget(track: _track!),
-
-                  // MAPA (✅ ahora es completamente interactivo)
-                  _Map(track: _track!),
-
-                  // PERFIL TRACK
-                  _Perfil(track: _track!),
-
-                  // IMAGENES
-                  if (_track!.images != null && _track!.images!.isNotEmpty)
-                    _Card(track: _track!)
-                  else
-                    const Text('No hay imágenes disponibles.'),
-
-                  const SizedBox(height: 60),
-                ],
-              ),
-  );
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_track != null ? _track!.name.split('.').first : 'Cargando...'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _track == null
+              ? const Center(child: Text('No se pudo cargar el track.'))
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _DatosWidget(track: _track!),
+                    _Map(track: _track!),
+                    _Perfil(track: _track!),
+                    if (_track!.images != null && _track!.images!.isNotEmpty)
+                      _Card(track: _track!)
+                    else
+                      const Text('No hay imágenes disponibles.'),
+                    const SizedBox(height: 60),
+                  ],
+                ),
+    );
+  }
 }
 
-}
 
 
 class _DatosWidget extends StatelessWidget {
@@ -345,20 +332,29 @@ class _Perfil extends ConsumerWidget {
                         },
                       ),
                       touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+
                         if (response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty) {
                           final index = response.lineBarSpots!.first.spotIndex;
                           final p = points[index];
+
                           ref.read(hoveredPointLatLngProvider.notifier).setPoint(LatLng(p.latitude, p.longitude));
                         } else {
                           ref.read(hoveredPointLatLngProvider.notifier).clear();
                         }
+                        
                       },
                       handleBuiltInTouches: true, // activa el comportamiento por defecto
                       getTouchedSpotIndicator:
                         (LineChartBarData barData, List<int> indicators) {
                         return indicators.map((int index) {
                           return TouchedSpotIndicatorData(
-                            const FlLine(color: Colors.transparent), // oculta la línea vertical
+                            
+                            const FlLine(
+                              // ignore: deprecated_member_use
+                              color: Colors.black, // 🎯 Línea vertical
+                              strokeWidth: 2,
+                            ),
+                                                
                             FlDotData(
                               show: true,
                               getDotPainter: (spot, percent, bar, index) =>
@@ -465,123 +461,132 @@ class _Perfil extends ConsumerWidget {
   }
 } 
 
+
 class _Map extends ConsumerStatefulWidget {
   final Track track;
 
   const _Map({required this.track});
 
   @override
-  ConsumerState<_Map> createState() => _MapState();
+  ConsumerState<_Map> createState() => _TrackMapState();
 }
 
-class _MapState extends ConsumerState<_Map> {
-  GoogleMapController? mapController;
-  MapType _mapType = MapType.hybrid;
+class _TrackMapState extends ConsumerState<_Map> {
+  final GlobalKey _mapKey = GlobalKey();
+  GoogleMapController? _mapController;
+  Offset? _currentOffset;
+  late final List<LatLng> _polylinePoints;
+
+  @override
+  void initState() {
+    super.initState();
+    _polylinePoints = widget.track.points!
+        .map((p) => LatLng(p.latitude, p.longitude))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    
+    ref.listen<LatLng?>(hoveredPointLatLngProvider, (prev, next) async {
+      if (next == null || _mapController == null) return;
 
-    final hoveredLatLng = ref.watch(hoveredPointLatLngProvider);
+      final bounds = await _mapController!.getVisibleRegion();
 
-    final List<LatLng> polylinePoints = widget.track.points!
-        .map((p) => LatLng(p.latitude, p.longitude))
-        .toList();
+      final mapBox = _mapKey.currentContext?.findRenderObject() as RenderBox?;
+      if (mapBox == null) return;
 
-    final Set<Marker> markers = {
-      Marker(
-        markerId: const MarkerId('start'),
-        position: polylinePoints.first,
-        infoWindow: const InfoWindow(title: 'Inicio'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      ),
-      Marker(
-        markerId: const MarkerId('end'),
-        position: polylinePoints.last,
-        infoWindow: const InfoWindow(title: 'Fin'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-    };
+      final mapSize = mapBox.size;
 
-
-    // 👉 Añadir marcador dinámico según índice tocado
-    if (hoveredLatLng != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('hovered'),
-          position: hoveredLatLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        ),
+      final offsetInMap = latLngToOffset(
+        point: next,
+        bounds: bounds,
+        mapSize: mapSize,
       );
-    }
+
+      _currentOffset = offsetInMap;
+
+  
+
+      setState(() {});
+    });
 
 
     return SizedBox(
       height: 400,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(5, 16, 5, 0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: Stack(
-            children: [
-              GoogleMap(
-                mapType: _mapType,
-                initialCameraPosition: CameraPosition(
-                  target: polylinePoints.first,
-                  zoom: 16,
-                ),
-                myLocationEnabled: false,
-                zoomGesturesEnabled: true,
-                scrollGesturesEnabled: true,
-                rotateGesturesEnabled: true,
-                tiltGesturesEnabled: true,
-                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                  Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
-                },
-                polylines: {
-                  Polyline(
-                    polylineId: const PolylineId('preview_polyline'),
-                    points: polylinePoints,
-                    color: Colors.blue,
-                    width: 5,
-                  ),
-                },
-                markers: markers,
-                onMapCreated: (controller) async {
-                  mapController = controller;
-                  await Future.delayed(const Duration(milliseconds: 300));
-                  _fitBounds();
-                },
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Stack(
+          children: [
+            GoogleMap(
+              key: _mapKey,
+              mapType: MapType.hybrid,
+              initialCameraPosition: CameraPosition(
+                target: _polylinePoints.first,
+                zoom: 16,
               ),
+              onMapCreated: (controller) async {
+                _mapController = controller;
+                await Future.delayed(const Duration(milliseconds: 300));
+                _fitBounds();
+              },
+              polylines: {
+                Polyline(
+                  polylineId: const PolylineId('track'),
+                  points: _polylinePoints,
+                  color: Colors.blue,
+                  width: 4,
+                ),
+              },
+              markers: {
+                Marker(
+                  markerId: const MarkerId('start'),
+                  position: _polylinePoints.first,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen),
+                ),
+                Marker(
+                  markerId: const MarkerId('end'),
+                  position: _polylinePoints.last,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueRed),
+                ),
+              },
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory(() => EagerGestureRecognizer()),
+              },
+              
+            ),
 
-              // 🟢 Botón flotante dentro del mapa
+            // Punto flotante blanco sobre el mapa
+            if (_currentOffset != null)
               Positioned(
-                top: 10,
-                right: 10,
-                child: FloatingActionButton(
-                  heroTag: 'mapTypeBtn',
-                  mini: true,
-                  backgroundColor: Colors.white,
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                  onPressed: () {
-                    setState(() {
-                      _mapType = _mapType == MapType.normal ? MapType.hybrid : MapType.normal;
-                    });
-                  },
-                  child: const Icon(Icons.layers),
+                left: _currentOffset!.dx - 6,
+                top: _currentOffset!.dy - 6,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.blueAccent, width: 2),
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   void _fitBounds() {
-    if (mapController == null || widget.track.points!.length < 2) return;
+    if (_mapController == null || _polylinePoints.length < 2) return;
 
     final bounds = _getLatLngBounds(widget.track.points!);
-    mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
   }
 
   LatLngBounds _getLatLngBounds(List<LocationPoint> points) {
@@ -600,6 +605,30 @@ class _MapState extends ConsumerState<_Map> {
     return LatLngBounds(
       southwest: LatLng(minLat, minLng),
       northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
+  Offset latLngToOffset({
+    required LatLng point,
+    required LatLngBounds bounds,
+    required Size mapSize,
+  }) {
+    // Coordenadas de los límites
+    final southWest = bounds.southwest;
+    final northEast = bounds.northeast;
+
+    // Diferencias de latitud y longitud
+    final latRange = northEast.latitude - southWest.latitude;
+    final lngRange = northEast.longitude - southWest.longitude;
+
+    // Coordenadas relativas (0..1)
+    final xPercent = (point.longitude - southWest.longitude) / lngRange;
+    final yPercent = 1 - ((point.latitude - southWest.latitude) / latRange); // invertido
+
+    // Offset en píxeles dentro del widget
+    return Offset(
+      xPercent * mapSize.width,
+      yPercent * mapSize.height,
     );
   }
 }

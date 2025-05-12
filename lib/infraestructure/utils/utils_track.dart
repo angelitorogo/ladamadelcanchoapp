@@ -101,6 +101,7 @@ Future<List<Map<String, dynamic>>> loadOfflineSnapshots() async {
 
 
 // Método para construir los datos del gráfico
+
 List<FlSpot> buildElevationProfile(List<LocationPoint> points) {
   double totalDistance = 0.0;
   List<FlSpot> spots = [];
@@ -116,7 +117,35 @@ List<FlSpot> buildElevationProfile(List<LocationPoint> points) {
   return spots;
 }
 
+
+/*
+List<FlSpot> buildElevationProfile(List<LocationPoint> points) {
+  final List<FlSpot> spots = [];
+  double accumulatedDistance = 0;
+
+  for (int i = 0; i < points.length; i++) {
+    if (i > 0) {
+      accumulatedDistance += getDistanceMeters(
+        points[i - 1].latitude,
+        points[i - 1].longitude,
+        points[i].latitude,
+        points[i].longitude,
+      );
+    }
+
+    // x: distancia acumulada en metros
+    // y: elevación
+    spots.add(FlSpot(accumulatedDistance, points[i].elevation));
+  }
+
+  return spots;
+}
+*/
+
+
+
 // Calcula distancia entre dos coordenadas (en metros)
+
 double calculateDistance(LocationPoint p1, LocationPoint p2) {
   const double R = 6371000; // radio de la Tierra en metros
   final double dLat = (p2.latitude - p1.latitude) * (pi / 180);
@@ -130,3 +159,24 @@ double calculateDistance(LocationPoint p1, LocationPoint p2) {
   final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
   return R * c;
 }
+/*
+double getDistanceMeters(double lat1, double lon1, double lat2, double lon2) {
+  const double R = 6371000; // Radio de la Tierra en metros
+  final double dLat = _degreesToRadians(lat2 - lat1);
+  final double dLon = _degreesToRadians(lon2 - lon1);
+
+  final double a = sin(dLat / 2) * sin(dLat / 2) +
+      cos(_degreesToRadians(lat1)) *
+          cos(_degreesToRadians(lat2)) *
+          sin(dLon / 2) *
+          sin(dLon / 2);
+
+  final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  return R * c;
+}
+
+
+double _degreesToRadians(double degrees) {
+  return degrees * pi / 180;
+}
+*/
