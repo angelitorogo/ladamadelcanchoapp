@@ -1,5 +1,4 @@
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/track_repository_impl.dart';

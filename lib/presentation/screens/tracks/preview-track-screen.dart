@@ -10,7 +10,6 @@ import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
-import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';

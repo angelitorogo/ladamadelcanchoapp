@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
-import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
