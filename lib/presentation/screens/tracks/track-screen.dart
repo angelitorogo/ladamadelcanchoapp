@@ -339,9 +339,9 @@ class _Perfil extends ConsumerWidget {
 
                           ref.read(hoveredPointLatLngProvider.notifier).setPoint(LatLng(p.latitude, p.longitude));
                         } else {
+
                           ref.read(hoveredPointLatLngProvider.notifier).clear();
                         }
-                        
                       },
                       handleBuiltInTouches: true, // activa el comportamiento por defecto
                       getTouchedSpotIndicator:
@@ -487,9 +487,18 @@ class _TrackMapState extends ConsumerState<_Map> {
 
   @override
   Widget build(BuildContext context) {
-    
+
+    /*
     ref.listen<LatLng?>(hoveredPointLatLngProvider, (prev, next) async {
-      if (next == null || _mapController == null) return;
+      if (next == null) {
+        // 👉 Usuario soltó el dedo → ocultamos el punto
+        setState(() {
+          _currentOffset = null;
+        });
+        return;
+      }
+
+      if (_mapController == null) return;
 
       final bounds = await _mapController!.getVisibleRegion();
 
@@ -504,79 +513,117 @@ class _TrackMapState extends ConsumerState<_Map> {
         mapSize: mapSize,
       );
 
-      _currentOffset = offsetInMap;
+      setState(() {
+        _currentOffset = offsetInMap;
+      });
+    });
+    */
 
-  
+    final hoveredPoint = ref.watch(hoveredPointLatLngProvider);
 
-      setState(() {});
+    // Se ejecuta en el frame siguiente, ideal para leer el tamaño y los bounds ya renderizados
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
+      if (hoveredPoint == null) {
+        if (_currentOffset != null) {
+          setState(() {
+            _currentOffset = null;
+          });
+        }
+        return;
+      }
+
+      if (_mapController == null) return;
+
+      final bounds = await _mapController!.getVisibleRegion();
+      final mapBox = _mapKey.currentContext?.findRenderObject() as RenderBox?;
+      if (mapBox == null) return;
+
+      final mapSize = mapBox.size;
+
+      final offsetInMap = latLngToOffset(
+        point: hoveredPoint,
+        bounds: bounds,
+        mapSize: mapSize,
+      );
+
+      if (_currentOffset != offsetInMap) {
+        setState(() {
+          _currentOffset = offsetInMap;
+        });
+      }
     });
 
 
     return SizedBox(
       height: 400,
       width: double.infinity,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Stack(
-          children: [
-            GoogleMap(
-              key: _mapKey,
-              mapType: MapType.hybrid,
-              initialCameraPosition: CameraPosition(
-                target: _polylinePoints.first,
-                zoom: 16,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Stack(
+            children: [
+              GoogleMap(
+                key: _mapKey,
+                mapType: MapType.hybrid,
+                initialCameraPosition: CameraPosition(
+                  target: _polylinePoints.first,
+                  zoom: 16,
+                ),
+                onMapCreated: (controller) async {
+                  _mapController = controller;
+                  await Future.delayed(const Duration(milliseconds: 300));
+                  _fitBounds();
+                },
+                polylines: {
+                  Polyline(
+                    polylineId: const PolylineId('track'),
+                    points: _polylinePoints,
+                    color: Colors.blue,
+                    width: 4,
+                  ),
+                },
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('start'),
+                    position: _polylinePoints.first,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueGreen),
+                  ),
+                  Marker(
+                    markerId: const MarkerId('end'),
+                    position: _polylinePoints.last,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueRed),
+                  ),
+                },
+                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                  Factory(() => EagerGestureRecognizer()),
+                },
+                
               ),
-              onMapCreated: (controller) async {
-                _mapController = controller;
-                await Future.delayed(const Duration(milliseconds: 300));
-                _fitBounds();
-              },
-              polylines: {
-                Polyline(
-                  polylineId: const PolylineId('track'),
-                  points: _polylinePoints,
-                  color: Colors.blue,
-                  width: 4,
-                ),
-              },
-              markers: {
-                Marker(
-                  markerId: const MarkerId('start'),
-                  position: _polylinePoints.first,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen),
-                ),
-                Marker(
-                  markerId: const MarkerId('end'),
-                  position: _polylinePoints.last,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed),
-                ),
-              },
-              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                Factory(() => EagerGestureRecognizer()),
-              },
-              
-            ),
-
-            // Punto flotante blanco sobre el mapa
-            if (_currentOffset != null)
-              Positioned(
-                left: _currentOffset!.dx - 6,
-                top: _currentOffset!.dy - 6,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.blueAccent, width: 2),
+        
+              // Punto flotante blanco sobre el mapa
+              if (_currentOffset != null)
+                Positioned(
+                  left: _currentOffset!.dx - 6,
+                  top: _currentOffset!.dy - 6,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.blueAccent, width: 2),
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
