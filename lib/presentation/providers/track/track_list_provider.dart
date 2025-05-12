@@ -52,50 +52,43 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
     return const TrackListState(); // Estado inicial
   }
 
-  Future<void> loadTracks({int limit = 10, int page = 1, String? userId}) async {
+  Future<void> loadTracks({int limit = 5, int page = 1, String? userId, bool append = false}) async {
+    
+    if (page > state.totalPages) return; // ❌ No más páginas
+
     state = state.copyWith(status: TrackListStatus.loading);
 
-    try {
-      
 
+    try {
       final response = await trackListRepository.loadAllTracks(
         limit: limit,
-        offset: (page - 1) * limit,
+        page: page,
         userId: userId,
       );
 
-      //print(response);
+      
 
-      final tracks = (response['tracks'] as List)
-        .map((trackJson) {
-          return Track.fromJson(trackJson);
-        })
-        .toList();
+      final tracks = (response['tracks'] as List).map((trackJson) {
+        return Track.fromJson(trackJson);
+      }).toList();
 
       final metadata = response['metadata'];
 
       state = state.copyWith(
         status: TrackListStatus.loaded,
-        tracks: tracks,
+        tracks: append ? [...state.tracks, ...tracks] : tracks,
         currentPage: metadata['page'],
         totalPages: metadata['lastPage'],
       );
+
     } catch (e) {
-
-      if(e is DioException) {
-        state = state.copyWith(
+      state = state.copyWith(
         status: TrackListStatus.error,
-        errorMessage: 'Error de conexión');
-      } else {
-        state = state.copyWith(
-          status: TrackListStatus.error,
-          errorMessage: e.toString(),
-        );
-      }
-
-      
+        errorMessage: '❌ Error al cargar tracks: ${e.toString()}',
+      );
     }
   }
+
 
 }
 

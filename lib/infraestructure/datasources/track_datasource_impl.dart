@@ -109,13 +109,18 @@ class TrackDatasourceImpl implements TrackDatasource {
   }
   
   @override
-  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int offset = 0, String? userId}) async {
+  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int page = 1, String? userId}) async {
 
     //await _fetchCsrfToken(); // ✅ CSRF requerido
 
     try {
       final response = await _dio.get(
         '/',
+        queryParameters: {
+        'limit': limit,
+        'page': page,
+        if (userId != null) 'userId': userId,
+      },
         options: Options(
           headers: {
             'X-CSRF-Token': _csrfToken,
