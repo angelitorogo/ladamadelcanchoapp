@@ -38,7 +38,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             limit: limit,
             page: nextPage,
             append: true,
-            userId: ref.read(authProvider).user?.id,
+            //userId: ref.read(authProvider).user?.id,
           );
         }
       }
@@ -137,6 +137,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 }
               },
               child: ListView.builder(
+                key: const PageStorageKey('trackListScroll'),
                 controller: _scrollController,
                 itemCount: trackState.tracks.length + 1,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -263,10 +264,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
           },
         ),
       ),
+
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDebugDialog(context, ref),
         child: const Icon(Icons.bug_report),
       ),
+      */
     );
   }
 }

@@ -81,6 +81,8 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
         totalPages: metadata['lastPage'],
       );
 
+      //print('📃 ${state.tracks.length}');
+
     } catch (e) {
       state = state.copyWith(
         status: TrackListStatus.error,

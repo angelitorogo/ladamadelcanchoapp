@@ -598,10 +598,12 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       ),
     
       //Debug
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDebugDialog(context, ref),
         child: const Icon(Icons.bug_report),
       ),
+      */
     
     );
   }
