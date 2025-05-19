@@ -125,6 +125,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     ];
 
     return NavigationDrawer(
+      
       selectedIndex: navDrawerIndex,
       onDestinationSelected: (value) {
         setState(() {
@@ -146,6 +147,12 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           height: MediaQuery.of(context).size.height - 30,
           child: Column(
             children: [
+
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('La Dama del Cancho', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+
               // SECCIÓN SCROLLABLE CON TODAS LAS EXPANSIONTILES
               Expanded(
                 child: SingleChildScrollView(
@@ -306,25 +313,39 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                         },
                       )
                     : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          ListTile(
-                            leading: Icon(appMenuItems[9].icon),
-                            title: Text(appMenuItems[9].title),
-                            onTap: () {
-                              context.push(appMenuItems[9].link!);
-                              widget.scaffoldKey.currentState?.closeDrawer();
-                            },
+                          Expanded(
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                              leading: Icon(appMenuItems[9].icon),
+                              title: Text(
+                                appMenuItems[9].title,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              onTap: () {
+                                context.push(appMenuItems[9].link!);
+                                widget.scaffoldKey.currentState?.closeDrawer();
+                              },
+                            ),
                           ),
-                          ListTile(
-                            leading: Icon(appMenuItems[10].icon),
-                            title: Text(appMenuItems[10].title),
-                            onTap: () {
-                              context.push(appMenuItems[10].link!);
-                              widget.scaffoldKey.currentState?.closeDrawer();
-                            },
+                          Expanded(
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                              leading: Icon(appMenuItems[10].icon),
+                              title: Text(
+                                appMenuItems[10].title,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              onTap: () {
+                                context.push(appMenuItems[10].link!);
+                                widget.scaffoldKey.currentState?.closeDrawer();
+                              },
+                            ),
                           ),
                         ],
                       ),
+
               ),
             ],
           ),
