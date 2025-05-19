@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 
@@ -14,8 +15,8 @@ class TrackRepositoryImpl extends TrackRepository {
   TrackRepositoryImpl(this.datasource);
 
   @override
-  Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile, String description, String type, String distance, String elevationGain, {List<File> images = const []}) {
-    return datasource.uploadTrack(name, gpxFile, description, type,  distance, elevationGain, images: images);
+  Future<Map<String, dynamic>> uploadTrack(WidgetRef ref, String name, File gpxFile, String description, String type, String distance, String elevationGain, {List<File> images = const []}) {
+    return datasource.uploadTrack(ref, name, gpxFile, description, type,  distance, elevationGain, images: images);
   }
   
   @override

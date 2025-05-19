@@ -145,7 +145,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
       if( !exitsTrack) {
 
-        final response = await repository.uploadTrack(name, uploadFile, description, type, distance, elevationGain, images: images );
+        final response = await repository.uploadTrack(ref, name, uploadFile, description, type, distance, elevationGain, images: images );
         state = const TrackUploadState(status: TrackUploadStatus.success);
         return response;
 

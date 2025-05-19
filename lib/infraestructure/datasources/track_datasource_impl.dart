@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 
 class TrackDatasourceImpl implements TrackDatasource {
   
@@ -65,13 +67,14 @@ class TrackDatasourceImpl implements TrackDatasource {
 
 
   @override
-  Future<Map<String, dynamic>> uploadTrack(String name, File gpxFile, String description, String type, String distance, String elevationGain, {List<File> images = const[]}) async {
+  Future<Map<String, dynamic>> uploadTrack(WidgetRef ref, String name, File gpxFile, String description, String type, String distance, String elevationGain, {List<File> images = const[]}) async {
     
     await _fetchCsrfToken(); // ✅ CSRF requerido
 
     //print('✅ Images3: $images');
 
     final formData = FormData.fromMap({
+      'user': ref.watch(authProvider).user!.id,
       'name': name,
       'distance': distance,
       'elevation_gain': elevationGain,

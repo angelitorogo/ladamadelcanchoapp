@@ -73,8 +73,7 @@ class _LoginForm extends ConsumerWidget {
             label: 'Correo electrónico',
             prefixIcon: Icons.email,
             onChanged: loginNotifier.emailChanged,
-            initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
-            //initialValue: '', //eliminar linea.
+            //initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
             validator: (_) {
               return loginState.emailTouched
                   ? Email.emailErrorMessage(loginState.email.error)
@@ -90,8 +89,7 @@ class _LoginForm extends ConsumerWidget {
             prefixIcon: Icons.password,
             obscureText: true,
             onChanged: loginNotifier.passwordChanged,
-            initialValue: 'Rod00gom!', //Eliminar linea
-            //initialValue: '', //Eliminar linea
+            //initialValue: 'Rod00gom!', //Eliminar linea
             validator: (_) {
               return loginState.passwordTouched
                   ? Password.passwordErrorMessage(loginState.password.error)
