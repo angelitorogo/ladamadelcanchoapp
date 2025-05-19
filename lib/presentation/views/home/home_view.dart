@@ -108,6 +108,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
             if (trackState.status == TrackListStatus.loading && trackState.tracks.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
+            if (trackState.status == TrackListStatus.loading && trackState.changeSetting!) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
             if (trackState.status == TrackListStatus.error && trackState.tracks.isEmpty) {
               return const Center(child: Text('❌ Error al cargar las rutas'));

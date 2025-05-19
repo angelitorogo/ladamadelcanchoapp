@@ -5,6 +5,7 @@ import 'package:ladamadelcanchoapp/config/menu/menu_items.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
@@ -25,9 +26,12 @@ class _SideMenuState extends ConsumerState<SideMenu> {
   Widget build(BuildContext context) {
 
     final auth = ref.watch(authProvider);
+    final direction = ref.watch(trackListProvider).direction;
+    final order = ref.watch(trackListProvider).orderBy;
+    final iconOrder = direction == 'asc' ? Icons.trending_up : Icons.trending_down;
 
-    final hasNotch = MediaQuery.of(context).viewPadding.top > 35; //saber el espacio que hay desde el borde superior hasta despues del notch, si tuviera mas de 35px es que tiene notch
-    
+    final sideMenuState = ref.watch(sideMenuStateProvider);
+    final sideMenuNotifier = ref.read(sideMenuStateProvider.notifier);
 
     final appMenuItems = <MenuItem>[
       const MenuItem(
@@ -100,19 +104,11 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         }
       ),
 
-      (auth.isAuthenticated) ?
-
-      MenuItem(
+      const MenuItem(
         title: 'Salir',
         icon: Icons.logout,
-        onTap: (ref) async { // ✅ Pasa `ref` correctamente
-          final hasInternet = await checkAndWarnIfNoInternet(context);
-          if(hasInternet) {
-            ref.read(authProvider.notifier).logout(ref);
-          }
-          
-        },
-      ) :
+        
+      ),
 
       const MenuItem(
         title: 'Login',
@@ -135,162 +131,204 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           navDrawerIndex = value;
         });
 
-
-
         final menuItem = appMenuItems[value];
 
         if (menuItem.onTap != null) {
-          menuItem.onTap!(ref); // ✅ Ejecuta la función si existe
+          menuItem.onTap!(ref);
         } else if (menuItem.link != null) {
-          context.push(menuItem.link!); // ✅ Solo navega si hay un link
+          context.push(menuItem.link!);
         }
 
-        widget.scaffoldKey.currentState?.closeDrawer();  // ya podriamos cerrar el side menu, cuando naveguemos a un item
-
+        widget.scaffoldKey.currentState?.closeDrawer();
       },
       children: [
-
-        Padding(
-          padding: EdgeInsets.fromLTRB(28, hasNotch ? 0 : 20, 16, 10), // en el padding top comprobamos si tiene notch o no, y asignamos o 0 o 20px de padding
-          child: const Text('Principal'),
-        ),
-
-        ...appMenuItems
-        .sublist(0,3)
-          .map( (item) => NavigationDrawerDestination(
-            icon: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(item.icon),
-            ),
-            label: Text(item.title)
-          ),
-        ),
-
-        const Padding(
-          padding: EdgeInsets.fromLTRB(28, 5, 28, 0),
-          child: Divider(),
-        ),
-
-        Padding(
-          padding: EdgeInsets.fromLTRB(28, hasNotch ? 0 : 20, 16, 10), // en el padding top comprobamos si tiene notch o no, y asignamos o 0 o 20px de padding
-          child: const Text('Tracks'),
-        ),
-
-        ...appMenuItems.sublist(3, 5).map((item) {
-          if (item.title == 'Tracks Pendientes') {
-            final pendingTracks = ref.watch(pendingTracksProvider);
-            final hasPendings = pendingTracks.isNotEmpty;
-
-            return NavigationDrawerDestination(
-              icon: Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Icon(item.icon),
-              ),
-              label: Row(
-                children: [
-                  Text(item.title),
-                  const SizedBox(width: 6),
-                  if (hasPendings)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
+        SizedBox(
+          height: MediaQuery.of(context).size.height - 30,
+          child: Column(
+            children: [
+              // SECCIÓN SCROLLABLE CON TODAS LAS EXPANSIONTILES
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      /// --- PRINCIPAL ---
+                      ExpansionTile(
+                        initiallyExpanded: sideMenuState.isPrincipalExpanded,
+                        onExpansionChanged: (expanded) {
+                          sideMenuNotifier.setPrincipalExpanded(expanded);
+                        },
+                        title: const Text('Principal'),
+                        childrenPadding: const EdgeInsets.only(left: 12),
+                        tilePadding: const EdgeInsets.fromLTRB(28, 0, 16, 0),
+                        children: [
+                          ListTile(
+                            leading: Icon(appMenuItems[0].icon),
+                            title: Text(appMenuItems[0].title),
+                            onTap: () {
+                              context.push(appMenuItems[0].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(appMenuItems[1].icon),
+                            title: Text(appMenuItems[1].title),
+                            onTap: () {
+                              context.push(appMenuItems[1].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(appMenuItems[2].icon),
+                            title: Text(appMenuItems[2].title),
+                            onTap: () {
+                              context.push(appMenuItems[2].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        pendingTracks.length.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+
+                      /// --- TRACKS ---
+                      ExpansionTile(
+                        initiallyExpanded: sideMenuState.isTracksExpanded,
+                        onExpansionChanged: (expanded) {
+                          sideMenuNotifier.setTracksExpanded(expanded);
+                        },
+                        title: const Text('Tracks'),
+                        childrenPadding: const EdgeInsets.only(left: 12),
+                        tilePadding: const EdgeInsets.fromLTRB(28, 0, 16, 0),
+                        children: [
+                          Builder(
+                            builder: (context) {
+                              final pendingTracks = ref.watch(pendingTracksProvider);
+                              final hasPendings = pendingTracks.isNotEmpty;
+
+                              return ListTile(
+                                leading: Icon(appMenuItems[3].icon),
+                                title: Row(
+                                  children: [
+                                    const Text('Tracks Pendientes'),
+                                    const SizedBox(width: 6),
+                                    if (hasPendings)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          pendingTracks.length.toString(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                onTap: () {
+                                  context.push(appMenuItems[3].link!);
+                                  widget.scaffoldKey.currentState?.closeDrawer();
+                                },
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(appMenuItems[4].icon),
+                            title: Text(appMenuItems[4].title),
+                            onTap: () {
+                              context.push(appMenuItems[4].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                        ],
                       ),
-                    ),
-                ],
+
+                      /// --- ORDENAR TRACKS POR ---
+                      ExpansionTile(
+                        initiallyExpanded: sideMenuState.isOrderExpanded,
+                        onExpansionChanged: (expanded) {
+                          sideMenuNotifier.setOrderExpanded(expanded);
+                        },
+                        title: const Text('Ordenar tracks por:'),
+                        childrenPadding: const EdgeInsets.only(left: 12),
+                        tilePadding: const EdgeInsets.fromLTRB(28, 0, 16, 0),
+                        children: [
+                          ListTile(
+                            leading: Icon(appMenuItems[5].icon),
+                            title: const Text('Distancia'),
+                            trailing: order == 'distance' ? Icon(iconOrder, size: 20) : null,
+                            onTap: () {
+                              appMenuItems[5].onTap?.call(ref);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(appMenuItems[6].icon),
+                            title: const Text('Desnivel'),
+                            trailing: order == 'elevation_gain' ? Icon(iconOrder, size: 20) : null,
+                            onTap: () {
+                              appMenuItems[6].onTap?.call(ref);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(appMenuItems[7].icon),
+                            title: const Text('Fecha'),
+                            trailing: order == 'created_at' ? Icon(iconOrder, size: 20) : null,
+                            onTap: () {
+                              appMenuItems[7].onTap?.call(ref);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            );
-          }
 
-          // Otros ítems normales
-          return NavigationDrawerDestination(
-            icon: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(item.icon),
-            ),
-            label: Text(item.title),
-          );
-        }),
+              const Divider(),
 
-
-
-        const Padding(
-          padding: EdgeInsets.fromLTRB(28, 5, 28, 0),
-          child: Divider(),
-        ),
-
-        Padding(
-          padding: EdgeInsets.fromLTRB(28, hasNotch ? 0 : 20, 16, 10), // en el padding top comprobamos si tiene notch o no, y asignamos o 0 o 20px de padding
-          child: const Text('Ordenar tracks por:'),
-        ),
-
-        ...appMenuItems
-        .sublist(5,6)
-          .map( (item) => NavigationDrawerDestination(
-            icon: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(item.icon),
-            ),
-            label: Text(item.title)
+              /// --- SECCIÓN INFERIOR: LOGIN / REGISTRO / SALIR ---
+              Padding(
+                padding: const EdgeInsets.only(left: 12, right: 12, bottom: 20),
+                child: auth.isAuthenticated
+                    ? ListTile(
+                        leading: Icon(appMenuItems[8].icon),
+                        title: Text(appMenuItems[8].title),
+                        onTap: () async {
+                          final hasInternet = await checkAndWarnIfNoInternet(context);
+                          if (hasInternet) {
+                            ref.read(authProvider.notifier).logout(ref);
+                            widget.scaffoldKey.currentState?.closeDrawer();
+                          }
+                        },
+                      )
+                    : Row(
+                        children: [
+                          ListTile(
+                            leading: Icon(appMenuItems[9].icon),
+                            title: Text(appMenuItems[9].title),
+                            onTap: () {
+                              context.push(appMenuItems[9].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                          ListTile(
+                            leading: Icon(appMenuItems[10].icon),
+                            title: Text(appMenuItems[10].title),
+                            onTap: () {
+                              context.push(appMenuItems[10].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                        ],
+                      ),
+              ),
+            ],
           ),
-        ),
-
-        ...appMenuItems
-        .sublist(6,7)
-          .map( (item) => NavigationDrawerDestination(
-            icon: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(item.icon),
-            ),
-            label: Text(item.title)
-          ),
-        ),
-
-        ...appMenuItems
-        .sublist(7,8)
-          .map( (item) => NavigationDrawerDestination(
-            icon: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(item.icon),
-            ),
-            label: Text(item.title)
-          ),
-        ),
-
-         const Padding(
-          padding: EdgeInsets.fromLTRB(28, 5, 28, 0),
-          child: Divider(),
-        ),
-
-
-        ...appMenuItems
-        .sublist(8,9)
-          .map( (item) => NavigationDrawerDestination(
-            //enabled: false,
-            icon: Icon(item.icon),
-            label: Text(item.title)
-          ),
-        ),
-
-
-        if(!auth.isAuthenticated)
-        ...appMenuItems
-        .sublist(9)
-          .map( (item) => NavigationDrawerDestination(
-            //enabled: false,
-            icon: Icon(item.icon),
-            label: Text(item.title)
-          ),
-        ),
-
+        )
       ],
     );
   }

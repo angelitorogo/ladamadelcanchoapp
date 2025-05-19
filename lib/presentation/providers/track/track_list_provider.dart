@@ -16,6 +16,7 @@ class TrackListState {
   final String orderBy;
   final String direction;
   final String? errorMessage;
+  final bool? changeSetting;
 
   const TrackListState({
     this.status = TrackListStatus.initial,
@@ -25,6 +26,7 @@ class TrackListState {
     this.orderBy = 'created_at',
     this.direction = 'desc',
     this.errorMessage,
+    this.changeSetting = false,
   });
 
   TrackListState copyWith({
@@ -35,6 +37,7 @@ class TrackListState {
     String? orderBy,
     String? direction,
     String? errorMessage,
+    bool? changeSetting,
   }) {
     return TrackListState(
       status: status ?? this.status,
@@ -43,7 +46,8 @@ class TrackListState {
       totalPages: totalPages ?? this.totalPages,
       orderBy: orderBy ?? this.orderBy,
       direction: direction ?? this.direction,
-      errorMessage: errorMessage,
+      errorMessage: errorMessage ?? this.errorMessage,
+      changeSetting: changeSetting ?? this.changeSetting,
     );
   }
 }
@@ -83,6 +87,7 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
 
       state = state.copyWith(
         status: TrackListStatus.loaded,
+        changeSetting: false,
         tracks: append ? [...state.tracks, ...tracks] : tracks,
         currentPage: metadata['page'],
         totalPages: metadata['lastPage'],
@@ -105,6 +110,10 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
     state = state.copyWith(
       orderBy: orderBy,
       direction: direction,
+    );
+
+    state = state.copyWith(
+      changeSetting: true,
     );
 
     loadTracks();
