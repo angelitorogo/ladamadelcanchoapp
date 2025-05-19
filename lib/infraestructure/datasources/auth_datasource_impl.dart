@@ -12,6 +12,7 @@ import 'package:ladamadelcanchoapp/domain/datasources/auth_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapper.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/auth_verify_user_response.dart';
+import 'package:ladamadelcanchoapp/infraestructure/models/register_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 
@@ -186,89 +187,90 @@ class AuthDatasourceImpl  extends AuthDatasource{
   
 
 
-@override
-Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) async {
+  @override
+  Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) async {
 
-  String? base64Image;
-  dynamic data;
+    String? base64Image;
+    dynamic data;
 
-  // ✅ Convertir la imagen a Base64 si el usuario ha seleccionado una
-  if (user.image != null  &&  user.image!.length > 60) {
-    final File imageFile = File(user.image!);
-    if (await imageFile.exists()) {
-      final List<int> imageBytes = await imageFile.readAsBytes();
-      base64Image = base64Encode(imageBytes);
+    // ✅ Convertir la imagen a Base64 si el usuario ha seleccionado una
+    if (user.image != null  &&  user.image!.length > 60) {
+      final File imageFile = File(user.image!);
+      if (await imageFile.exists()) {
+        final List<int> imageBytes = await imageFile.readAsBytes();
+        base64Image = base64Encode(imageBytes);
+
+        // ✅ Enviar datos en JSON incluyendo la imagen en Base64 (si existe)
+        data = {
+          "id": user.id,
+          "email": user.email,
+          "fullname": user.fullname,
+          "role": user.role,
+          "telephone": user.telephone == "" ? null : user.telephone,
+          "active": user.active,
+          "theme": user.theme,
+          "language": user.language,
+          "image": base64Image, // 🔥 Se envía la imagen en Base64 o `null` si no hay nueva imagen
+        };
+        
+      }
+
+    } else {
 
       // ✅ Enviar datos en JSON incluyendo la imagen en Base64 (si existe)
-      data = {
-        "id": user.id,
-        "email": user.email,
-        "fullname": user.fullname,
-        "role": user.role,
-        "telephone": user.telephone ?? "",
-        "active": user.active,
-        "theme": user.theme,
-        "language": user.language,
-        "image": base64Image, // 🔥 Se envía la imagen en Base64 o `null` si no hay nueva imagen
-      };
-      
+        data = {
+          "id": user.id,
+          "email": user.email,
+          "fullname": user.fullname,
+          "role": user.role,
+          "telephone": user.telephone == "" ? null : user.telephone,
+          "active": user.active,
+          "theme": user.theme,
+          "language": user.language,
+        };
+
     }
 
-  } else {
 
-    // ✅ Enviar datos en JSON incluyendo la imagen en Base64 (si existe)
-      data = {
-        "id": user.id,
-        "email": user.email,
-        "fullname": user.fullname,
-        "role": user.role,
-        "telephone": user.telephone ?? "",
-        "active": user.active,
-        "theme": user.theme,
-        "language": user.language,
-      };
-
-  }
+    // ✅ Si no hay CSRF en memoria, intenta obtener uno nuevo automáticamente
+    await fetchCsrfToken();
 
 
-  // ✅ Si no hay CSRF en memoria, intenta obtener uno nuevo automáticamente
-  await fetchCsrfToken();
+    final response = await _dio.put(
+      "/update",
+      data: data,
+      options: Options(
+        headers: {
+          "X-CSRF-Token": _csrfToken,
+          "Content-Type": "application/json",
+        },
+      ),
+    );
 
+    if (response.statusCode == 400 || response.statusCode == 401) {
+      throw Exception(response.data['message']);
+    }
 
-  final response = await _dio.put(
-    "/update",
-    data: data,
-    options: Options(
-      headers: {
-        "X-CSRF-Token": _csrfToken,
-        "Content-Type": "application/json",
-      },
-    ),
-  );
+    final UserUpdatedResponse userUpdated = UserUpdatedResponse(
+      id: response.data['id'], 
+      email: response.data['email'], 
+      fullname: response.data['fullname'], 
+      password: response.data['password'], 
+      role: response.data['role'], 
+      telephone: response.data['telephone'], 
+      image: response.data['image'], 
+      active: response.data['active'], 
+      theme: response.data['theme'], 
+      createdAt: DateTime.tryParse(response.data['created_at'])!, 
+      updatedAt: DateTime.tryParse(response.data['updated_at'])!, 
+      language: response.data['language']
+    ); 
 
-  if (response.statusCode != 200) {
-    throw Exception(response.data['message']);
-  }
+    return userUpdated;
 
-  final UserUpdatedResponse userUpdated = UserUpdatedResponse(
-    id: response.data['id'], 
-    email: response.data['email'], 
-    fullname: response.data['fullname'], 
-    password: response.data['password'], 
-    role: response.data['role'], 
-    telephone: response.data['telephone'], 
-    image: response.data['image'], 
-    active: response.data['active'], 
-    theme: response.data['theme'], 
-    createdAt: DateTime.tryParse(response.data['created_at'])!, 
-    updatedAt: DateTime.tryParse(response.data['updated_at'])!, 
-    language: response.data['language']
-  ); 
+    }
+    
 
-  return userUpdated;
-
-  }
-  
   @override
   Future<UserEntity> getUser(String userId) async {
 
@@ -296,8 +298,38 @@ Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context) as
     }
     
   }
+  
+  @override
+  Future<RegisterResult> register(BuildContext context, String fullname, String email, String password, WidgetRef ref) async {
+    
+    try {
 
+      // ✅ Asegura tener CSRF Token antes de login
+      await fetchCsrfToken();
 
+      final response = await _dio.post(
+        '/register',
+        data: {'fullname': fullname, 'email': email, 'password': password},
+        options: Options(
+          headers: {'X-CSRF-Token': _csrfToken},
+        ),
+      );
+
+      if (response.statusCode == 201 && response.data['message'] == 'Usuario registrado correctamente') {
+        final msg = response.data['message'] ?? 'Usuario registrado correctamente';
+        return RegisterResult(success: true, message: msg);
+      } else {
+        final msg = response.data['message'] ?? 'Error al registrar usuario';
+        return RegisterResult(success: false, message: msg);
+      }
+      
+    } catch (e) {
+      return RegisterResult(success: false, message: e.toString());
+    }
+
+  }
+
+  
 
     
 }

@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/forms/login_notifier.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/forms/register_notifier.dart';
+import 'package:ladamadelcanchoapp/presentation/widgets/alerts/alerts.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/widgets.dart';
 
-class LoginScreen extends StatelessWidget {
-  static const name = 'login-screen';
+class RegisterScreen extends StatelessWidget {
 
-  const LoginScreen({super.key});
+  static const name = 'register-screen';
+
+  const RegisterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: _LoginView(),
+      body: _RegisterView(),
     );
   }
 }
 
-class _LoginView extends StatelessWidget {
-  const _LoginView();
+class _RegisterView extends StatelessWidget {
+  const _RegisterView();
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +36,7 @@ class _LoginView extends StatelessWidget {
               SizedBox(height: 40),
               FlutterLogo(size: 200),
               SizedBox(height: 40),
-              _LoginForm(),
+              _RegisterForm(),
               SizedBox(height: 20),
             ],
           ),
@@ -44,14 +47,14 @@ class _LoginView extends StatelessWidget {
 }
 
 
-class _LoginForm extends ConsumerWidget {
-  const _LoginForm();
+class _RegisterForm extends ConsumerWidget {
+  const _RegisterForm();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final loginState = ref.watch(loginProvider); //estado
-    final loginNotifier = ref.read(loginProvider.notifier); //notifier
+    final registerState = ref.watch(registerProvider); //estado
+    final registerNotifier = ref.read(registerProvider.notifier); //notifier
 
     final authState = ref.watch(authProvider); //estado
     final authNotifier = ref.read(authProvider.notifier); //notifier
@@ -68,16 +71,31 @@ class _LoginForm extends ConsumerWidget {
       autovalidateMode: AutovalidateMode.onUserInteraction, // Validación en tiempo real
       child: Column(
         children: [
+
+          // Nombre completo
+          CustomTextFormFiled(
+            label: 'Nombre completo',
+            prefixIcon: Icons.person_sharp,
+            onChanged: registerNotifier.fullnameChanged,
+            initialValue: 'Pepe Perez', //eliminar linea.
+            validator: (_) {
+              return registerState.fullnameTouched
+                  ? Fullname.fullnameErrorMessage(registerState.fullname.error)
+                  : null;
+            },
+          ),
+
+          const SizedBox(height: 20),
+
           // Email
           CustomTextFormFiled(
             label: 'Correo electrónico',
             prefixIcon: Icons.email,
-            onChanged: loginNotifier.emailChanged,
-            initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
-            //initialValue: '', //eliminar linea.
+            onChanged: registerNotifier.emailChanged,
+            initialValue: 'pepe@pepe.com', //eliminar linea.
             validator: (_) {
-              return loginState.emailTouched
-                  ? Email.emailErrorMessage(loginState.email.error)
+              return registerState.emailTouched
+                  ? Email.emailErrorMessage(registerState.email.error)
                   : null;
             },
           ),
@@ -89,12 +107,27 @@ class _LoginForm extends ConsumerWidget {
             label: 'Contraseña',
             prefixIcon: Icons.password,
             obscureText: true,
-            onChanged: loginNotifier.passwordChanged,
+            onChanged: registerNotifier.passwordChanged,
             initialValue: 'Rod00gom!', //Eliminar linea
-            //initialValue: '', //Eliminar linea
             validator: (_) {
-              return loginState.passwordTouched
-                  ? Password.passwordErrorMessage(loginState.password.error)
+              return registerState.passwordTouched
+                  ? Password.passwordErrorMessage(registerState.password.error)
+                  : null;
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          // Contraseña
+          CustomTextFormFiled(
+            label: 'Repite contraseña',
+            prefixIcon: Icons.password,
+            obscureText: true,
+            onChanged: registerNotifier.password2Changed,
+            initialValue: 'Rod00gom!', //Eliminar linea
+            validator: (_) {
+              return registerState.password2Touched
+                  ? Password.passwordErrorMessage(registerState.password2.error)
                   : null;
             },
           ),
@@ -128,40 +161,53 @@ class _LoginForm extends ConsumerWidget {
                 ),
               ),
 
-              //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
-              onPressed: () async {
+              onPressed: () async{
+
+                print('DATA:');
+                print(registerState.fullname.value);
+                print(registerState.email.value);
+                print(registerState.password.value);
+                print(registerState.password2.value);
+
+                if(registerState.password.value != registerState.password2.value) {
+                  mostrarAlerta(context, 'Contraseñas no coinciden');
+                  return;
+                }
 
                 final hasInternet = await checkAndWarnIfNoInternet(context);
                 if(hasInternet) {
 
-                  await authNotifier.login(
+                  final result = await authNotifier.register(
                     // ignore: use_build_context_synchronously
                     context,
-                    loginState.email.value,
-                    loginState.password.value,
+                    registerState.fullname.value,
+                    registerState.email.value,
+                    registerState.password.value,
                     ref
                   );
 
+                  if (result.success) {
+                    // ✅ Registro OK, ya se redirige dentro del notifier
+                    if (context.mounted) {
+                      mostrarAlertaSuccess(context, result.message!, redirectRoute: '/');
+                    }
+                  } else {
+                    // ❌ Mostrar alerta con mensaje del backend
+                    if (context.mounted) {
+                      mostrarAlerta(context, result.message!);
+                    }
+                  }
+
                 }
 
-                
-              
-              },
 
-              /*
-              onPressed: authState.isLoading ||
-                      loginState.status != FormzSubmissionStatus.success
-                  /? null
-                  : () async {
-                      await authNotifier.login(
-                        context,
-                        loginState.email.value,
-                        loginState.password.value,
-                      );
-                    },
-              */
-              icon: const Icon(Icons.login, size: 30, color: Colors.white,),
-              label: const Text('Login', style: TextStyle(fontSize: 17)),
+              },
+              
+            
+            
+              
+              icon: const Icon(Icons.person_add, size: 30, color: Colors.white,),
+              label: const Text('Registro', style: TextStyle(fontSize: 17)),
             ),
           )
 
@@ -195,63 +241,7 @@ class _LoginForm extends ConsumerWidget {
     );
   }
 
-  void mostrarAlerta(BuildContext context, String mensaje) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog( // ⬅ Usamos `Dialog` para más control
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: SizedBox(
-            width: 300, // ⬅ Define el ancho de la alerta
-            height: 300,
-            child: AlertDialog(
-              titlePadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 30),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 28),
-                  SizedBox(height: 10),
-                  Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: Text(
-                mensaje,
-                textAlign: TextAlign.center, // 🔥 Centra el texto
-                style: const TextStyle(fontSize: 17),
-              ),
-              actions: [
-                Center(
-                  child: SizedBox(
-                    width: 150,
-                    height: 50,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      child: const Text(
-                        'Aceptar',
-                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
+  
 
 
   

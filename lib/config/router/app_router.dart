@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_auth_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/login_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/auth/register_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
@@ -67,6 +68,12 @@ final appRouter = GoRouter(
       ),  
 
       GoRoute(
+        path: '/register',
+        name: RegisterScreen.name,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+
+      GoRoute(
         path: '/profile',
         name: ProfileScreen.name,
         builder: (context, state) {
@@ -85,7 +92,9 @@ final appRouter = GoRouter(
       GoRoute(
         path: '/pending-tracks',
         name: PendingTracksScreen.name,
-        builder: (context, state) => const PendingTracksScreen(),
+        builder: (context, state) {
+          return const CheckAuthScreen(child: PendingTracksScreen());
+        },
       ),
       
       GoRoute(

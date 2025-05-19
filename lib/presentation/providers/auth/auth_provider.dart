@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
+import 'package:ladamadelcanchoapp/infraestructure/models/register_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/login_notifier.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
@@ -108,7 +110,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ref.read(profileProvider.notifier).resetForm(userTempUpdated);
 
     } catch (error) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Sesión expirada, inicia sesón de nuevo');
+      if(error.toString().contains('El teléfono solo puede contener números')){
+        state = state.copyWith(isLoading: false, errorMessage: 'El teléfono solo puede contener números');
+      }
+      // Extrae solo el mensaje limpio de la Exception
+      final cleanedMessage = error.toString().startsWith('Exception: ')
+          ? error.toString().replaceFirst('Exception: ', '')
+          : error.toString();
+      state = state.copyWith(isLoading: false, errorMessage: cleanedMessage);
     }
 
   }
@@ -132,7 +141,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(BuildContext context, String email, String password, WidgetRef ref) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    email = 'angelitorogo@hotmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
+    //email = 'pepe2@pepe.com'; //para no tener que escribir email y password mientras dure el desarrollo
+    //email = 'angelitorogo@hotmail.com';
     //email = 'crysmaldonado20@gmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
     password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
@@ -147,6 +157,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await verifyUser();
         formNotifier.resetForm();
         state = state.copyWith(isAuthenticated: true, isLoading: false);
+        ref.watch(pendingTracksProvider.notifier).loadTracks();
         if (context.mounted) {
           GoRouter.of(context).go('/');
         }
@@ -200,7 +211,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   }
 
-  Future<void> logout() async {
+  Future<void> logout(WidgetRef ref) async {
 
     state = state.copyWith(isLoading: true);
 
@@ -215,11 +226,47 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = const AuthState();
 
       state = state.copyWith(isLoading: false, user: null, isAuthenticated: false);
+      ref.read(pendingTracksProvider.notifier).resetState();
 
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: 'Error al verificar usuario');
     }
 
+  }
+
+
+  Future<RegisterResult> register(BuildContext context, String fullname, String email, String password, WidgetRef ref) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final result = await authRepository.register(context, fullname, email, password, ref);
+
+
+      if (result.success) {
+        formNotifier.resetForm();
+        state = state.copyWith(isLoading: false);
+        /*
+        if (context.mounted) {
+          GoRouter.of(context).go('/');
+        }
+        */
+        return result;
+      } else {
+        // ✅ Asegurar que el estado de autenticación es FALSO si el login falla
+        state = state.copyWith(
+          isLoading: false,
+        );
+        return result;
+      }
+
+
+    } catch (e) {
+      // ✅ También asegurar que `isAuthenticated = false` en caso de error
+      state = state.copyWith(
+        isLoading: false,
+      );
+      return RegisterResult(success: false, message: e.toString());
+    }
   }
 
 }

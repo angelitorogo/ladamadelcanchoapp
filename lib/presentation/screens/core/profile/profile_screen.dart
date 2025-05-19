@@ -4,8 +4,10 @@ import 'package:formz/formz.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/widgets/alerts/alerts.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/inputs/custom_text_form_filed.dart';
 import 'dart:io';
 
@@ -35,6 +37,7 @@ class ProfileScreen extends ConsumerWidget {
     final colors = Theme.of(context).colorScheme;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
+
       if (previous?.errorMessage != next.errorMessage && next.errorMessage != null) {
         Future.microtask(() {
           if (context.mounted && ModalRoute.of(context)?.isCurrent == true) {
@@ -173,8 +176,9 @@ class ProfileScreen extends ConsumerWidget {
                         initialValue: profileState.telephone.value,
                         onChanged: profileNotifier.telephoneChanged,
                         validator: (_) {
-                          return profileState.telephoneTouched 
-                              ? Telephone.telephoneErrorMessage(profileState.telephone.error) 
+                          final error = profileState.telephone.displayError;
+                          return error != null 
+                              ? Telephone.telephoneErrorMessage(error) 
                               : null;
                         },
                       ),
@@ -252,97 +256,17 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
         ),
+        
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showDebugDialog(context, ref),
+        child: const Icon(Icons.bug_report),
+      ),
+      
       ),
     );
   }
 
-  void mostrarAlerta(BuildContext context, String mensaje) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          title: const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: Colors.red, size: 28),
-              SizedBox(height: 10),
-              Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: Text(
-            mensaje,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 17),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            SizedBox(
-              width: 150,
-              height: 50,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                child: const Text(
-                  'Aceptar',
-                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void mostrarAlertaSuccess(BuildContext context, String mensaje) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          title: const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(height: 10),
-              Text('Hecho!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: Text(
-            mensaje,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 17),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            SizedBox(
-              width: 150,
-              height: 50,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                child: const Text(
-                  'Aceptar',
-                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  
 
 
 }

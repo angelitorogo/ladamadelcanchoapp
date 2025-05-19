@@ -19,51 +19,34 @@ class ConfigView extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mapa'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        scrolledUnderElevation: 0, //Para que no cambie el color del appbar cuando hacemos scroll
+        title: const Text('Configuración'),
         actions: [
-
-          (auth.isAuthenticated) ?
-          
-          GestureDetector(
-            onTap: () {
-              GoRouter.of(context).push('/profile');
-            },
-            child: SizedBox(
-              height: 40,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ClipOval(
-                  child: Image.network(
-                    imageUrl,
-                    width: 40, // Tamaño de la imagen
-                    height: 40,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      size: 50,
-                      color: Colors.grey,
-                    ), // 🔥 Si la imagen no carga, muestra un ícono
+          (auth.isAuthenticated)
+              ? GestureDetector(
+                  onTap: () => GoRouter.of(context).push('/profile'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ClipOval(
+                      child: Image.network(
+                        imageUrl,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.person, size: 40, color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: IconButton.filledTonal(
+                    onPressed: () => GoRouter.of(context).push('/login'),
+                    icon: const Icon(Icons.login),
                   ),
                 ),
-              ),
-            ),
-          )
-
-          :
-
-          SizedBox(
-            height: 40,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: IconButton.filledTonal(
-                onPressed: () {
-                  GoRouter.of(context).push('/login');
-                }, 
-                icon: const Icon(Icons.login)
-              ),
-            ),
-          ),
-
         ],
       ),
         

@@ -71,6 +71,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        scrolledUnderElevation: 0, //Para que no cambie el color del appbar cuando hacemos scroll
         title: const Text('Inicio'),
         actions: [
           (auth.isAuthenticated)

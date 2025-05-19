@@ -34,7 +34,6 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
   @override
   Widget build(BuildContext context) {
     final tracks = ref.watch(pendingTracksProvider);
-    final notifier = ref.read(pendingTracksProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tracks pendientes')),
@@ -86,7 +85,8 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                                 ),
                                 onPressed: () async {
                                   Navigator.of(context).pop();
-                                  await notifier.removeTrack(index);
+                                  
+                                  await ref.read(pendingTracksProvider.notifier).removeTrack(index);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -95,6 +95,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                                       ),
                                     );
                                   }
+                                  
                                 },
                                 child: const Text('Eliminar'),
                               ),

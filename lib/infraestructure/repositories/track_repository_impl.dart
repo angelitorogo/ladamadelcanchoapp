@@ -19,8 +19,8 @@ class TrackRepositoryImpl extends TrackRepository {
   }
   
   @override
-  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int page = 0, String? userId}) {
-    return datasource.loadAllTracks(limit: limit, page:page, userId: userId);
+  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int page = 0, String? userId, String? orderBy, String? direction}) {
+    return datasource.loadAllTracks(limit: limit, page:page, userId: userId, orderBy: orderBy, direction: direction);
   }
   
   @override

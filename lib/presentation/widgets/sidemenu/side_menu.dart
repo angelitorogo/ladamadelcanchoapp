@@ -5,6 +5,7 @@ import 'package:ladamadelcanchoapp/config/menu/menu_items.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
 
@@ -58,21 +59,45 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         icon: Icons.save_as
       ),
 
-      const MenuItem(
-          title: 'Distancia',
-          link: '/distance',
-          icon: Icons.space_bar
-        ),
-      const MenuItem(
-          title: 'Desnivel',
-          link: '/desnivel',
-          icon: Icons.terrain
-        ),
+      MenuItem(
+        title: 'Distancia',
+        link: '/distance',
+        icon: Icons.space_bar,
+        onTap: (ref) {
+          final direction = ref.read(trackListProvider).direction;
+          if(direction == 'asc') {
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'desc');
+          } else {
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'asc');
+          }
+        }
+      ),
+      MenuItem(
+        title: 'Desnivel',
+        link: '/desnivel',
+        icon: Icons.terrain,
+        onTap: (ref) {
+          final direction = ref.read(trackListProvider).direction;
+          if(direction == 'asc') {
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'desc');
+          } else {
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'asc');
+          }
+        }
+      ),
 
-      const MenuItem(
+      MenuItem(
         title: 'Fecha',
         link: '/date',
-        icon: Icons.date_range
+        icon: Icons.date_range,
+        onTap: (ref) {
+          final direction = ref.read(trackListProvider).direction;
+          if(direction == 'asc') {
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc');
+          } else {
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'asc');
+          }
+        }
       ),
 
       (auth.isAuthenticated) ?
@@ -83,7 +108,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         onTap: (ref) async { // ✅ Pasa `ref` correctamente
           final hasInternet = await checkAndWarnIfNoInternet(context);
           if(hasInternet) {
-            ref.read(authProvider.notifier).logout();
+            ref.read(authProvider.notifier).logout(ref);
           }
           
         },
@@ -93,6 +118,12 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         title: 'Login',
         icon: Icons.login,
         link: '/login',
+      ),
+
+      const MenuItem(
+        title: 'Registro',
+        icon: Icons.person_add,
+        link: '/register',
       )
 
     ];
@@ -103,6 +134,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         setState(() {
           navDrawerIndex = value;
         });
+
+
 
         final menuItem = appMenuItems[value];
 
@@ -200,7 +233,29 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         ),
 
         ...appMenuItems
-        .sublist(5,8)
+        .sublist(5,6)
+          .map( (item) => NavigationDrawerDestination(
+            icon: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Icon(item.icon),
+            ),
+            label: Text(item.title)
+          ),
+        ),
+
+        ...appMenuItems
+        .sublist(6,7)
+          .map( (item) => NavigationDrawerDestination(
+            icon: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Icon(item.icon),
+            ),
+            label: Text(item.title)
+          ),
+        ),
+
+        ...appMenuItems
+        .sublist(7,8)
           .map( (item) => NavigationDrawerDestination(
             icon: Padding(
               padding: const EdgeInsets.only(left: 10),
@@ -217,7 +272,18 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
 
         ...appMenuItems
-        .sublist(8)
+        .sublist(8,9)
+          .map( (item) => NavigationDrawerDestination(
+            //enabled: false,
+            icon: Icon(item.icon),
+            label: Text(item.title)
+          ),
+        ),
+
+
+        if(!auth.isAuthenticated)
+        ...appMenuItems
+        .sublist(9)
           .map( (item) => NavigationDrawerDestination(
             //enabled: false,
             icon: Icon(item.icon),

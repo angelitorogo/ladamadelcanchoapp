@@ -62,6 +62,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        scrolledUnderElevation: 0,
         title: Text(_track != null ? _track!.name.split('.').first : 'Cargando...'),
       ),
       body: _isLoading

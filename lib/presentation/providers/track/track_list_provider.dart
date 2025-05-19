@@ -13,6 +13,8 @@ class TrackListState {
   final List<Track> tracks;
   final int currentPage;
   final int totalPages;
+  final String orderBy;
+  final String direction;
   final String? errorMessage;
 
   const TrackListState({
@@ -20,6 +22,8 @@ class TrackListState {
     this.tracks = const [],
     this.currentPage = 1,
     this.totalPages = 1,
+    this.orderBy = 'created_at',
+    this.direction = 'desc',
     this.errorMessage,
   });
 
@@ -28,6 +32,8 @@ class TrackListState {
     List<Track>? tracks,
     int? currentPage,
     int? totalPages,
+    String? orderBy,
+    String? direction,
     String? errorMessage,
   }) {
     return TrackListState(
@@ -35,6 +41,8 @@ class TrackListState {
       tracks: tracks ?? this.tracks,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
+      orderBy: orderBy ?? this.orderBy,
+      direction: direction ?? this.direction,
       errorMessage: errorMessage,
     );
   }
@@ -57,12 +65,12 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
 
     state = state.copyWith(status: TrackListStatus.loading);
 
-
     try {
       final response = await trackListRepository.loadAllTracks(
         limit: limit,
-        page: page,
-        userId: userId,
+        page: page, 
+        orderBy: state.orderBy,
+        direction: state.direction,
       );
 
       
@@ -88,6 +96,19 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
         errorMessage: '❌ Error al cargar tracks: ${e.toString()}',
       );
     }
+  }
+
+  Future<void> changeOrdersAndDirection(String orderBy, String direction) async {
+
+    reset();
+
+    state = state.copyWith(
+      orderBy: orderBy,
+      direction: direction,
+    );
+
+    loadTracks();
+
   }
 
 

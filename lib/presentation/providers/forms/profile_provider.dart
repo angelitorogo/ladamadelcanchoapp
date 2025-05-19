@@ -158,6 +158,7 @@ class ProfileNotifier extends StateNotifier<ProfileFormState> {
   }
 
   void telephoneChanged(String value) {
+    
     final telephone = Telephone.dirty(value);
     state = state.copyWith(
       telephone: telephone,
