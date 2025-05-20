@@ -113,11 +113,55 @@ class _HomeViewState extends ConsumerState<HomeView> {
             }
 
             if (trackState.status == TrackListStatus.error && trackState.tracks.isEmpty) {
-              return const Center(child: Text('❌ Error al cargar las rutas'));
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final hasInternet = await checkAndWarnIfNoInternet(context);
+                  if (hasInternet) {
+                    await ref.read(trackListProvider.notifier).loadTracks(
+                          limit: limit,
+                          page: 1,
+                          append: false,
+                          userId: auth.user?.id,
+                        );
+                    if (context.mounted) {
+                      const Center(child: CircularProgressIndicator());
+                    }
+                  }
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [
+                    SizedBox(height: 200),
+                    Center(child: Text('❌ Error al cargar las rutas')),
+                  ],
+                ),
+              );
             }
 
             if (trackState.tracks.isEmpty) {
-              return const Center(child: Text('No hay rutas disponibles.'));
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final hasInternet = await checkAndWarnIfNoInternet(context);
+                  if (hasInternet) {
+                    await ref.read(trackListProvider.notifier).loadTracks(
+                          limit: limit,
+                          page: 1,
+                          append: false,
+                          userId: auth.user?.id,
+                        );
+                    if (context.mounted) {
+                      const Center(child: CircularProgressIndicator());
+                    }
+                  }
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [
+                    SizedBox(height: 200),
+                    Center(child: Text('No hay rutas disponibles.')),
+                  ],
+                ),
+              );
             }
 
             return RefreshIndicator(

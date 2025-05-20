@@ -64,10 +64,23 @@ class AuthDatasourceImpl  extends AuthDatasource{
       } else {
         throw Exception('Error al obtener CSRF Token');
       }
-    } catch (e) {
+    } on DioException catch (e) {
 
-      throw Exception(e);
-    }
+      if( e.response?.statusCode == 502) {
+        //print("⚠️ Error 502: El servidor está inactivo o no responde.");
+        return 'El servidor está inactivo o no responde.';
+      } else {
+        //print('⚠️ Error en la solicitud CSRF: ${e.message}');
+        return 'Error en la solicitud CSRF: ${e.message}';
+      }
+
+    } catch (e) {
+      // Otro tipo de errores (por ejemplo, de conexión o lógicos)
+      //print('⚠️ Error no manejado: $e');
+      return 'Error inesperado: $e';
+    }  
+
+    
   }
 
   @override

@@ -8,9 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/domain/entities/pending_track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
@@ -571,13 +573,36 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                               );
                             } else {
                               if (context.mounted) {
-                                selectedImages = [];
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('❌ ${ref.watch(trackUploadProvider).message}'),
-                                    behavior: SnackBarBehavior.floating,
+
+                                //guardar track pending en prefs 
+                                // Esto se probara solo cuando falle el upload
+                                await ref.read(pendingTracksProvider.notifier).addTrack(
+                                  PendingTrack(
+                                    userId: ref.read(authProvider).user!.id,
+                                    timestamp: DateTime.now(),
+                                    isTracking: false,
+                                    isPaused: false,
+                                    distance: locationState.distance,
+                                    elevationGain: locationState.elevationGain,
+                                    points: widget.points,
+                                    discardedPoints: [],
+                                    mode: mode,
                                   ),
                                 );
+
+                                ref.read(locationProvider.notifier).resetState();
+
+                                selectedImages = [];
+
+                                if(context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('❌ ${ref.watch(trackUploadProvider).message}, se ha guardado en tracks pendientes'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                                
                               }
                             }
 

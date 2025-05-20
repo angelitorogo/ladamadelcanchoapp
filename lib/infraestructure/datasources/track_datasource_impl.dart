@@ -25,6 +25,22 @@ class TrackDatasourceImpl implements TrackDatasource {
     GlobalCookieJar.instance.then((jar) {
       _cookieJar = jar;
       _dio.interceptors.add(CookieManager(_cookieJar));
+
+      // Interceptor para depurar cookies enviadas
+      /*
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final cookies = await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+          print('🍪 Cookies enviadas en ${options.path}:');
+          for (final cookie in cookies) {
+            print('➡️ ${cookie.name} = ${cookie.value}');
+          }
+
+          handler.next(options);
+        },
+      ));
+      */
+    
     });
   }
 
@@ -90,7 +106,12 @@ class TrackDatasourceImpl implements TrackDatasource {
         })),
     });
 
+    //ver exactamente qué cookies se van a enviar en una petición con Dio y dio_cookie_manager
+
+
     try {
+
+      
       final response = await _dio.post(
         '/upload',
         data: formData,

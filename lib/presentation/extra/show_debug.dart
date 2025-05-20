@@ -14,6 +14,11 @@ Future<void> showDebugDialog(BuildContext context, WidgetRef ref) async {
       final jar = ref.read(authProvider.notifier).jar();
       final cookies = await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
 
+      // Mostramos dominio, path y si se envía o no
+      for (final c in await jar!.loadForRequest(Uri.parse('https://cookies.argomez.com'))) {
+        debugPrint('🍪 Cookie en jar: ${c.name} = ${c.value} | Domain: ${c.domain}, Path: ${c.path}');
+      }
+
 
       final cookiesInfo = cookies?.isEmpty ?? true
         ? 'No hay cookies guardadas.'
