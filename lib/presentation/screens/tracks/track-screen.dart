@@ -130,11 +130,14 @@ class _DatosWidget extends StatelessWidget {
               ),
               const SizedBox(width: 6),
 
+              /*
               Text(
                 distance >= 1000
                   ? '${(distance / 1000).toStringAsFixed(1)} km'
                   : '${distance.toInt()} metros',
               ),
+              */
+              Text('${(distance).toStringAsFixed(2)} km'),
 
       
               const SizedBox(width: 8),
@@ -284,13 +287,74 @@ class _Perfil extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final elevations = track.points!.map((p) => p.elevation).toList();
+    
     final minElevation = elevations.reduce(min);
     final maxElevation = elevations.reduce(max);
-    final double interval = maxElevation - minElevation < 600 ? 100 : 200;
+    final diffElevation = maxElevation - minElevation;
+
+    // Margen fijo mínimo de seguridad visual
+    const double margin = 100; // puedes poner 10, 15, 20... lo que se vea mejor
+
+    // Calculamos el eje Y ajustado y redondeado a la decena más próxima
+    int minY = ((minElevation - margin) ~/ 100) * 100;
+    int maxY = (((maxElevation + margin) + 9) ~/ 5) * 5;
+
+    double intervalElevation;
+    double intervalDistance;
+
+    if(double.parse(track.distance) <=5) {
+      intervalDistance = 500;
+    } else if(double.parse(track.distance) <= 10) {
+      intervalDistance = 1000;
+    } else if( double.parse(track.distance) <= 20) {
+      intervalDistance = 2000;
+    } else {
+      intervalDistance = 3000;
+    }
+
+    if (diffElevation <= 50) {
+
+      intervalElevation = 50;
+      minY = (minElevation ~/ 30) * 30;
+      maxY = (minY + 3 * intervalElevation + ((diffElevation ~/ intervalElevation) * intervalElevation)).toInt();
+
+    } else if (diffElevation <= 100) {
+
+      intervalElevation = 100;
+      minY = (minElevation ~/ 100) * 100;
+      maxY = (((maxElevation + 99) ~/ 100) * 100) + 100;
+
+    } else if (diffElevation <= 200) {
+
+      intervalElevation = 100;
+      minY = (minElevation ~/ 100) * 100;
+      maxY = (((maxElevation + 99) ~/ 100) * 100) + 100;
+
+    } else if (diffElevation <= 300) {
+
+      intervalElevation = 100;
+      minY = (minElevation ~/ 100) * 100;
+      maxY = (((maxElevation + 99) ~/ 100) * 100);
+
+    } else if (diffElevation <= 600) {
+
+      intervalElevation = 200;
+      minY = (minElevation ~/ 100) * 100;
+      maxY = (((maxElevation + 99) ~/ 100) * 100);
+      
+    } else {
+      
+      intervalElevation = 250;
+      minY = (minElevation ~/ 100) * 100;
+      maxY = (((maxElevation + 399) ~/ 100) * 100);
+
+    }
+
+
     final points = track.points!;
 
     return SizedBox(
-      height: 275,
+      height: 230,
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -310,9 +374,9 @@ class _Perfil extends ConsumerWidget {
                   LineChartData(
                     backgroundColor: const Color.fromARGB(255, 106, 186, 223),
                     minX: 0,
-                    maxX: double.parse(track.distance), // asegúrate de que esté en metros si usas intervalos en metros
-                    minY: (minElevation ~/ 100) * 100,
-                    maxY: ((maxElevation + 99) ~/ 100) * 100 + 200,
+                    maxX: double.parse(track.distance) * 1000, // asegúrate de que esté en metros si usas intervalos en metros
+                    minY: minY.toDouble(),
+                    maxY: maxY.toDouble(),
                 
                     lineTouchData: LineTouchData(
                       enabled: true,
@@ -400,29 +464,53 @@ class _Perfil extends ConsumerWidget {
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 40,
-                          interval: interval,
+                          interval: intervalElevation,
                           getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}', style: const TextStyle(fontSize: 10));
+                            if (value % intervalElevation != 0) return const SizedBox.shrink();
+
+                            return Text('${value.toInt()}m', style: const TextStyle(fontSize: 10));
                           },
+
                         ),
                       ),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 30,
-                          interval: 1000, // 👈 Etiqueta cada 1000 metros (1 km)
+                          interval: intervalDistance,
                           getTitlesWidget: (value, meta) {
-                            final totalDistance = double.parse(track.distance);
-                            final km = (value / 1000).toStringAsFixed(0); // Redondeado al km
-                            // Ocultar si está cerca del valor final
-                            if ((value - totalDistance).abs() < 1.0) {
+                            final totalDistance = double.parse(track.distance) * 1000; // en metros
+
+                            // 🔥 Omitimos si el valor está demasiado cerca del final (último label forzado)
+                            if (totalDistance - value < (intervalDistance / 5)) {
                               return const SizedBox.shrink();
+                            
                             }
+
+                            if( value < intervalDistance ) {
+                              return const Padding(
+                              padding: EdgeInsets.fromLTRB(20, 5, 5, 5),
+                              child: Text('0km', style: TextStyle(fontSize: 10)),
+                            );
+                            }
+
+                            String km = '';
+
+                            if (value % 1000 == 0) {
+                              km = (value / 1000).toStringAsFixed(0);
+                            } else {
+                              km = (value / 1000).toStringAsFixed(1);
+                            }
+                              
+                            
+                            
+
                             return Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5), // Mueve el texto hacia arriba
-                              child: Text(km, style: const TextStyle(fontSize: 10)),
+                              padding: const EdgeInsets.fromLTRB(20, 5, 5, 5),
+                              child: Text('${km}km', style: const TextStyle(fontSize: 10)),
                             );
                           },
+
                         ),
                       ),
                       rightTitles: const AxisTitles(

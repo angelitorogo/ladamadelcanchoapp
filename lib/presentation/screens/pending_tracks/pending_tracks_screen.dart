@@ -86,7 +86,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                                 onPressed: () async {
                                   Navigator.of(context).pop();
                                   
-                                  await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                                  //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -123,7 +123,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
 
                       if (result == 'uploaded') {
                         // Track subido, eliminarlo
-                        await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                        //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
                       }
 
                     } 

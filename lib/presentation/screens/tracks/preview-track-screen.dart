@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/pending_track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
@@ -114,10 +115,15 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       final currElevation = widget.points[i].elevation;
       final nextElevation = widget.points[i + 1].elevation;
 
+      /*
       total += _distanceBetween(
         LatLng(widget.points[i].latitude, widget.points[i].longitude),
         LatLng(widget.points[i + 1].latitude, widget.points[i + 1].longitude),
       );
+      */
+      final result = calculateDisAndEle(widget.points);
+      distanceKm = result.totalDistanceMeters / 1000;
+      elevationGain = result.totalElevationGain;
 
       final delta = nextElevation - currElevation;
       if (delta > 0) gain += delta;
@@ -127,9 +133,12 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       if (currElevation < minElevation) minElevation = currElevation;
     }
 
+    /*
     distanceKm = total;
     elevationGain = gain;
+    */
     elevationLoss = loss;
+    
 
     final startTime = widget.points.first.timestamp.toLocal();
     final endTime = widget.points.last.timestamp.toLocal();
@@ -139,7 +148,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
   }
 
 
-
+  
   double _distanceBetween(LatLng a, LatLng b) {
     const earthRadius = 6371; // km
     final dLat = _deg2rad(b.latitude - a.latitude);
@@ -479,7 +488,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                       //eliminar track pending del prefs
                       if(widget.index != null) {
-                        await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                        //await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
                       }
                       
 
@@ -529,7 +538,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                             
                             // ignore: use_build_context_synchronously
-                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, locationState.distance.toString(), locationState.elevationGain.toString(), fileCaptureMap, points: widget.points, images: selectedImages);
+                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, distanceKm.toString(), elevationGain.toString(), fileCaptureMap, points: widget.points, images: selectedImages);
                             
 
                             if (response != null && context.mounted) {
@@ -557,7 +566,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                                         //eliminar track pending del prefs
                                         if(widget.index != null) {
-                                          await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                                          //await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
                                         }
 
                                         if(context.mounted) {
@@ -582,8 +591,8 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                                     timestamp: DateTime.now(),
                                     isTracking: false,
                                     isPaused: false,
-                                    distance: locationState.distance,
-                                    elevationGain: locationState.elevationGain,
+                                    distance: distanceKm,
+                                    elevationGain: elevationGain,
                                     points: widget.points,
                                     discardedPoints: [],
                                     mode: mode,

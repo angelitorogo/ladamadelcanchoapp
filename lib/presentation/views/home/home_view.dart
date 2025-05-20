@@ -285,7 +285,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                               size: 16, color: Colors.grey),
                                           const SizedBox(width: 6),
                                           Text(
-                                              '${((double.tryParse(track.distance) ?? 0.0) / 1000).toStringAsFixed(2)} km'),
+                                              '${((double.tryParse(track.distance) ?? 0.0)).toStringAsFixed(2)} km'),
                                           const SizedBox(width: 15),
                                           const Icon(Icons.terrain,
                                               size: 16, color: Colors.grey),
