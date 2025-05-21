@@ -16,6 +16,7 @@ import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provi
 import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/full_screen_carousel_view.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
 
 class TrackScreen extends ConsumerStatefulWidget {
   final int trackIndex;
@@ -28,6 +29,8 @@ class TrackScreen extends ConsumerStatefulWidget {
 class _TrackScreenState extends ConsumerState<TrackScreen> {
   Track? _track;
   bool _isLoading = true;
+
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>(); 
   
 
   @override
@@ -63,6 +66,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
+      drawer: SideMenu(scaffoldKey: scaffoldKey),
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         scrolledUnderElevation: 0,

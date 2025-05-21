@@ -171,8 +171,16 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                           ListTile(
                             leading: Icon(appMenuItems[0].icon),
                             title: Text(appMenuItems[0].title),
-                            onTap: () {
-                              context.go(appMenuItems[0].link!);
+                            onTap: () async {
+                              ref.read(trackListProvider.notifier).reset();
+                              await ref.read(trackListProvider.notifier).loadTracks(
+                                limit: 5,
+                                page: 1,
+                                append: false,
+                              );
+                              if(context.mounted) {
+                                context.go(appMenuItems[0].link!);
+                              }
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),

@@ -87,7 +87,6 @@ final appRouter = GoRouter(
         path: '/user-screen',
         name: UserScreen.name,
         builder: (context, state) {
-          print('NAVEGANDO A USER SCREEN');
           final user = state.extra as UserEntity;
           return CheckAuthScreen(child: UserScreen(user: user));
         },

@@ -73,6 +73,7 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
       final response = await trackListRepository.loadAllTracks(
         limit: limit,
         page: page, 
+        userId: userId,
         orderBy: state.orderBy,
         direction: state.direction,
       );
