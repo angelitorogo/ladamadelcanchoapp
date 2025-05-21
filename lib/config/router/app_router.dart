@@ -2,9 +2,11 @@
 import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_auth_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/login_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/register_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
@@ -78,6 +80,16 @@ final appRouter = GoRouter(
         name: ProfileScreen.name,
         builder: (context, state) {
           return const CheckAuthScreen(child: ProfileScreen());
+        },
+      ),
+
+      GoRoute(
+        path: '/user-screen',
+        name: UserScreen.name,
+        builder: (context, state) {
+          print('NAVEGANDO A USER SCREEN');
+          final user = state.extra as UserEntity;
+          return CheckAuthScreen(child: UserScreen(user: user));
         },
       ),
 

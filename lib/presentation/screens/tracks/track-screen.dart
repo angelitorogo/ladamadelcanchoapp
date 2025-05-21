@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
@@ -12,6 +13,7 @@ import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/full_screen_carousel_view.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -118,7 +120,15 @@ class _DatosWidget extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(height: 6),
-              Text(track.user.fullname),
+
+              GestureDetector(
+                onTap: () {
+                  context.pushNamed(
+                    UserScreen.name,
+                    extra: track.user,
+                  );
+                },
+                child: Text(track.user.fullname)),
       
               const SizedBox(height: 16),
 

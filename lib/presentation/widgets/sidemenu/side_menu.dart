@@ -172,7 +172,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             leading: Icon(appMenuItems[0].icon),
                             title: Text(appMenuItems[0].title),
                             onTap: () {
-                              context.push(appMenuItems[0].link!);
+                              context.go(appMenuItems[0].link!);
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
@@ -180,7 +180,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             leading: Icon(appMenuItems[1].icon),
                             title: Text(appMenuItems[1].title),
                             onTap: () {
-                              context.push(appMenuItems[1].link!);
+                              context.go(appMenuItems[1].link!);
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
@@ -188,7 +188,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             leading: Icon(appMenuItems[2].icon),
                             title: Text(appMenuItems[2].title),
                             onTap: () {
-                              context.push(appMenuItems[2].link!);
+                              context.go(appMenuItems[2].link!);
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
