@@ -104,7 +104,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
   void _calculateTrackStats() {
     if (widget.points.isEmpty) return;
 
-    double total = 0;
+    // ignore: unused_local_variable
     double gain = 0;
     double loss = 0;
 
@@ -146,24 +146,6 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     startTimeStr = DateFormat.Hm().format(startTime);
     endTimeStr = DateFormat.Hm().format(endTime);
   }
-
-
-  
-  double _distanceBetween(LatLng a, LatLng b) {
-    const earthRadius = 6371; // km
-    final dLat = _deg2rad(b.latitude - a.latitude);
-    final dLon = _deg2rad(b.longitude - a.longitude);
-
-    final lat1 = _deg2rad(a.latitude);
-    final lat2 = _deg2rad(b.latitude);
-
-    final aCalc = sin(dLat / 2) * sin(dLat / 2) +
-        sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
-    final c = 2 * atan2(sqrt(aCalc), sqrt(1 - aCalc));
-    return earthRadius * c;
-  }
-
-  double _deg2rad(double deg) => deg * pi / 180;
 
   Widget _buildDataCell(String text) {
     return Padding(
@@ -212,7 +194,6 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
   Widget build(BuildContext context) {
     final uploadState = ref.watch(trackUploadProvider);
     final uploader = ref.read(trackUploadProvider.notifier);
-    final locationState = ref.watch(locationProvider);
 
     final modeState = ref.watch(locationProvider).mode;
     String mode;
