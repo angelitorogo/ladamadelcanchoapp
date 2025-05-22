@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -68,6 +69,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final auth = ref.watch(authProvider);
     final imageUrl = "${Environment.apiUrl}/files/${auth.user?.image}";
     final trackState = ref.watch(trackListProvider);
+    
+    Future.microtask(() {
+      ref.watch(sideMenuStateProvider.notifier).resetUserScreen();
+    });
 
     return Scaffold(
       appBar: AppBar(

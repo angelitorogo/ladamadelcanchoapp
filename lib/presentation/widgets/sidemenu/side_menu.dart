@@ -7,6 +7,7 @@ import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dar
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
 
@@ -69,10 +70,15 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         icon: Icons.space_bar,
         onTap: (ref) {
           final direction = ref.read(trackListProvider).direction;
+          
+          final isUserScreen = ModalRoute.of(context)?.settings.name == UserScreen.name;
+          final userId = isUserScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
+
+
           if(direction == 'asc') {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'desc');
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'desc', userId);
           } else {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'asc');
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'asc', userId);
           }
         }
       ),
@@ -82,10 +88,14 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         icon: Icons.terrain,
         onTap: (ref) {
           final direction = ref.read(trackListProvider).direction;
+          
+          final isUserScreen = ModalRoute.of(context)?.settings.name == UserScreen.name;
+          final userId = isUserScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
+          
           if(direction == 'asc') {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'desc');
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'desc', userId);
           } else {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'asc');
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'asc', userId);
           }
         }
       ),
@@ -96,10 +106,14 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         icon: Icons.date_range,
         onTap: (ref) {
           final direction = ref.read(trackListProvider).direction;
+          
+          final isUserScreen = ModalRoute.of(context)?.settings.name == UserScreen.name;
+          final userId = isUserScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
+
           if(direction == 'asc') {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc');
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', userId);
           } else {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'asc');
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'asc', userId);
           }
         }
       ),
@@ -173,6 +187,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             title: Text(appMenuItems[0].title),
                             onTap: () async {
                               ref.read(trackListProvider.notifier).reset();
+                              ref.read(sideMenuStateProvider.notifier).resetUserScreen();
+                              final userScreen = ref.watch(sideMenuStateProvider).userScreen;
                               await ref.read(trackListProvider.notifier).loadTracks(
                                 limit: 5,
                                 page: 1,

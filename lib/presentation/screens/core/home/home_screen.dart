@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
 
@@ -19,6 +20,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void onTap(int index) async {
     if (index == 0) {
       ref.read(trackListProvider.notifier).reset();
+      ref.read(sideMenuStateProvider.notifier).resetUserScreen();
       await ref.read(trackListProvider.notifier).loadTracks(
         limit: 5,
         page: 1,
@@ -36,6 +38,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: currentIndex == 0

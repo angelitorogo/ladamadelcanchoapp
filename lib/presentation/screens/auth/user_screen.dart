@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
@@ -30,9 +31,13 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>(); 
 
+  
+
   @override
   void initState() {
     super.initState();
+
+    
 
     _scrollController.addListener(() {
       final state = ref.read(trackListProvider);
@@ -75,6 +80,11 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   Widget build(BuildContext context) {
 
     final trackState = ref.watch(trackListProvider);
+    
+
+    Future.microtask(() {
+      ref.read(sideMenuStateProvider.notifier).serUserScreen(widget.user);
+    });
 
     return Scaffold(
       key: scaffoldKey,
