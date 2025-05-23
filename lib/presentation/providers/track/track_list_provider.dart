@@ -1,7 +1,6 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
-import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/track_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_repository_provider.dart';
 

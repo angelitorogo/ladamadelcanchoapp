@@ -19,13 +19,15 @@ class HomeView extends ConsumerStatefulWidget {
   ConsumerState<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends ConsumerState<HomeView> {
+class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
   final ScrollController _scrollController = ScrollController();
   final int limit = 5;
 
   @override
   void initState() {
     super.initState();
+
+    
 
     _scrollController.addListener(() {
       final state = ref.read(trackListProvider);
@@ -55,6 +57,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               userId: auth.user?.id,
             );
       }
+      
     });
   }
 
@@ -69,7 +72,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final auth = ref.watch(authProvider);
     final imageUrl = "${Environment.apiUrl}/files/${auth.user?.image}";
     final trackState = ref.watch(trackListProvider);
-    
+
     Future.microtask(() {
       ref.watch(sideMenuStateProvider.notifier).resetUserScreen();
     });

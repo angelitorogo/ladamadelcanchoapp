@@ -188,7 +188,6 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             onTap: () async {
                               ref.read(trackListProvider.notifier).reset();
                               ref.read(sideMenuStateProvider.notifier).resetUserScreen();
-                              final userScreen = ref.watch(sideMenuStateProvider).userScreen;
                               await ref.read(trackListProvider.notifier).loadTracks(
                                 limit: 5,
                                 page: 1,
