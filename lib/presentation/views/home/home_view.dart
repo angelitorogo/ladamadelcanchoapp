@@ -47,14 +47,12 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
     });
 
     Future.microtask(() async {
-      final auth = ref.read(authProvider);
       // ignore: use_build_context_synchronously
       final hasInternet = await checkAndWarnIfNoInternet(context);
       if (hasInternet) {
         await ref.read(trackListProvider.notifier).loadTracks(
               limit: limit,
               page: 1,
-              userId: auth.user?.id,
             );
       }
       
@@ -129,7 +127,6 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
                           limit: limit,
                           page: 1,
                           append: false,
-                          userId: auth.user?.id,
                         );
                     if (context.mounted) {
                       const Center(child: CircularProgressIndicator());
@@ -155,7 +152,6 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
                           limit: limit,
                           page: 1,
                           append: false,
-                          userId: auth.user?.id,
                         );
                     if (context.mounted) {
                       const Center(child: CircularProgressIndicator());
@@ -180,7 +176,6 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
                         limit: limit,
                         page: 1,
                         append: false,
-                        userId: auth.user?.id,
                       );
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
