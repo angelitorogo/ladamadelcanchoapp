@@ -11,12 +11,15 @@ import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/full_screen_carousel_view.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
+
+
 
 class TrackScreen extends ConsumerStatefulWidget {
   final int trackIndex;
@@ -64,33 +67,51 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: scaffoldKey,
-      drawer: SideMenu(scaffoldKey: scaffoldKey),
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        scrolledUnderElevation: 0,
-        title: Text(_track != null ? _track!.name.split('.').first : 'Cargando...'),
+
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async {
+        //print('✅ volviendo desde TrackScreen');
+        ref.read(trackListProvider.notifier).reset();
+        ref.read(sideMenuStateProvider.notifier).resetUserScreen();
+        await ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', null);
+        await ref.read(trackListProvider.notifier).loadTracks(
+          limit: 5,
+          page: 1,
+          append: false,
+        );
+        return true;
+      },
+      
+      child: Scaffold(
+        key: scaffoldKey,
+        drawer: SideMenu(scaffoldKey: scaffoldKey),
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          scrolledUnderElevation: 0,
+          title: Text(_track != null ? _track!.name.split('.').first : 'Cargando...'),
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _track == null
+                ? const Center(child: Text('No se pudo cargar el track.'))
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _DatosWidget(track: _track!),
+                      _Map(track: _track!),
+                      _Perfil(track: _track!),
+                      if (_track!.images != null && _track!.images!.isNotEmpty)
+                        _Card(track: _track!)
+                      else
+                        const Text('No hay imágenes disponibles.'),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _track == null
-              ? const Center(child: Text('No se pudo cargar el track.'))
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _DatosWidget(track: _track!),
-                    _Map(track: _track!),
-                    _Perfil(track: _track!),
-                    if (_track!.images != null && _track!.images!.isNotEmpty)
-                      _Card(track: _track!)
-                    else
-                      const Text('No hay imágenes disponibles.'),
-                    const SizedBox(height: 60),
-                  ],
-                ),
     );
   }
 }

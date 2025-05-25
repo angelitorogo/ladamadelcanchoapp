@@ -1,18 +1,14 @@
 
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -45,9 +41,10 @@ class _UserScreenState extends ConsumerState<UserScreen> {
 
     
 
-    _scrollController.addListener(() {
+    _scrollController.addListener(() async {
       final state = ref.read(trackListProvider);
       final notifier = ref.read(trackListProvider.notifier);
+      await ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', widget.user.id);
 
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
         if (state.status != TrackListStatus.loading && state.currentPage < state.totalPages) {
@@ -241,62 +238,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                 ],
               ),
 
-              /*
-              child: ListView.builder(
-                key: const PageStorageKey('trackListScroll'),
-                controller: _scrollController,
-                itemCount: trackState.tracks.length + 1,
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  
-                  if (index == trackState.tracks.length) {
-                    if (trackState.status == TrackListStatus.loading &&
-                        trackState.tracks.isNotEmpty &&
-                        trackState.currentPage < trackState.totalPages) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  }
-
-
-                  final track = trackState.tracks[index];
-                  
-
-                  // ⬇️ Tu misma visualización original del track
-                  final icon = switch (track.type) {
-                    'Senderismo' => Icons.directions_walk,
-                    'Ciclismo' => Icons.directions_bike,
-                    'Conduciendo' => Icons.directions_car,
-                    _ => Icons.help_outline,
-                  };
-
-                  final imageTrackUrl = (track.images?.isNotEmpty ?? false)
-                      ? "${Environment.apiUrl}/files/tracks/${track.images!.first}"
-                      : 'https://upload.wikimedia.org/wikipedia/en/6/60/No_Picture.jpg';
-
-                  return GestureDetector(
-                    onTap: () {
-                      context.pushNamed(
-                        TrackScreen.name,
-                        extra: {'trackIndex': index},
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                      child: _Card(imageTrackUrl: imageTrackUrl, track: track, icon: icon)
-                    ),
-                  );
-                },
-              ),
-              */
-
-
-
-
+              
             );
           },
         ),

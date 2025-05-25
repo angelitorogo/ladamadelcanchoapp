@@ -6,6 +6,8 @@ import 'package:ladamadelcanchoapp/config/router/app_router.dart';
 import 'package:ladamadelcanchoapp/config/theme/app_theme.dart';
 
 
+
+
 Future main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +16,7 @@ Future main() async {
 
   // Ocultar barras de navegación y de estado (modo inmersivo)
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
 
   runApp(
     const ProviderScope(child: MainApp())
@@ -32,6 +35,9 @@ class MainApp extends StatelessWidget {
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
       theme: AppTheme().getTheme(),
+
+
+
     );
   }
 }

@@ -10,6 +10,7 @@ import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provi
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+
 class HomeView extends ConsumerStatefulWidget {
   static const name = 'home-view';
 
@@ -19,7 +20,7 @@ class HomeView extends ConsumerStatefulWidget {
   ConsumerState<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
+class _HomeViewState extends ConsumerState<HomeView> {
   final ScrollController _scrollController = ScrollController();
   final int limit = 5;
 
@@ -29,6 +30,7 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
 
     
 
+    // Scroll listener
     _scrollController.addListener(() {
       final state = ref.read(trackListProvider);
       final notifier = ref.read(trackListProvider.notifier);
@@ -46,6 +48,7 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
       }
     });
 
+    //Carga inicial
     Future.microtask(() async {
       // ignore: use_build_context_synchronously
       final hasInternet = await checkAndWarnIfNoInternet(context);
@@ -59,11 +62,15 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
     });
   }
 
+
+
+
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +81,7 @@ class _HomeViewState extends ConsumerState<HomeView> with RouteAware {
     Future.microtask(() {
       ref.watch(sideMenuStateProvider.notifier).resetUserScreen();
     });
+
 
     return Scaffold(
       appBar: AppBar(
