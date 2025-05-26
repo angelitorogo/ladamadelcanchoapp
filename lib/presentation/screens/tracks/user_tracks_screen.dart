@@ -1,11 +1,14 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -111,6 +114,7 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
             }
 
             final track = trackState.tracks[index];
+
             final icon = switch (track.type) {
               'Senderismo' => Icons.directions_walk,
               'Ciclismo' => Icons.directions_bike,
@@ -122,11 +126,24 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
                 ? "${Environment.apiUrl}/files/tracks/${track.images!.first}"
                 : 'https://upload.wikimedia.org/wikipedia/en/6/60/No_Picture.jpg';
 
-            return _Card(
-              imageTrackUrl: imageTrackUrl,
-              track: track,
-              icon: icon,
-            );
+            return GestureDetector(
+              onTap: () {
+                context.pushNamed(
+                  TrackScreen.name,
+                  extra: {'trackIndex': index},
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                child: FadeInUp(
+                  child: _Card(
+                    imageTrackUrl: imageTrackUrl,
+                    track: track,
+                    icon: icon,
+                  ),
+                ), 
+              )
+                  );
           },
         ),
       ),

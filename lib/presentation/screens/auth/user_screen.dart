@@ -76,7 +76,7 @@ class _Data extends StatelessWidget {
           child: Container(
             width: 100,
             height: 100,
-            color: Colors.grey[300],
+            color: const Color.fromARGB(255, 26, 25, 25),
             child: Image.network(
               imageUrl,
               fit: BoxFit.cover,

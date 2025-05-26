@@ -1,8 +1,10 @@
 
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
+import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
@@ -234,87 +236,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                      child: Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        child: SizedBox(
-                          height: 120,
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius:
-                                    const BorderRadius.horizontal(left: Radius.circular(15)),
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.29,
-                                  height: double.infinity,
-                                  child: Image.network(
-                                    imageTrackUrl,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder: (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return const Center(
-                                          child: CircularProgressIndicator(strokeWidth: 2));
-                                    },
-                                    errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.route,
-                                              size: 16, color: Colors.grey),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              track.name.split('.').first,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold, fontSize: 16),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.access_time,
-                                              size: 16, color: Colors.grey),
-                                          const SizedBox(width: 6),
-                                          Text(timeago.format(track.createdAt, locale: 'es')),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.straighten,
-                                              size: 16, color: Colors.grey),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                              '${((double.tryParse(track.distance) ?? 0.0)).toStringAsFixed(2)} km'),
-                                          const SizedBox(width: 15),
-                                          const Icon(Icons.terrain,
-                                              size: 16, color: Colors.grey),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                              '${(double.tryParse(track.elevationGain) ?? 0.0).toStringAsFixed(0)} m'),
-                                          const SizedBox(width: 15),
-                                          Icon(icon, size: 16, color: Colors.grey),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      child: FadeInUp(
+                        child: _Card(
+                          imageTrackUrl: imageTrackUrl, 
+                          track: track, 
+                          icon: icon
                         ),
-                      ),
+                      )
                     ),
                   );
                 },
@@ -333,3 +261,90 @@ class _HomeViewState extends ConsumerState<HomeView> {
     );
   }
 }
+
+
+class _Card extends StatelessWidget {
+  final String imageTrackUrl;
+  final Track track;
+  final IconData icon;
+
+  const _Card({required this.imageTrackUrl, required this.track, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    timeago.setLocaleMessages('es', timeago.EsMessages());
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: SizedBox(
+        height: 120,
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.29,
+                height: double.infinity,
+                child: Image.network(
+                  imageTrackUrl,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                  },
+                  errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.route, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            track.name.split('.').first,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(timeago.format(track.createdAt, locale: 'es')),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.straighten, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text('${((double.tryParse(track.distance) ?? 0.0)).toStringAsFixed(2)} km'),
+                        const SizedBox(width: 15),
+                        const Icon(Icons.terrain, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text('${(double.tryParse(track.elevationGain) ?? 0.0).toStringAsFixed(0)} m'),
+                        const SizedBox(width: 15),
+                        Icon(icon, size: 16, color: Colors.grey),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
