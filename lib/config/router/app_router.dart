@@ -13,6 +13,7 @@ import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_trackin
 import 'package:ladamadelcanchoapp/presentation/screens/pending_tracks/pending_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/user_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/wellcome/wellcome_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/views/config/config_view.dart';
 import 'package:ladamadelcanchoapp/presentation/views/home/home_view.dart';
@@ -89,6 +90,15 @@ final appRouter = GoRouter(
         builder: (context, state) {
           final user = state.extra as UserEntity;
           return CheckAuthScreen(child: UserScreen(user: user));
+        },
+      ),
+
+      GoRoute(
+        path: '/user-tracks',
+        name: UserTracksScreen.name,
+        builder: (context, state) {
+          final user = state.extra as UserEntity;
+          return CheckAuthScreen(child: UserTracksScreen(user: user));
         },
       ),
 

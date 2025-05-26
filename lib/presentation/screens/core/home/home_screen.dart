@@ -21,12 +21,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (index == 0) {
       ref.read(trackListProvider.notifier).reset();
       ref.read(sideMenuStateProvider.notifier).resetUserScreen();
-      await ref.read(trackListProvider.notifier).loadTracks(
-        limit: 5,
-        page: 1,
-        userId: null,
-        append: false,
-      );
+      ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', null);
+      
     }
 
     widget.childView.goBranch(index,

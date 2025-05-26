@@ -17,6 +17,7 @@ class TrackListState {
   final String direction;
   final String? errorMessage;
   final bool? changeSetting;
+  final int totalTracks;
 
   const TrackListState({
     this.status = TrackListStatus.initial,
@@ -27,6 +28,7 @@ class TrackListState {
     this.direction = 'desc',
     this.errorMessage,
     this.changeSetting = false,
+    this.totalTracks = 0,
   });
 
   TrackListState copyWith({
@@ -38,6 +40,7 @@ class TrackListState {
     String? direction,
     String? errorMessage,
     bool? changeSetting,
+    int? totalTracks
   }) {
     return TrackListState(
       status: status ?? this.status,
@@ -48,6 +51,7 @@ class TrackListState {
       direction: direction ?? this.direction,
       errorMessage: errorMessage ?? this.errorMessage,
       changeSetting: changeSetting ?? this.changeSetting,
+      totalTracks: totalTracks ?? this.totalTracks
     );
   }
 }
@@ -84,14 +88,17 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
         return Track.fromJson(trackJson);
       }).toList();
 
-      final metadata = response['metadata'];
+      final metadata = Metadata.fromJson(response['metadata']);
+
+      
 
       state = state.copyWith(
         status: TrackListStatus.loaded,
         changeSetting: false,
         tracks: append ? [...state.tracks, ...tracks] : tracks,
-        currentPage: metadata['page'],
-        totalPages: metadata['lastPage'],
+        currentPage: metadata.page,
+        totalPages: metadata.lastPage,
+        totalTracks: metadata.totalTracks
       );
 
       //print('📃 ${state.tracks.length}');

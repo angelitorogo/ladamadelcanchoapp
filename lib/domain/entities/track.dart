@@ -60,3 +60,28 @@ class Track {
         'user': user.toJson(),
       };
 }
+
+
+class Metadata {
+    final int totalTracks;
+    final int page;
+    final int lastPage;
+
+    Metadata({
+        required this.totalTracks,
+        required this.page,
+        required this.lastPage,
+    });
+
+    factory Metadata.fromJson(Map<String, dynamic> json) => Metadata(
+        totalTracks: json["totalTracks"],
+        page: json["page"],
+        lastPage: json["lastPage"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "totalTracks": totalTracks,
+        "page": page,
+        "lastPage": lastPage,
+    };
+}

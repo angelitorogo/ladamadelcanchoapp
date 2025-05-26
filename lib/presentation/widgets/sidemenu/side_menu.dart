@@ -7,7 +7,7 @@ import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dar
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/tracks/user_tracks_screen.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
 
@@ -71,8 +71,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         onTap: (ref) {
           final direction = ref.read(trackListProvider).direction;
           
-          final isUserScreen = ModalRoute.of(context)?.settings.name == UserScreen.name;
-          final userId = isUserScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
+          final isUserTracksScreen = ModalRoute.of(context)?.settings.name == UserTracksScreen.name;
+          final userId = isUserTracksScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
 
 
           if(direction == 'asc') {
@@ -89,8 +89,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         onTap: (ref) {
           final direction = ref.read(trackListProvider).direction;
           
-          final isUserScreen = ModalRoute.of(context)?.settings.name == UserScreen.name;
-          final userId = isUserScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
+          final isUserTracksScreen = ModalRoute.of(context)?.settings.name == UserTracksScreen.name;
+          final userId = isUserTracksScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
           
           if(direction == 'asc') {
             ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'desc', userId);
@@ -107,8 +107,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         onTap: (ref) {
           final direction = ref.read(trackListProvider).direction;
           
-          final isUserScreen = ModalRoute.of(context)?.settings.name == UserScreen.name;
-          final userId = isUserScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
+          final isUserTracksScreen = ModalRoute.of(context)?.settings.name == UserTracksScreen.name;
+          final userId = isUserTracksScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
 
           if(direction == 'asc') {
             ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', userId);
@@ -188,11 +188,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             onTap: () async {
                               ref.read(trackListProvider.notifier).reset();
                               ref.read(sideMenuStateProvider.notifier).resetUserScreen();
-                              await ref.read(trackListProvider.notifier).loadTracks(
-                                limit: 5,
-                                page: 1,
-                                append: false,
-                              );
+                              ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', null);
+
                               if(context.mounted) {
                                 context.go(appMenuItems[0].link!);
                               }

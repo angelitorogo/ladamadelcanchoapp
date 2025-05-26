@@ -118,14 +118,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
 
 
 
-class _DatosWidget extends StatelessWidget {
+class _DatosWidget extends ConsumerWidget {
 
   final Track track;
 
   const _DatosWidget({required this.track});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     
     final elevation = double.parse(track.elevationGain);
     final distance = double.parse(track.distance);
@@ -149,11 +149,18 @@ class _DatosWidget extends StatelessWidget {
               const SizedBox(height: 6),
 
               GestureDetector(
-                onTap: () {
-                  context.pushNamed(
-                    UserScreen.name,
-                    extra: track.user,
+                onTap: () async {
+
+                  await ref.read(trackListProvider.notifier).loadTracks(
+                    limit: 5,
+                    page: 1,
+                    userId: track.user.id,
                   );
+
+                  if(context.mounted) {
+                    context.pushNamed( UserScreen.name, extra: track.user);
+                  }
+                  
                 },
                 child: Text(track.user.fullname)),
       
@@ -614,37 +621,6 @@ class _TrackMapState extends ConsumerState<_Map> {
 
   @override
   Widget build(BuildContext context) {
-
-    /*
-    ref.listen<LatLng?>(hoveredPointLatLngProvider, (prev, next) async {
-      if (next == null) {
-        // 👉 Usuario soltó el dedo → ocultamos el punto
-        setState(() {
-          _currentOffset = null;
-        });
-        return;
-      }
-
-      if (_mapController == null) return;
-
-      final bounds = await _mapController!.getVisibleRegion();
-
-      final mapBox = _mapKey.currentContext?.findRenderObject() as RenderBox?;
-      if (mapBox == null) return;
-
-      final mapSize = mapBox.size;
-
-      final offsetInMap = latLngToOffset(
-        point: next,
-        bounds: bounds,
-        mapSize: mapSize,
-      );
-
-      setState(() {
-        _currentOffset = offsetInMap;
-      });
-    });
-    */
 
     final hoveredPoint = ref.watch(hoveredPointLatLngProvider);
 
