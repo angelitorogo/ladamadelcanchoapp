@@ -24,17 +24,22 @@ class _LoginView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SafeArea(
+    return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 30),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 40),
-              FlutterLogo(size: 200),
-              SizedBox(height: 40),
-              _LoginForm(),
-              SizedBox(height: 20),
+              const SizedBox(height: 40),
+              Image.asset(
+                'assets/images/icono.png',
+                width: 200, // Opcional: tamaño deseado
+                height: 200,
+                fit: BoxFit.contain, // O BoxFit.cover, según prefieras
+              ),
+              const SizedBox(height: 40),
+              const _LoginForm(),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -73,7 +78,7 @@ class _LoginForm extends ConsumerWidget {
             label: 'Correo electrónico',
             prefixIcon: Icons.email,
             onChanged: loginNotifier.emailChanged,
-            //initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
+            initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
             validator: (_) {
               return loginState.emailTouched
                   ? Email.emailErrorMessage(loginState.email.error)
@@ -89,7 +94,7 @@ class _LoginForm extends ConsumerWidget {
             prefixIcon: Icons.password,
             obscureText: true,
             onChanged: loginNotifier.passwordChanged,
-            //initialValue: 'Rod00gom!', //Eliminar linea
+            initialValue: 'Rod00gom!', //Eliminar linea
             validator: (_) {
               return loginState.passwordTouched
                   ? Password.passwordErrorMessage(loginState.password.error)
@@ -146,18 +151,6 @@ class _LoginForm extends ConsumerWidget {
               
               },
 
-              /*
-              onPressed: authState.isLoading ||
-                      loginState.status != FormzSubmissionStatus.success
-                  /? null
-                  : () async {
-                      await authNotifier.login(
-                        context,
-                        loginState.email.value,
-                        loginState.password.value,
-                      );
-                    },
-              */
               icon: const Icon(Icons.login, size: 30, color: Colors.white,),
               label: const Text('Login', style: TextStyle(fontSize: 17)),
             ),

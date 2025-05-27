@@ -26,17 +26,22 @@ class _RegisterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SafeArea(
+    return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 30),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 40),
-              FlutterLogo(size: 200),
-              SizedBox(height: 40),
-              _RegisterForm(),
-              SizedBox(height: 20),
+              const SizedBox(height: 40),
+              Image.asset(
+                'assets/images/icono.png',
+                width: 200, // Opcional: tamaño deseado
+                height: 200,
+                fit: BoxFit.contain, // O BoxFit.cover, según prefieras
+              ),
+              const SizedBox(height: 40),
+              const _RegisterForm(),
+              const SizedBox(height: 20),
             ],
           ),
         ),

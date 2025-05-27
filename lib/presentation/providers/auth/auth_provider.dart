@@ -142,9 +142,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     //email = 'pepe2@pepe.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    //email = 'angelitorogo@hotmail.com';
+    email = 'angelitorogo@hotmail.com';
     //email = 'crysmaldonado20@gmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    //password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
+    password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
    
 
