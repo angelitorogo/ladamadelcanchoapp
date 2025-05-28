@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
@@ -78,7 +79,7 @@ class _LoginForm extends ConsumerWidget {
             label: 'Correo electrónico',
             prefixIcon: Icons.email,
             onChanged: loginNotifier.emailChanged,
-            initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
+            //initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
             validator: (_) {
               return loginState.emailTouched
                   ? Email.emailErrorMessage(loginState.email.error)
@@ -94,7 +95,7 @@ class _LoginForm extends ConsumerWidget {
             prefixIcon: Icons.password,
             obscureText: true,
             onChanged: loginNotifier.passwordChanged,
-            initialValue: 'Rod00gom!', //Eliminar linea
+            //initialValue: 'Rod00gom!', //Eliminar linea
             validator: (_) {
               return loginState.passwordTouched
                   ? Password.passwordErrorMessage(loginState.password.error)
@@ -108,52 +109,79 @@ class _LoginForm extends ConsumerWidget {
 
 
           // Botón de login
-          SizedBox(
-            width: 150,
-            height: 50,
-            child: FilledButton.tonalIcon(
-
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                  if (states.contains(WidgetState.disabled)) {
-                    return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
-                  }
-                  return colors.onPrimaryFixedVariant; // 🔥 Color cuando está activo
-                }),
-                foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
-                shape: WidgetStateProperty.all(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30), // 📏 Bordes redondeados
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              
+              SizedBox(
+                width: 150,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    ref.watch(authProvider.notifier).reset();
+                    context.pop();
+                  },
+                  icon: Icon(Icons.cancel, size: 25, color: colors.primary),
+                  label: Text('Cancelar', style: TextStyle(fontSize: 17, color: colors.primary)),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: colors.primary, width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    foregroundColor: const Color(0xFFEE7B7B), // Esto asegura que los estados hover/pressed también sean redAccent
                   ),
-                ),
-                padding: WidgetStateProperty.all(
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
               ),
 
-              //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
-              onPressed: () async {
-
-                final hasInternet = await checkAndWarnIfNoInternet(context);
-                if(hasInternet) {
-
-                  await authNotifier.login(
-                    // ignore: use_build_context_synchronously
-                    context,
-                    loginState.email.value,
-                    loginState.password.value,
-                    ref
-                  );
-
-                }
-
-                
+              SizedBox(
+                width: 150,
+                height: 50,
+                child: FilledButton.tonalIcon(
               
-              },
-
-              icon: const Icon(Icons.login, size: 30, color: Colors.white,),
-              label: const Text('Login', style: TextStyle(fontSize: 17)),
-            ),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                      if (states.contains(WidgetState.disabled)) {
+                        return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
+                      }
+                      return colors.onPrimaryFixedVariant; // 🔥 Color cuando está activo
+                    }),
+                    foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30), // 📏 Bordes redondeados
+                      ),
+                    ),
+                    padding: WidgetStateProperty.all(
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                  ),
+              
+                  //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
+                  onPressed: () async {
+              
+                    final hasInternet = await checkAndWarnIfNoInternet(context);
+                    if(hasInternet) {
+              
+                      await authNotifier.login(
+                        // ignore: use_build_context_synchronously
+                        context,
+                        loginState.email.value,
+                        loginState.password.value,
+                        ref
+                      );
+              
+                    }
+              
+                    
+                  
+                  },
+              
+                  icon: const Icon(Icons.login, size: 25, color: Colors.white,),
+                  label: const Text('Login', style: TextStyle(fontSize: 17)),
+                ),
+              ),
+            ],
           )
 
           :

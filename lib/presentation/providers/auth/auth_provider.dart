@@ -8,14 +8,14 @@ import 'package:ladamadelcanchoapp/infraestructure/models/register_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/forms/login_notifier.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/forms/register_notifier.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  final formNotifier = ref.watch(loginProvider.notifier); 
+  final formNotifier = ref.watch(registerProvider.notifier); 
   return AuthNotifier(authRepository: authRepository, formNotifier: formNotifier);
 });
 
@@ -53,7 +53,7 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepositoryImpl authRepository;
-  final LoginNotifier  formNotifier;
+  final RegisterNotifier  formNotifier;
 
   AuthNotifier({required this.authRepository, required this.formNotifier}) : super(const AuthState()){
     loadSession(); // ✅ Cargar sesión al iniciar la app
@@ -142,9 +142,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     //email = 'pepe2@pepe.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    email = 'angelitorogo@hotmail.com';
+    //email = 'angelitorogo@hotmail.com';
     //email = 'crysmaldonado20@gmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
+    //password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
    
 
@@ -237,6 +237,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<RegisterResult> register(BuildContext context, String fullname, String email, String password, WidgetRef ref) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
+ 
+    //email = 'pepe@pepe.com';
+    //fullname = 'Pepe Perez';
+    //password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
     try {
       final result = await authRepository.register(context, fullname, email, password, ref);
@@ -269,4 +273,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+
+  AuthState reset() {
+    formNotifier.resetForm();
+    return const AuthState();
+  }
 }
