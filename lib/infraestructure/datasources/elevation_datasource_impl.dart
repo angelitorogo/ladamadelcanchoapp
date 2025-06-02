@@ -13,21 +13,13 @@ class ElevationDatasourceImpl implements ElevationDatasource {
 
   @override
   Future<List<LocationPoint>> getElevations(List<LocationPoint> points) async {
-    /*
-    final locations = points.map((p) => {
-      "latitude": p.latitude,
-      "longitude": p.longitude,
-    }).toList();
-    */
+
     final locations = points.map((p) => '${p.latitude},${p.longitude}').join('|');
 
+    print('📍 Puntos Originales: $locations');
+
     try {
-      /*
-      final response = await _dio.post(
-        '/v1/lookup',
-        data: {"locations": locations},
-      );
-      */
+
       final response = await _dio.get(
       'https://api.opentopodata.org/v1/mapzen', // 🔁 URL completa, ignora el baseUrl
       queryParameters: {
@@ -37,6 +29,10 @@ class ElevationDatasourceImpl implements ElevationDatasource {
 
       if (response.statusCode == 200 && response.data['results'] != null) {
         final results = response.data['results'] as List;
+
+        print('📍 Puntos corregidos: ${response.data['results']}');
+
+
         return List.generate(points.length, (i) {
           final orig = points[i];
           final ele = results[i]['elevation'] ?? orig.elevation;
@@ -69,6 +65,9 @@ class ElevationDatasourceImpl implements ElevationDatasource {
           response.data['results'] != null &&
           response.data['results'].isNotEmpty) {
         final ele = response.data['results'][0]['elevation'];
+
+        print('📍 Punto corregido');
+
         return CorrectedElevationResponse(
           point: LocationPoint(
             latitude: point.latitude,

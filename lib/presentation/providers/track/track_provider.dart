@@ -42,19 +42,19 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   TrackUploadNotifier(this.repository, this.repository2) : super(const TrackUploadState());
 
-  Future<bool> existsTrackForName(String name) async {
+  Future<Track?> existsTrackForName(String name) async {
 
     try {
 
       final result = await repository.existsTrack(name);
-      return result ? true: false;
+      return result;
 
     } catch (e) {
       state = const TrackUploadState(
         status: TrackUploadStatus.error,
         message: 'Error al subir el track',
       );
-      return false;
+      return null;
     }
 
   }
@@ -141,20 +141,22 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
       repository2.fetchCsrfToken(); //cogerlo si se puede del authState
 
       //SABER SI YA HAY UN TRACK CON ESE NAME Peticion a back track:name
-      final exitsTrack = await existsTrackForName(name);
+      final track = await existsTrackForName(name);
 
-      if( !exitsTrack) {
+      if( track != null) {
 
-        final response = await repository.uploadTrack(ref, name, uploadFile, description, type, distance, elevationGain, images: images );
-        state = const TrackUploadState(status: TrackUploadStatus.success);
-        return response;
-
-      } else {
         state = const TrackUploadState(
           status: TrackUploadStatus.error,
           message: 'Ya existe un track con ese nombre.',
         );
         return null;
+
+      } else {
+
+        final response = await repository.uploadTrack(ref, name, uploadFile, description, type, distance, elevationGain, images: images );
+        state = const TrackUploadState(status: TrackUploadStatus.success);
+        return response;
+        
       }
       
     } catch (e) {

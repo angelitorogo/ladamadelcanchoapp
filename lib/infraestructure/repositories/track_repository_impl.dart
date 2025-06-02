@@ -25,13 +25,18 @@ class TrackRepositoryImpl extends TrackRepository {
   }
   
   @override
-  Future<bool> existsTrack(String name) {
+  Future<Track?> existsTrack(String name) {
     return datasource.existsTrack(name);
   }
 
   @override
   Future<Track> loadTrack(String id) {
     return datasource.loadTrack(id);
+  }
+
+  @override
+  Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}) {
+    return datasource.getNearestTracks(trackId, limit: limit);
   }
 
  

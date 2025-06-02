@@ -469,7 +469,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                       //eliminar track pending del prefs
                       if(widget.index != null) {
-                        //await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                        await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
                       }
                       
 
@@ -547,7 +547,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
                                         //eliminar track pending del prefs
                                         if(widget.index != null) {
-                                          //await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                                          await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
                                         }
 
                                         if(context.mounted) {

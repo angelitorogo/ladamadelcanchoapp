@@ -9,8 +9,10 @@ abstract class TrackDatasource {
 
   Future<Map<String, dynamic>> loadAllTracks({ int limit = 10, int page = 0, String? userId, String? orderBy, String? direction });
 
-  Future<bool> existsTrack(String name);
+  Future<Track?> existsTrack(String name);
 
   Future<Track> loadTrack(String id);
+
+  Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}); 
   
 }

@@ -193,6 +193,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
     final elevationRepository = ElevationRepositoryImpl(ElevationDatasourceImpl());
     List<LocationPoint> correctedPoints;
     try {
+
+      // Aqui falla algo, no correige los puntos
       correctedPoints = await elevationRepository.getCorrectedElevations(state.points);
     } catch (e) {
       // 🚨 Si falla la corrección, usamos los puntos originales

@@ -47,7 +47,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                 return ListTile(
                   leading: const Icon(Icons.route),
                   title: Text(_formatTimestamp(track.timestamp)),
-                  subtitle: Text('📏 ${(track.distance / 1000).toStringAsFixed(3)} km'),
+                  subtitle: Text('📏 ${(track.distance).toStringAsFixed(2)} km'),
                   trailing: IconButton(
                     icon: const Icon(Icons.cancel, color: Colors.red),
                     onPressed: () {
@@ -86,7 +86,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                                 onPressed: () async {
                                   Navigator.of(context).pop();
                                   
-                                  //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                                  await ref.read(pendingTracksProvider.notifier).removeTrack(index);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -123,7 +123,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
 
                       if (result == 'uploaded') {
                         // Track subido, eliminarlo
-                        //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                        await ref.read(pendingTracksProvider.notifier).removeTrack(index);
                       }
 
                     } 

@@ -13,7 +13,8 @@ class Track {
   final List<LocationPoint>? points;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final UserEntity user;
+  final UserEntity? user;
+  final double? distanceFromCurrent;
 
   Track({
     required this.id,
@@ -27,7 +28,8 @@ class Track {
     this.points,
     required this.createdAt,
     required this.updatedAt,
-    required this.user,
+    this.user,
+    this.distanceFromCurrent
   });
 
   factory Track.fromJson(Map<String, dynamic> json) => Track(
@@ -43,6 +45,7 @@ class Track {
     createdAt: DateTime.parse(json['created_at']),
     updatedAt: DateTime.parse(json['updated_at']),
     user: UserEntity.fromJson(json['user']),
+    distanceFromCurrent: json['distanceFromCurrent']
   );
 
   Map<String, dynamic> toJson() => {
@@ -57,7 +60,8 @@ class Track {
         'points': points?.map((p) => p.toMap()).toList(),
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt.toIso8601String(),
-        'user': user.toJson(),
+        'user': user?.toJson(),
+        'distanceFromCurrent': distanceFromCurrent
       };
 }
 

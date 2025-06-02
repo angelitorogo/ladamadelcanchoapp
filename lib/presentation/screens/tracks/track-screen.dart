@@ -14,6 +14,8 @@ import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_nearest_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/full_screen_carousel_view.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -22,9 +24,10 @@ import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart'
 
 
 class TrackScreen extends ConsumerStatefulWidget {
-  final int trackIndex;
+  final int? trackIndex;
+  final String? trackName;
   static const name = 'track-screen';
-  const TrackScreen({super.key, required this.trackIndex});
+  const TrackScreen({super.key, this.trackIndex, this.trackName});
   @override
   ConsumerState<TrackScreen> createState() => _TrackScreenState();
 }
@@ -32,6 +35,7 @@ class TrackScreen extends ConsumerStatefulWidget {
 class _TrackScreenState extends ConsumerState<TrackScreen> {
   Track? _track;
   bool _isLoading = true;
+  late List<Track> tracks;
 
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>(); 
   
@@ -42,20 +46,41 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
     loadTrack();
   }
 
+  
+
   Future<void> loadTrack() async {
+
     try {
-      final tracks = ref.watch(trackListProvider).tracks;
-      if (widget.trackIndex < 0 || widget.trackIndex >= tracks.length) {
-        throw Exception('Índice de track inválido');
+
+      if (widget.trackIndex != null) {
+
+        tracks = ref.watch(trackListProvider).tracks;
+
+        if (widget.trackIndex! < 0 || widget.trackIndex! >= tracks.length) {
+          throw Exception('Índice de track inválido');
+        }
+        final track = tracks[widget.trackIndex!];
+        setState(() {
+          _track = track;
+          _isLoading = false;
+        });
+      } else {
+
+        //hacer consulta de ese track
+
+        Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(widget.trackName!);
+
+        setState(() {
+          _track = track;
+          _isLoading = false;
+        });
+      
       }
-      final track = tracks[widget.trackIndex];
-      setState(() {
-        _track = track;
-        _isLoading = false;
-      });
+
     } catch (e) {
       setState(() => _isLoading = false);
       if (context.mounted) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Error al cargar el track: $e'),
@@ -108,7 +133,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
                         _Card(track: _track!)
                       else
                         const Text('No hay imágenes disponibles.'),
+                      _Nearest(track: _track!),
                       const SizedBox(height: 60),
+
                     ],
                   ),
       ),
@@ -154,7 +181,7 @@ class _DatosWidget extends ConsumerWidget {
                   await ref.read(trackListProvider.notifier).loadTracks(
                     limit: 5,
                     page: 1,
-                    userId: track.user.id,
+                    userId: track.user!.id,
                   );
 
                   if(context.mounted) {
@@ -162,7 +189,7 @@ class _DatosWidget extends ConsumerWidget {
                   }
                   
                 },
-                child: Text(track.user.fullname)),
+                child: Text(track.user!.fullname)),
       
               const SizedBox(height: 16),
 
@@ -780,5 +807,132 @@ class _TrackMapState extends ConsumerState<_Map> {
       xPercent * mapSize.width,
       yPercent * mapSize.height,
     );
+  }
+}
+
+
+class _Nearest extends ConsumerStatefulWidget {
+  final Track track;
+  const _Nearest({required this.track});
+
+  @override
+  ConsumerState<_Nearest> createState() => _NearestState();
+}
+
+class _NearestState extends ConsumerState<_Nearest> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(trackNearestListProvider.notifier).loadNearestTracks(widget.track.id);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tracksNearest = ref.watch(trackNearestListProvider);
+
+    
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '📍 Rutas Cercanas:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              height: 200, // altura de las miniaturas
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: tracksNearest.tracks.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                
+                itemBuilder: (context, index) {
+                  
+                  final track = tracksNearest.tracks[index];
+                  final imageUrl = "${Environment.apiUrl}/files/tracks/${track.images!.first}";
+
+                  return GestureDetector(
+                    onTap: () {
+
+                      
+                      
+
+                      context.pushNamed(
+                        TrackScreen.name,
+                        extra: {'trackName': track.name},
+                      );      
+
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            imageUrl,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: Colors.grey[300],
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.broken_image, color: Colors.grey),
+                            ),
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('A ${(track.distanceFromCurrent! / 1000).toStringAsFixed(2)} km'),
+                              Text('Distancia: ${(double.parse(track.distance)).toStringAsFixed(0)} km'),
+                              Text('Desnivel: ${(double.parse(track.elevationGain)).toStringAsFixed(0)} m'),
+                            ],
+                          ),
+                        )
+
+                      ],
+                    ),
+                  );
+                },
+
+
+              ),
+            ),
+
+           
+          ],
+        ),
+      ),
+    );
+    
+
+
   }
 }

@@ -179,11 +179,14 @@ class TrackDatasourceImpl implements TrackDatasource {
   }
   
   @override
-  Future<bool> existsTrack(String name) async {
+  Future<Track?> existsTrack(String name) async {
 
-    //try {
+    final finalName = name.replaceAll('.gpx', '');
+
+    
+    try {
       final response = await _dio.get(
-        '/track/$name' ,
+        '/track/$finalName' ,
         options: Options(
           headers: {
             'X-CSRF-Token': _csrfToken,
@@ -191,36 +194,25 @@ class TrackDatasourceImpl implements TrackDatasource {
         ),
       );
 
-      if (response.statusCode == 200) {
-        final isAvailable = response.data.toString().toLowerCase() == 'true';
-        return isAvailable;
-      } else{ 
-        return false;
-      }
-
-    /*
-    } catch (e) {
-      if( e is DioException) {
-        throw DioException.connectionError(
-          requestOptions: RequestOptions(
-            path: '/', // la ruta que falló
-            baseUrl: _dio.options.baseUrl, // opcional
-          ),
-          reason: e.toString(),
-        );
+      if (response.statusCode == 200 && response.data != null) {
+        final track = Track.fromJson(response.data); // ✅ Usa tu modelo Track
+        return track;
       } else {
-        throw Exception('❌ Error: $e');
-      } 
-      
+        return null;
+      }
+    } catch (e) {
+      return null;
     }
-    */
+
+      
+
+    
+
 
   }
 
   @override
   Future<Track> loadTrack(String id) async {
-
-    
 
     final response = await _dio.get(
       '/$id' ,
@@ -235,6 +227,18 @@ class TrackDatasourceImpl implements TrackDatasource {
 
     return track;
   }
+
+  @override
+  Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}) async {
+    final response = await _dio.get('/nearest/$trackId', queryParameters: {
+      'limit': limit,
+    });
+
+    final List<dynamic> data = response.data;
+    return data.map((json) => Track.fromJson(json)).toList();
+  }
+
+
 
 
   //https://cookies.argomez.com/api/tracks?limit=10&page=1&userId=23235555

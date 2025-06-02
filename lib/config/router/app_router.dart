@@ -135,11 +135,17 @@ final appRouter = GoRouter(
         path: '/track',
         name: TrackScreen.name,
         builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          final int trackIndex = extra['trackIndex'];
-          return TrackScreen(trackIndex: trackIndex);
+          final extra = state.extra as Map<String, dynamic>?; // Nullable
+          final int? trackIndex = extra?['trackIndex'] as int?;
+          final String? trackName = extra?['trackName'] as String?;
+          
+          return TrackScreen(
+            trackIndex: trackIndex,
+            trackName: trackName,
+          );
         },
       ),
+
 
 
     /*
