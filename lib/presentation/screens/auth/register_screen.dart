@@ -68,7 +68,7 @@ class _RegisterForm extends ConsumerWidget {
 
     ref.listen(authProvider, (previous, next) {
       if (previous?.errorMessage != next.errorMessage && next.errorMessage != null) {
-        mostrarAlerta(context, next.errorMessage!);
+        mostrarAlerta(context, next.errorMessage!, colors.error);
       }
     });
 
@@ -201,7 +201,7 @@ class _RegisterForm extends ConsumerWidget {
                     */
 
                     if(registerState.password.value != registerState.password2.value) {
-                      mostrarAlerta(context, 'Contraseñas no coinciden');
+                      mostrarAlerta(context, 'Contraseñas no coinciden', colors.error);
                       return;
                     }
 
@@ -225,7 +225,7 @@ class _RegisterForm extends ConsumerWidget {
                       } else {
                         // ❌ Mostrar alerta con mensaje del backend
                         if (context.mounted) {
-                          mostrarAlerta(context, result.message!);
+                          mostrarAlerta(context, result.message!, colors.error);
                         }
                       }
 

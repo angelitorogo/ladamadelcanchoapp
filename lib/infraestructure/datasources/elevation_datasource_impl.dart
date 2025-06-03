@@ -16,7 +16,7 @@ class ElevationDatasourceImpl implements ElevationDatasource {
 
     final locations = points.map((p) => '${p.latitude},${p.longitude}').join('|');
 
-    print('📍 Puntos Originales: $locations');
+    //print('📍 Puntos Originales: $locations');
 
     try {
 
@@ -30,7 +30,7 @@ class ElevationDatasourceImpl implements ElevationDatasource {
       if (response.statusCode == 200 && response.data['results'] != null) {
         final results = response.data['results'] as List;
 
-        print('📍 Puntos corregidos: ${response.data['results']}');
+        //print('📍${results.length}, Puntos corregidos: ${response.data['results']}');
 
 
         return List.generate(points.length, (i) {
@@ -66,7 +66,7 @@ class ElevationDatasourceImpl implements ElevationDatasource {
           response.data['results'].isNotEmpty) {
         final ele = response.data['results'][0]['elevation'];
 
-        print('📍 Punto corregido');
+        //print('📍 Punto corregido. Original: ${point.elevation} - Corregido: $ele');
 
         return CorrectedElevationResponse(
           point: LocationPoint(
@@ -79,6 +79,8 @@ class ElevationDatasourceImpl implements ElevationDatasource {
         );
       }
 
+      //print('📍 Punto NO corregido. Original: ${point.elevation}');
+
       // Si no hay elevación válida
       return CorrectedElevationResponse(
         point: point,
@@ -86,6 +88,7 @@ class ElevationDatasourceImpl implements ElevationDatasource {
       );
     } catch (_) {
       // En caso de error, fallback sin corrección
+      //print('📍 Punto NO corregido. Original: ${point.elevation}');
       return CorrectedElevationResponse(
         point: point,
         corrected: false,

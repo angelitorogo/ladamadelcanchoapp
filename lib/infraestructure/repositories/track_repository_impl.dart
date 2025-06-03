@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
@@ -37,6 +38,12 @@ class TrackRepositoryImpl extends TrackRepository {
   @override
   Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}) {
     return datasource.getNearestTracks(trackId, limit: limit);
+  }
+
+
+  @override
+  Future<Response<dynamic>> deleteTrack(String id) {
+    return datasource.deleteTrack(id);
   }
 
  

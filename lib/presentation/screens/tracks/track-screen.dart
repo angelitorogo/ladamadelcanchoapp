@@ -11,6 +11,7 @@ import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
@@ -96,6 +97,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   @override
   Widget build(BuildContext context) {
 
+    final authState = ref.read(authProvider).user;
+
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
@@ -134,7 +137,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
                       else
                         const Text('No hay imágenes disponibles.'),
                       _Nearest(track: _track!),
+                      const SizedBox(height: 0),
+
+                      
+                      if( authState!.id == _track!.user!.id)
+                      _Buttons(trackId: _track!.id,),
+
                       const SizedBox(height: 60),
+
 
                     ],
                   ),
@@ -263,7 +273,6 @@ class _DatosWidget extends ConsumerWidget {
   }
 }
 
-
 class _Card extends StatelessWidget {
 
   final Track track;
@@ -348,7 +357,6 @@ class _Card extends StatelessWidget {
     );
   }
 }
-
 
 class _Perfil extends ConsumerWidget {
   final Track track;
@@ -622,7 +630,6 @@ class _Perfil extends ConsumerWidget {
   }
 } 
 
-
 class _Map extends ConsumerStatefulWidget {
   final Track track;
 
@@ -810,7 +817,6 @@ class _TrackMapState extends ConsumerState<_Map> {
   }
 }
 
-
 class _Nearest extends ConsumerStatefulWidget {
   final Track track;
   const _Nearest({required this.track});
@@ -831,6 +837,10 @@ class _NearestState extends ConsumerState<_Nearest> {
   @override
   Widget build(BuildContext context) {
     final tracksNearest = ref.watch(trackNearestListProvider);
+
+    if(tracksNearest.tracks.isEmpty) {
+      return const SizedBox();
+    }
 
     
     return Card(
@@ -934,5 +944,144 @@ class _NearestState extends ConsumerState<_Nearest> {
     
 
 
+  }
+}
+
+class _Buttons extends ConsumerWidget {
+  final String trackId;
+  const _Buttons({required this.trackId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final TrackUploadState trackStatus = ref.watch(trackUploadProvider);
+    final colors = Theme.of(context).colorScheme;
+
+    return SafeArea(
+        minimum: const EdgeInsets.only(bottom: 8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          child: Row(
+            children: [
+              
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Editar'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    // Aquí pondrás tu lógica para editar.
+                  },
+                ),
+              ),
+
+              const SizedBox(width: 10,),
+
+              ( trackStatus.status == TrackUploadStatus.loading ) ?
+
+
+                SizedBox(
+                  width: 150,
+                  height: 50,
+                  child: TextButton(
+                    onPressed: null, // 🔒 Deshabilitado mientras carga
+                    style: TextButton.styleFrom(
+                      backgroundColor: colors.onPrimaryFixedVariant, // 🔥 Color de fondo
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
+                    ),
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white, // 🎨 Color del loading
+                        strokeWidth: 3, // 📏 Grosor del círculo
+                      ),
+                    ),
+                  ),
+                )
+
+              :
+
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.cancel),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('¿Esta seguro de eliminar el track?'),
+                        content: const Text('Esta acción no se puede deshacer.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('No'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Sí, eliminar'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true)  {
+
+                      final result = await ref.read(trackUploadProvider.notifier).deleteTrack(trackId);
+
+                      if (context.mounted && result.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✅ ${result.data['message']}'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+
+                        await ref.read(trackListProvider.notifier).loadTracks(
+                          limit: 5,
+                          page: 1,
+                          append: false
+                        );
+
+                        await Future.delayed(const Duration(milliseconds: 500));
+
+                        if (context.mounted) {
+                          context.go('/');
+                        }
+
+                      } else if( context.mounted && result.statusCode == 500) {
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('❌ Servidor parece caído, intentelo mas tarde'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+
+                      }
+
+                    }
+
+                  },
+                  label: const Text('Eliminar'),
+                ),
+              ),
+
+
+            ],
+          ),
+        ),
+      );
   }
 }

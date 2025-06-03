@@ -1,6 +1,7 @@
 
 
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
@@ -65,6 +66,39 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
     return result;
 
   }
+
+  void borrarArchivosEnCarpeta() async {
+  // Solicitar permisos de almacenamiento
+
+  // Ruta de la carpeta a borrar
+  final carpetaTracks = Directory('/storage/emulated/0/Download/GPX/tracks/');
+  final carpetaImages = Directory('/storage/emulated/0/Download/GPX/captures/');
+
+  if (await carpetaTracks.exists()) {
+    // Listar y borrar los archivos
+    final archivos = carpetaTracks.listSync();
+    for (var archivo in archivos) {
+      if (archivo is File) {
+     
+        await archivo.delete();
+
+      }
+    }
+  } 
+
+  if (await carpetaImages.exists()) {
+    // Listar y borrar los archivos
+    final archivos = carpetaImages.listSync();
+    for (var archivo in archivos) {
+      if (archivo is File) {
+     
+        await archivo.delete();
+
+      }
+    }
+  } 
+
+}
 
   Future<Map<String, dynamic>?> uploadTrack(BuildContext context, String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<LocationPoint> points = const[], List<File> images = const []} ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
@@ -155,6 +189,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
         final response = await repository.uploadTrack(ref, name, uploadFile, description, type, distance, elevationGain, images: images );
         state = const TrackUploadState(status: TrackUploadStatus.success);
+        borrarArchivosEnCarpeta();
         return response;
         
       }
@@ -165,6 +200,24 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
         message: 'Error al subir el track',
       );
       return null;
+    }
+  }
+
+
+  Future<Response<dynamic>> deleteTrack(String id) async {
+
+    state = const TrackUploadState(status: TrackUploadStatus.loading);
+
+    try {
+      final result = await repository.deleteTrack(id);
+      state = const TrackUploadState(status: TrackUploadStatus.success);
+      return result;
+    } catch (e) {
+      state = const TrackUploadState(
+        status: TrackUploadStatus.error,
+        message: 'Error al eliminar el track',
+      );
+      return Response(requestOptions: RequestOptions(), statusCode: 500, statusMessage: 'Error al eliminar el track: $e');
     }
   }
 

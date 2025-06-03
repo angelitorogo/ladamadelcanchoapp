@@ -69,7 +69,8 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
 
   Future<void> loadTracks({int limit = 5, int page = 1, String? userId, bool append = false}) async {
     
-    if (page > state.totalPages) return; // ❌ No más páginas
+    
+    if (state.totalPages != 0 && page > state.totalPages) return;// ❌ No más páginas
 
     state = state.copyWith(status: TrackListStatus.loading);
 

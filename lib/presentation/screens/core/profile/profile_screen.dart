@@ -41,7 +41,7 @@ class ProfileScreen extends ConsumerWidget {
       if (previous?.errorMessage != next.errorMessage && next.errorMessage != null) {
         Future.microtask(() {
           if (context.mounted && ModalRoute.of(context)?.isCurrent == true) {
-            mostrarAlerta(context, next.errorMessage!);
+            mostrarAlerta(context, next.errorMessage!, colors.error);
           }
         });
       }

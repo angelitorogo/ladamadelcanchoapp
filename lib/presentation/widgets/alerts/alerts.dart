@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-void mostrarAlerta(BuildContext context, String mensaje) {
+void mostrarAlerta(BuildContext context, String mensaje, Color color) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -18,12 +18,12 @@ void mostrarAlerta(BuildContext context, String mensaje) {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
-              title: const Column(
+              title: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 28),
-                  SizedBox(height: 10),
-                  Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Icon(Icons.error_outline, color: color, size: 28),
+                  const SizedBox(height: 10),
+                  const Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
               content: Text(

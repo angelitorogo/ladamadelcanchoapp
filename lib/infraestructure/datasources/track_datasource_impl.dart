@@ -177,6 +177,35 @@ class TrackDatasourceImpl implements TrackDatasource {
 
     
   }
+
+  @override
+  Future<Response<dynamic>> deleteTrack(String id) async {
+
+    await _fetchCsrfToken(); // ✅ CSRF requerido
+
+    try {
+      final response = await _dio.delete(
+        '/$id',
+        options: Options(
+          headers: {
+            'X-CSRF-Token': _csrfToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+
+        return response;
+      } else {
+        return response;
+      }
+
+    } catch (e) {
+      return Response(requestOptions: RequestOptions(), statusCode: 500, statusMessage: 'Error al eliminar el track: $e');
+    }
+
+
+  }
   
   @override
   Future<Track?> existsTrack(String name) async {
