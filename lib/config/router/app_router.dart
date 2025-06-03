@@ -9,6 +9,7 @@ import 'package:ladamadelcanchoapp/presentation/screens/auth/register_screen.dar
 import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/edit_track/edit_track_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/pending_tracks/pending_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
@@ -130,6 +131,18 @@ final appRouter = GoRouter(
         },
       ),
 
+      GoRoute(
+        path: '/edit-track',
+        name: EditTrackScreen.name,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final File trackFile = extra['trackFile'];
+          final List<LocationPoint> points = extra['points'];
+          final List<String>? images = extra['images'];
+          return EditTrackScreen(trackFile: trackFile, points: points, images: images);
+        },
+      ),
+
 
       GoRoute(
         path: '/track',
@@ -138,7 +151,6 @@ final appRouter = GoRouter(
           final extra = state.extra as Map<String, dynamic>?; // Nullable
           final int? trackIndex = extra?['trackIndex'] as int?;
           final String? trackName = extra?['trackName'] as String?;
-          
           return TrackScreen(
             trackIndex: trackIndex,
             trackName: trackName,

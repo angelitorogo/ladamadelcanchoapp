@@ -4,45 +4,38 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
-import 'package:ladamadelcanchoapp/domain/entities/pending_track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
-import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
-import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 
 
-class TrackPreviewScreen extends ConsumerStatefulWidget {
+class EditTrackScreen extends ConsumerStatefulWidget {
   final File trackFile;
   final List<LocationPoint> points;
-  final int? index;
+  final List<String>? images;
 
-  const TrackPreviewScreen({
+  const EditTrackScreen({
     super.key,
     required this.trackFile,
     required this.points,
-    required this.index
+    this.images
   });
 
-  static const name = 'track-preview-screen';
+  static const name = 'edit-track-screen';
 
   @override
-  ConsumerState<TrackPreviewScreen> createState() => _TrackPreviewScreenState();
+  ConsumerState<EditTrackScreen> createState() => _EditTrackScreenState();
 }
 
-class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
+class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
   late final TextEditingController _nameController;
   final TextEditingController descriptionController = TextEditingController();
   late final List<LatLng> polylinePoints;
@@ -59,6 +52,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
   List<File> selectedImages = [];
   double maxElevation = 0;
   double minElevation = 0;
+  List<String> serverImages = [];
 
 
   @override
@@ -70,15 +64,28 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     polylinePoints = widget.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
     bounds = _calculateBounds(polylinePoints);
     _calculateTrackStats();
+
+    // 🟡 Inicializar imágenes del servidor
+    serverImages = widget.images ?? [];
+
   }
 
+  // 🟡 Nuevo método para eliminar imagen del servidor
+  void _removeServerImage(int index) {
+    setState(() {
+      serverImages.removeAt(index);
+    });
+  }
+
+
+  // 🟡 Modificar _pickImages para añadir sin reemplazar
   Future<void> _pickImages() async {
     final picker = ImagePicker();
     final picked = await picker.pickMultiImage();
 
     if (picked.isNotEmpty) {
       setState(() {
-        selectedImages = picked.map((xfile) => File(xfile.path)).toList();
+        selectedImages.addAll(picked.map((xfile) => File(xfile.path)));
       });
     }
   }
@@ -115,12 +122,6 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       final currElevation = widget.points[i].elevation;
       final nextElevation = widget.points[i + 1].elevation;
 
-      /*
-      total += _distanceBetween(
-        LatLng(widget.points[i].latitude, widget.points[i].longitude),
-        LatLng(widget.points[i + 1].latitude, widget.points[i + 1].longitude),
-      );
-      */
       final result = calculateDisAndEle(widget.points);
       distanceKm = result.totalDistanceMeters / 1000;
       elevationGain = result.totalElevationGain;
@@ -133,10 +134,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       if (currElevation < minElevation) minElevation = currElevation;
     }
 
-    /*
-    distanceKm = total;
-    elevationGain = gain;
-    */
+
     elevationLoss = loss;
     
 
@@ -192,8 +190,8 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final uploadState = ref.watch(trackUploadProvider);
-    final uploader = ref.read(trackUploadProvider.notifier);
+    //final uploadState = ref.watch(trackUploadProvider);
+    //final uploader = ref.read(trackUploadProvider.notifier);
 
     final modeState = ref.watch(locationProvider).mode;
     String mode;
@@ -212,7 +210,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Vista previa del track')),
+      appBar: AppBar(title: const Text('Editar track')),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -401,24 +399,80 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
+                  // 🟡 MODIFICADO: Mostrar imágenes servidor + locales y permitir eliminación
                   SizedBox(
                     height: 80,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: selectedImages.length,
+                        itemCount: serverImages.length + selectedImages.length,
                         separatorBuilder: (_, __) => const SizedBox(width: 8),
                         itemBuilder: (context, index) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.file(
-                              selectedImages[index],
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            ),
-                          );
+                          if (index < serverImages.length) {
+                            final String imageUrl = '${Environment.apiUrl}/files/tracks/${serverImages[index]}';
+                            
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () => _removeServerImage(index),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            final localIndex = index - serverImages.length;
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.file(
+                                    selectedImages[localIndex],
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedImages.removeAt(localIndex);
+                                      });
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
                         },
                       ),
                     ),
@@ -427,13 +481,8 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
               ),
             ),
 
-          ],
-        ),
-      ),
-
-      // ✅ Botones con estado de carga
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.only(bottom: 8),
+            SafeArea(
+        minimum: const EdgeInsets.only(bottom: 40),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
@@ -442,49 +491,15 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.cancel),
+                  label: const Text('Cancelar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red, 
+                    backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('¿Cancelar subida del track?'),
-                        content: const Text('Si existe el archivo .gpx, será eliminado del dispositivo.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('No'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Sí, cancelar'),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirm == true)  {
-                      final path = '/storage/emulated/0/Download/GPX/tracks/${widget.trackFile.uri.pathSegments.last}';
-                      final file = File(path);
-                      if (await file.exists()) await file.delete();
-
-                      //eliminar track pending del prefs
-                      if(widget.index != null) {
-                        await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
-                      }
-                      
-
-                      // 🔁 REINICIA el estado
-                      ref.read(locationProvider.notifier).resetState();
-                      
-                      if (context.mounted) Navigator.of(context).pop('cancelled');
-                    }
                   },
-                  label: const Text('Cancelar'),
                 ),
               ),
               const SizedBox(width: 10),
@@ -492,145 +507,33 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
               // ✅ GUARDAR
               Expanded(
                 child: ElevatedButton.icon(
-                  icon: uploadState.status == TrackUploadStatus.loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.cloud_upload),
+                  icon: const Icon(Icons.update_outlined),
+                  label: const Text('Actualizar'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: uploadState.status == TrackUploadStatus.loading
-                      ? null
-                      : () async {
-
-                          //comprobar si hay o no internet
-                          final hasInternet = await checkAndWarnIfNoInternet(context);
-
-                          if(hasInternet) {
-
-                            final name = _nameController.text.trim();
-                            final description = descriptionController.text;
-                            final file = widget.trackFile;
-
-
-                            captureMap();
-                            Map<String, dynamic>? response;
-
-                            //print('✅ Images1: $selectedImages');
-
-                            final File fileCaptureMap = await captureMap();
-
-
-                            
-                            // ignore: use_build_context_synchronously
-                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, distanceKm.toString(), elevationGain.toString(), fileCaptureMap, points: widget.points, images: selectedImages);
-                            
-
-                            if (response != null && context.mounted) {
-
-                              // 🔁 Reinicia el estado de ubicación
-                              ref.read(locationProvider.notifier).resetState();
-
-                              // 🔁 Recarga el listado de tracks
-                              ref.read(trackListProvider.notifier).loadTracks();
-
-                              await showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Row(
-                                    children: [
-                                      Icon(Icons.check_circle, color: Colors.green),
-                                      SizedBox(width: 8),
-                                      Text('Track subido'),
-                                    ],
-                                  ),
-                                  content: const Text('El track se ha guardado correctamente en el servidor.'),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () async {
-
-                                        //eliminar track pending del prefs
-                                        if(widget.index != null) {
-                                          await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
-                                        }
-
-                                        if(context.mounted) {
-                                          Navigator.of(context).pop('uploaded');
-                                          GoRouter.of(context).go('/');
-                                        }
-
-                                      },
-                                      child: const Text('Aceptar'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } else {
-                              if (context.mounted) {
-
-                                //guardar track pending en prefs 
-                                // Esto se probara solo cuando falle el upload
-                                await ref.read(pendingTracksProvider.notifier).addTrack(
-                                  PendingTrack(
-                                    userId: ref.read(authProvider).user!.id,
-                                    timestamp: DateTime.now(),
-                                    isTracking: false,
-                                    isPaused: false,
-                                    distance: distanceKm,
-                                    elevationGain: elevationGain,
-                                    points: widget.points,
-                                    discardedPoints: [],
-                                    mode: mode,
-                                  ),
-                                );
-
-                                ref.read(locationProvider.notifier).resetState();
-
-                                selectedImages = [];
-
-                                if(context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('❌ ${ref.watch(trackUploadProvider).message}, se ha guardado en tracks pendientes'),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                                
-                              }
-                            }
-
-                          }
-
-                          
-                        },
-                  label: Text(
-                    uploadState.status == TrackUploadStatus.loading
-                        ? 'Subiendo...'
-                        : 'Guardar',
-                  ),
+                  onPressed: () async {
+                  },
                 ),
               ),
+              
+
             ],
           ),
         ),
       ),
-    
-      //Debug
-      
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showDebugDialog(context, ref),
-        child: const Icon(Icons.bug_report),
-      ),
-      
-    
+
+          ],
+        ),
+      )
     );
+
+    
+    
+    
   }
 
   String _formatDuration(Duration duration) {

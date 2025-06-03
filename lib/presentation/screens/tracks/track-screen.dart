@@ -1,4 +1,5 @@
 
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -11,6 +12,7 @@ import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
@@ -18,6 +20,7 @@ import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provi
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_nearest_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/edit_track/edit_track_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/full_screen_carousel_view.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
@@ -141,9 +144,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
 
                       
                       if( authState!.id == _track!.user!.id)
-                      _Buttons(trackId: _track!.id,),
+                      _Buttons(track: _track!,),
 
-                      const SizedBox(height: 60),
+                      const SizedBox(height: 20),
 
 
                     ],
@@ -948,8 +951,8 @@ class _NearestState extends ConsumerState<_Nearest> {
 }
 
 class _Buttons extends ConsumerWidget {
-  final String trackId;
-  const _Buttons({required this.trackId});
+  final Track track;
+  const _Buttons({required this.track});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -974,8 +977,27 @@ class _Buttons extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () {
-                    // Aquí pondrás tu lógica para editar.
+                  onPressed: () async {
+                    //comprobar si hay o no internet
+                    final hasInternet = await checkAndWarnIfNoInternet(context);
+
+                    if(hasInternet && context.mounted) {
+
+                      final result = await context.pushNamed(
+                        EditTrackScreen.name, // o TrackPreviewScreen.name
+                        extra: {
+                          'trackFile': File('offline.gpx'), // puedes cambiar por un File real si lo necesitas
+                          'points': track.points,
+                          'images': track.images
+                        },
+                      );
+
+                      if (result == 'uploaded') {
+                        // Track subido, eliminarlo
+                        //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                      }
+
+                    }
                   },
                 ),
               ),
@@ -1038,7 +1060,7 @@ class _Buttons extends ConsumerWidget {
 
                     if (confirm == true)  {
 
-                      final result = await ref.read(trackUploadProvider.notifier).deleteTrack(trackId);
+                      final result = await ref.read(trackUploadProvider.notifier).deleteTrack(track.id);
 
                       if (context.mounted && result.statusCode == 200) {
                         ScaffoldMessenger.of(context).showSnackBar(
