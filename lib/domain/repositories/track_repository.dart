@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
@@ -16,6 +15,8 @@ abstract class TrackRepository {
   Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}); 
 
   Future<Response<dynamic>> deleteTrack(String id);
+
+  Future<Response<dynamic>> updateTrack(String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []});
 
   
 }

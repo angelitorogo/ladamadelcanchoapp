@@ -134,8 +134,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await prefs.setBool('isAuthenticated', false);
   }
 
-  PersistCookieJar? jar() {
-    return authRepository.cookieJar();
+  Future<PersistCookieJar?> jar() async {
+    return await authRepository.cookieJar();
   }
 
   Future<void> login(BuildContext context, String email, String password, WidgetRef ref) async {

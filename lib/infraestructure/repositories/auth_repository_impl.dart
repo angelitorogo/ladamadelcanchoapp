@@ -56,7 +56,7 @@ class AuthRepositoryImpl extends AuthRepository{
   }
 
   @override
-  PersistCookieJar cookieJar() {
+  Future<PersistCookieJar> cookieJar() {
     return datasource.cookieJar();
   }
   

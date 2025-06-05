@@ -28,9 +28,10 @@ class _CheckAuthScreenState extends ConsumerState<CheckAuthScreen> {
 
   Future<void> _verifySessionOnStartup() async {
     var hasToken = false;
-    final jar = ref.read(authProvider.notifier).jar();
     final auth = ref.read(authProvider);
-    final cookies = await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    final jar = await ref.read(authProvider.notifier).jar();
+    final cookies = await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));    
+    
     if(cookies != null) {
       hasToken = cookies.any((c) => c.name == 'auth_token');
     }

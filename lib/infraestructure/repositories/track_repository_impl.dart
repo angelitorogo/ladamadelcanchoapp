@@ -1,12 +1,9 @@
 
-
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
-
 import 'package:ladamadelcanchoapp/domain/repositories/track_repository.dart';
 
 class TrackRepositoryImpl extends TrackRepository {
@@ -44,6 +41,12 @@ class TrackRepositoryImpl extends TrackRepository {
   @override
   Future<Response<dynamic>> deleteTrack(String id) {
     return datasource.deleteTrack(id);
+  }
+
+
+  @override
+  Future<Response<dynamic>> updateTrack(String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []}) {
+    return datasource.updateTrack(id, name, description, imagesOld: imagesOld, images: images);
   }
 
  

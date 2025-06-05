@@ -136,10 +136,11 @@ final appRouter = GoRouter(
         name: EditTrackScreen.name,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
-          final File trackFile = extra['trackFile'];
+          final String trackFile = extra['trackFile'];
           final List<LocationPoint> points = extra['points'];
           final List<String>? images = extra['images'];
-          return EditTrackScreen(trackFile: trackFile, points: points, images: images);
+          final String trackId = extra['trackId'];
+          return EditTrackScreen(trackFile: trackFile, points: points, images: images, trackId: trackId);
         },
       ),
 
@@ -150,7 +151,7 @@ final appRouter = GoRouter(
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?; // Nullable
           final int? trackIndex = extra?['trackIndex'] as int?;
-          final String? trackName = extra?['trackName'] as String?;
+          final String trackName = extra?['trackName'] as String;
           return TrackScreen(
             trackIndex: trackIndex,
             trackName: trackName,

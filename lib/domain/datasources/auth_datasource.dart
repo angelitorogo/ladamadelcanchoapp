@@ -28,6 +28,6 @@ abstract class AuthDatasource {
 
   Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context);
 
-  PersistCookieJar cookieJar();
+  Future<PersistCookieJar> cookieJar();
 
 }

@@ -27,6 +27,6 @@ abstract class AuthRepository {
 
   Future<UserUpdatedResponse> updateUser(UserEntity user, BuildContext context);
 
-  PersistCookieJar cookieJar();
+  Future<PersistCookieJar>  cookieJar();
 
 }

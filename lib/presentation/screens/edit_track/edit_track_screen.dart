@@ -1,31 +1,36 @@
 
-
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
+import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:image_picker/image_picker.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/only_track_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 
 
 class EditTrackScreen extends ConsumerStatefulWidget {
-  final File trackFile;
+  final String trackFile;
   final List<LocationPoint> points;
   final List<String>? images;
+  final String trackId;
 
   const EditTrackScreen({
     super.key,
     required this.trackFile,
     required this.points,
+    required this.trackId,
     this.images
   });
 
@@ -58,8 +63,8 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
   @override
   void initState() {
     super.initState();
-    final rawName = widget.trackFile.uri.pathSegments.last;
-    final defaultName = rawName.replaceAll('.gpx', '');
+    //final rawName = widget.trackFile.uri.pathSegments.last;
+    final defaultName = widget.trackFile.replaceAll('.gpx', '');
     _nameController = TextEditingController(text: defaultName);
     polylinePoints = widget.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
     bounds = _calculateBounds(polylinePoints);
@@ -482,49 +487,114 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
             ),
 
             SafeArea(
-        minimum: const EdgeInsets.only(bottom: 40),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Row(
-            children: [
-              // ❌ CANCELAR
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Cancelar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              minimum: const EdgeInsets.only(bottom: 40),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  children: [
+                    // ❌ CANCELAR
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.cancel),
+                        label: const Text('Cancelar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () async {
+
+                          context.pop();
+
+                        },
+                      ),
                     ),
-                  ),
-                  onPressed: () async {
-                  },
+                    const SizedBox(width: 10),
+
+                    // ✅ GUARDAR
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: ref.watch(trackUploadProvider).status == TrackUploadStatus.loading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.update_outlined),
+                        label: const Text('Actualizar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () async {
+
+                          //comprobar si hay o no internet
+                          final hasInternet = await checkAndWarnIfNoInternet(context);
+
+                          if(hasInternet) {
+
+                            final name = _nameController.text.trim();
+                            final description = descriptionController.text;
+                            final images = selectedImages;
+                        
+
+                            if(serverImages.isEmpty) {
+                              final File fileCaptureMap = await captureMap();
+                              images.add(fileCaptureMap);
+                            }
+
+
+                            
+                            
+                            // ignore: use_build_context_synchronously
+                            final response = await ref.read(trackUploadProvider.notifier).updateTrack(
+                              widget.trackId,
+                              '$name.gpx',
+                              description,
+                              imagesOld: serverImages,
+                              images: images,
+                            );
+
+                            if(response.data['ok']) {
+
+                              Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName('$name.gpx');
+
+                              if( track != null){
+                                ref.read(trackProvider.notifier).updateTrack(track);
+                              }
+                                
+                              if(context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('✅ ${response.data['message']}'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }  
+                              
+                            } else {
+                              response;
+                            }
+
+
+
+                            
+
+                          } 
+
+                          
+                        },
+                      ),
+                    ),
+                    
+
+                  ],
                 ),
               ),
-              const SizedBox(width: 10),
-
-              // ✅ GUARDAR
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.update_outlined),
-                  label: const Text('Actualizar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () async {
-                  },
-                ),
-              ),
-              
-
-            ],
-          ),
-        ),
-      ),
+            ),
 
           ],
         ),

@@ -221,6 +221,23 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
     }
   }
 
+  Future<Response<dynamic>> updateTrack(String id, String name, String description, { List<String> imagesOld = const[] ,List<File> images = const[] }) async {
+
+    state = const TrackUploadState(status: TrackUploadStatus.loading);
+    try {
+      final result = await repository.updateTrack(id, name, description, imagesOld: imagesOld, images: images);
+      state = const TrackUploadState(status: TrackUploadStatus.success);
+      return result;
+    } catch (e) {
+      state = const TrackUploadState(
+        status: TrackUploadStatus.error,
+        message: 'Error al actualizar el track',
+      );
+      return Response(requestOptions: RequestOptions(), statusCode: 500, statusMessage: 'Error al actualizar el track: $e');
+    }
+
+  } 
+
   void reset() {
     state = const TrackUploadState();
   }

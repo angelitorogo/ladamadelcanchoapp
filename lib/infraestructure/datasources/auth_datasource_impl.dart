@@ -2,7 +2,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -25,27 +24,22 @@ class AuthDatasourceImpl  extends AuthDatasource{
   ));
   String? _csrfToken; // Guardamos el CSRF token
   //final _cookieJar = GlobalCookieJar.instance;
-  late final PersistCookieJar _cookieJar;
-
+  final Future<PersistCookieJar> _cookieJar = GlobalCookieJar.instance;
 
 
   AuthDatasourceImpl() {
-    GlobalCookieJar.instance.then((jar) {
-      _cookieJar = jar;
-      _dio.interceptors.add(CookieManager(_cookieJar));
+    _cookieJar.then((jar) {
+      _dio.interceptors.add(CookieManager(jar));
     });
 
 
   }
 
-  @override
-  PersistCookieJar cookieJar() {
-    return _cookieJar;
-  }
   
   @override
   Future<void> checkCookies() async {
-    /*final cookies =*/await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    final jar = await _cookieJar;
+    /*final cookies =*/await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
     //print('🍪 Cookies guardadas auth: $cookies');
   }
 
@@ -103,7 +97,8 @@ class AuthDatasourceImpl  extends AuthDatasource{
       //print("📡 Respuesta del servidor: ${response.data}");
 
       // 🧪 Log para debug
-      /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+      final jar = await _cookieJar;
+      /*final cookies =*/await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
       //print("🍪 Cookies después de login: $cookies");
 
       if (response.statusCode == 201 && response.data['message'] == 'Login exitoso') {
@@ -167,7 +162,8 @@ class AuthDatasourceImpl  extends AuthDatasource{
 
 
       // 🔥 Limpiar cookies después de hacer logout
-      await _cookieJar.deleteAll();
+      final jar = await _cookieJar;
+      await jar.deleteAll();
       //print("Cookies eliminadas correctamente");
       
       
@@ -341,8 +337,13 @@ class AuthDatasourceImpl  extends AuthDatasource{
     }
 
   }
-
   
+  @override
+  Future<PersistCookieJar> cookieJar() async {
+    return await _cookieJar;
+  }
+
+    
 
     
 }

@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -16,6 +15,7 @@ import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/only_track_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_nearest_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
@@ -29,15 +29,14 @@ import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart'
 
 class TrackScreen extends ConsumerStatefulWidget {
   final int? trackIndex;
-  final String? trackName;
+  final String trackName;
   static const name = 'track-screen';
-  const TrackScreen({super.key, this.trackIndex, this.trackName});
+  const TrackScreen({super.key, this.trackIndex, required this.trackName});
   @override
   ConsumerState<TrackScreen> createState() => _TrackScreenState();
 }
 
 class _TrackScreenState extends ConsumerState<TrackScreen> {
-  Track? _track;
   bool _isLoading = true;
   late List<Track> tracks;
 
@@ -54,44 +53,25 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
 
   Future<void> loadTrack() async {
 
+    
+
+  
     try {
 
-      if (widget.trackIndex != null) {
 
-        tracks = ref.watch(trackListProvider).tracks;
+      Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(widget.trackName);
 
-        if (widget.trackIndex! < 0 || widget.trackIndex! >= tracks.length) {
-          throw Exception('Índice de track inválido');
-        }
-        final track = tracks[widget.trackIndex!];
-        setState(() {
-          _track = track;
-          _isLoading = false;
-        });
-      } else {
-
-        //hacer consulta de ese track
-
-        Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(widget.trackName!);
-
-        setState(() {
-          _track = track;
-          _isLoading = false;
-        });
-      
+      if( track != null){
+        ref.read(trackProvider.notifier).loadTrack(track);
       }
+
+      setState(() {
+        _isLoading = false;
+      });
 
     } catch (e) {
       setState(() => _isLoading = false);
-      if (context.mounted) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error al cargar el track: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      
     }
   }
 
@@ -100,7 +80,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   @override
   Widget build(BuildContext context) {
 
-    final authState = ref.read(authProvider).user;
+    final authState = ref.watch(authProvider).user;
+    final track = ref.watch(trackProvider);
 
     // ignore: deprecated_member_use
     return WillPopScope(
@@ -123,29 +104,27 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.surface,
           scrolledUnderElevation: 0,
-          title: Text(_track != null ? _track!.name.split('.').first : 'Cargando...'),
+          title: Text(track != null ? track.name.split('.').first : 'Cargando...'),
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : _track == null
+            : track == null
                 ? const Center(child: Text('No se pudo cargar el track.'))
                 : ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _DatosWidget(track: _track!),
-                      _Map(track: _track!),
-                      _Perfil(track: _track!),
-                      if (_track!.images != null && _track!.images!.isNotEmpty)
-                        _Card(track: _track!)
+                      _DatosWidget(track: track),
+                      _Map(track: track),
+                      _Perfil(track: track),
+                      if (track.images != null && track.images!.isNotEmpty)
+                        _Card(track: track)
                       else
                         const Text('No hay imágenes disponibles.'),
-                      _Nearest(track: _track!),
+                      _Nearest(track: track),
                       const SizedBox(height: 0),
 
-                      
-                      if( authState!.id == _track!.user!.id)
-                      _Buttons(track: _track!,),
-
+                      if(authState != null && authState.id == track.user!.id)
+                        _Buttons(track: track,),
                       const SizedBox(height: 20),
 
 
@@ -986,9 +965,10 @@ class _Buttons extends ConsumerWidget {
                       final result = await context.pushNamed(
                         EditTrackScreen.name, // o TrackPreviewScreen.name
                         extra: {
-                          'trackFile': File('offline.gpx'), // puedes cambiar por un File real si lo necesitas
+                          'trackFile': track.name, // puedes cambiar por un File real si lo necesitas
                           'points': track.points,
-                          'images': track.images
+                          'images': track.images,
+                          'trackId': track.id,
                         },
                       );
 

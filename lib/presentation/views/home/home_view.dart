@@ -58,6 +58,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         await ref.read(trackListProvider.notifier).loadTracks(
               limit: limit,
               page: 1,
+              append: false
             );
       }
       
@@ -231,7 +232,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     onTap: () {
                       context.pushNamed(
                         TrackScreen.name,
-                        extra: {'trackIndex': index},
+                        extra: {'trackIndex': index, 'trackName': track.name},
                       );
                     },
                     child: Padding(

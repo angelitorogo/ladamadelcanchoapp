@@ -11,7 +11,7 @@ Future<void> showDebugDialog(BuildContext context, WidgetRef ref) async {
           ? 'No hay preferencias guardadas.'
           : prefsKeys.map((k) => '• $k: ${prefs.get(k)}').join('\n');
 
-      final jar = ref.read(authProvider.notifier).jar();
+      final jar = await ref.read(authProvider.notifier).jar();
       final cookies = await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
 
       // Mostramos dominio, path y si se envía o no

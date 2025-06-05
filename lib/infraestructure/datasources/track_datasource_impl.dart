@@ -18,34 +18,21 @@ class TrackDatasourceImpl implements TrackDatasource {
   ));
 
   //final _cookieJar = GlobalCookieJar.instance;
-  late final PersistCookieJar _cookieJar;
+  final Future<PersistCookieJar> _cookieJar = GlobalCookieJar.instance;
+
   String? _csrfToken;
 
   TrackDatasourceImpl() {
-    GlobalCookieJar.instance.then((jar) {
-      _cookieJar = jar;
-      _dio.interceptors.add(CookieManager(_cookieJar));
-
-      // Interceptor para depurar cookies enviadas
-      /*
-      _dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final cookies = await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-          print('🍪 Cookies enviadas en ${options.path}:');
-          for (final cookie in cookies) {
-            print('➡️ ${cookie.name} = ${cookie.value}');
-          }
-
-          handler.next(options);
-        },
-      ));
-      */
     
+    _cookieJar.then((jar) {
+      _dio.interceptors.add(CookieManager(jar));
     });
+
   }
 
   Future<void> checkCookies() async {
-    /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    final jar = await _cookieJar;
+    /*final cookies = */await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
     //print('🍪 Cookies guardadas track: $cookies');
   }
 
@@ -55,15 +42,17 @@ class TrackDatasourceImpl implements TrackDatasource {
 
     try {
 
+      final jar = await _cookieJar;
+
       final authDio = Dio(BaseOptions(
         baseUrl: 'https://cookies.argomez.com/api/auth',
         validateStatus: (status) => status != null && status < 500,
       ));
 
-      authDio.interceptors.add(CookieManager(_cookieJar));
+      authDio.interceptors.add(CookieManager(jar));
 
       // 🔍 VERIFICAMOS cookies antes de llamar CSRF
-      _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+      await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
 
       final response = await authDio.get('/csrf-token');
 
@@ -71,7 +60,7 @@ class TrackDatasourceImpl implements TrackDatasource {
         _csrfToken = response.data['csrfToken'];
         await checkCookies();
         return;
-      }
+      } 
 
       throw Exception('Error CSRF: ${response.statusCode}');
     } catch (e) {
@@ -135,8 +124,7 @@ class TrackDatasourceImpl implements TrackDatasource {
   @override
   Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int page = 1, String? userId, String? orderBy, String? direction}) async {
 
-    //await _fetchCsrfToken(); // ✅ CSRF requerido
-
+    await _fetchCsrfToken(); // ✅ CSRF requerido
 
     try {
       final response = await _dio.get(
@@ -154,6 +142,8 @@ class TrackDatasourceImpl implements TrackDatasource {
           },
         ),
       );
+
+      //await Future.delayed(const Duration(seconds: 1));
 
       if (response.statusCode == 200) {
         return response.data;
@@ -265,6 +255,51 @@ class TrackDatasourceImpl implements TrackDatasource {
 
     final List<dynamic> data = response.data;
     return data.map((json) => Track.fromJson(json)).toList();
+  }
+
+
+  @override
+  Future<Response<dynamic>> updateTrack(String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []}) async {
+
+    try {
+
+      await _fetchCsrfToken(); // ✅ CSRF requerido
+
+      final formData = FormData.fromMap({
+        'name': name,
+        'description': description,
+        'imagesOld': imagesOld,
+        
+        if (images.isNotEmpty) 
+          'images': await Future.wait(images.map((img) async {
+            return await MultipartFile.fromFile(img.path, filename: img.uri.pathSegments.last);
+          })),
+      });
+
+      final response = await _dio.put(
+        '/$id',
+        data: formData,
+        options: Options(
+          headers: {
+            'X-CSRF-Token': _csrfToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        return Response(requestOptions: RequestOptions(), statusCode: response.statusCode, statusMessage: 'Error al actualizar el track');
+      }
+
+      
+    } catch (e) {
+
+      return Response(requestOptions: RequestOptions(), statusCode: 500, statusMessage: 'Error al actualizar el track');
+      
+    }
+
+
   }
 
 
