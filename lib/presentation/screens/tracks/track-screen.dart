@@ -860,13 +860,12 @@ class _NearestState extends ConsumerState<_Nearest> {
                   return GestureDetector(
                     onTap: () {
 
-                      
-                      
 
                       context.pushNamed(
                         TrackScreen.name,
                         extra: {'trackName': track.name},
-                      );      
+                      );  
+
 
                     },
                     child: Column(

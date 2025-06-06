@@ -256,11 +256,13 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
         ),
-        
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showDebugDialog(context, ref),
-        child: const Icon(Icons.bug_report),
-      ),
+      
+        /*
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => showDebugDialog(context, ref),
+          child: const Icon(Icons.bug_report),
+        ),
+        */
       
       ),
     );

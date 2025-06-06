@@ -130,7 +130,7 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
               onTap: () {
                 context.pushNamed(
                   TrackScreen.name,
-                  extra: {'trackIndex': index},
+                  extra: {'trackIndex': index , 'trackName': track.name},
                 );
               },
               child: Padding(
