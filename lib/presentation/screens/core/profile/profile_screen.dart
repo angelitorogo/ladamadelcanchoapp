@@ -193,7 +193,7 @@ class ProfileScreen extends ConsumerWidget {
                                     if (states.contains(WidgetState.disabled)) {
                                       return const Color(0xFF566D79);
                                     }
-                                    return Colors.green;
+                                    return ColorsPeronalized.successColor;
                                   }),
                                   foregroundColor: WidgetStateProperty.all(Colors.white),
                                   shape: WidgetStateProperty.all(
@@ -229,7 +229,7 @@ class ProfileScreen extends ConsumerWidget {
                               child: TextButton(
                                 onPressed: null,
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: ColorsPeronalized.successColor,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.all(12),
                                 ),

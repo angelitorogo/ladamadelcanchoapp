@@ -410,7 +410,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                           icon: const Icon(Icons.photo_library),
                           label: const Text("Seleccionar imágenes"),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.onPrimaryFixedVariant, 
+                            backgroundColor: ColorsPeronalized.infoColor, 
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -520,7 +520,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                             fontWeight: FontWeight.bold
                           ),),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: ColorsPeronalized.cancelColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -545,7 +545,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                               child: TextButton(
                                 onPressed: null,
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: ColorsPeronalized.successColor,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.all(12),
                                 ),
@@ -570,7 +570,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                             fontWeight: FontWeight.bold
                           ),),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: ColorsPeronalized.successColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

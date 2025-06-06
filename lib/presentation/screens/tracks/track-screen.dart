@@ -518,10 +518,10 @@ class _Perfil extends ConsumerWidget {
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
                             colors: [
-                              Colors.green,
+                              ColorsPeronalized.successColor,
                               Colors.yellow,
                               Colors.orange,
-                              Colors.red,
+                              ColorsPeronalized.cancelColor,
                             ],
                           ),
                         ),
@@ -964,7 +964,7 @@ class _Buttons extends ConsumerWidget {
                               fontWeight: FontWeight.bold
                             ),),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: ColorsPeronalized.infoColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -1007,7 +1007,7 @@ class _Buttons extends ConsumerWidget {
                   child: TextButton(
                     onPressed: null, // 🔒 Deshabilitado mientras carga
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.red, // 🔥 Color de fondo
+                      backgroundColor: ColorsPeronalized.cancelColor, // 🔥 Color de fondo
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
                     ),
@@ -1031,7 +1031,7 @@ class _Buttons extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.cancel),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: ColorsPeronalized.cancelColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -1045,7 +1045,7 @@ class _Buttons extends ConsumerWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           title: const Column(
                             children: [
-                              Icon(Icons.warning_amber_rounded, color: Colors.red),
+                              Icon(Icons.warning_amber_rounded, color: ColorsPeronalized.cancelColor),
                               SizedBox(width: 10),
                               Text('¿Eliminar track?'),
                             ],
@@ -1066,7 +1066,7 @@ class _Buttons extends ConsumerWidget {
                               child: FilledButton(
                                 onPressed: () => Navigator.of(context).pop(),
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: ColorsPeronalized.cancelColor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
@@ -1079,7 +1079,7 @@ class _Buttons extends ConsumerWidget {
                               height: 50,
                               child: TextButton(
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: ColorsPeronalized.successColor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),

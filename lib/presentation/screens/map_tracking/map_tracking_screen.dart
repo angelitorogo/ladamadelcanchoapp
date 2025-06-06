@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/elevation_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
@@ -332,7 +333,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                           if (elevationDiff.abs() >= 15 && elevationDiff.abs() < 30  && distance >= 15 && distance < 30) {
                             textColor = Colors.orange;
                           } else if (elevationDiff.abs() >= 30  && distance >= 30) {
-                            textColor = Colors.red;
+                            textColor = ColorsPeronalized.cancelColor;
                           }
 
                           return Padding(
@@ -437,8 +438,8 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                 FloatingActionButton(
                   heroTag: 'trackingButton',
                   backgroundColor: !locationState.isTracking
-                      ? (initialPosition == null ? Colors.grey : Colors.green)
-                      : Colors.red,
+                      ? (initialPosition == null ? Colors.grey : ColorsPeronalized.successColor)
+                      : ColorsPeronalized.cancelColor,
                   onPressed: initialPosition == null
                       ? null
                       : () async {
@@ -478,7 +479,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                                             }
                                           }, 
                                           style: TextButton.styleFrom(
-                                            backgroundColor: Colors.green,
+                                            backgroundColor: ColorsPeronalized.successColor,
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           ),
                                           child: const Text(

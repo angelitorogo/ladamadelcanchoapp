@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
@@ -68,6 +69,8 @@ class _LoginForm extends ConsumerWidget {
       }
     });
 
+    const colors = ColorsPeronalized;
+
     return Form(
       autovalidateMode: AutovalidateMode.onUserInteraction, // Validación en tiempo real
       child: Column(
@@ -122,7 +125,7 @@ class _LoginForm extends ConsumerWidget {
                   icon: const Icon(Icons.cancel, size: 25, color: Colors.white),
                   label: const Text('Cancelar', style: TextStyle(fontSize: 17, color: Colors.white)),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: ColorsPeronalized.cancelColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -144,7 +147,7 @@ class _LoginForm extends ConsumerWidget {
                       if (states.contains(WidgetState.disabled)) {
                         return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
                       }
-                      return Colors.green; // 🔥 Color cuando está activo
+                      return ColorsPeronalized.successColor; // 🔥 Color cuando está activo
                     }),
                     foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
                     shape: WidgetStateProperty.all(
@@ -191,7 +194,7 @@ class _LoginForm extends ConsumerWidget {
                 child: TextButton(
                   onPressed: null, // 🔒 Deshabilitado mientras carga
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.green, // 🔥 Color de fondo
+                    backgroundColor: ColorsPeronalized.successColor, // 🔥 Color de fondo
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
                   ),
@@ -236,7 +239,7 @@ class _LoginForm extends ConsumerWidget {
               title: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 28),
+                  Icon(Icons.error_outline, color: ColorsPeronalized.cancelColor, size: 28),
                   SizedBox(height: 10),
                   Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
@@ -254,7 +257,7 @@ class _LoginForm extends ConsumerWidget {
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: ColorsPeronalized.cancelColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       ),

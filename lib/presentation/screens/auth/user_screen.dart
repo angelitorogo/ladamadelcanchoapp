@@ -53,7 +53,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
               },
               icon: const Icon(Icons.list),
               style: TextButton.styleFrom(
-                backgroundColor: colors.onPrimaryFixedVariant,
+                backgroundColor: ColorsPeronalized.infoColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.all(12),
               ),

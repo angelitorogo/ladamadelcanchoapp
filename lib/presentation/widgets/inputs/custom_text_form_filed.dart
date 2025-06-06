@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 
 class CustomTextFormFiled extends StatelessWidget {
   final IconData? prefixIcon;
@@ -54,8 +55,8 @@ class CustomTextFormFiled extends StatelessWidget {
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: colors.primary) : null,
         hintText: hint,
         errorText: errorMessage,
-        errorBorder: borderEnabled.copyWith(borderSide: BorderSide(color: Colors.red.shade800)),
-        focusedErrorBorder: borderEnabled.copyWith(borderSide: BorderSide(color: Colors.red.shade800)),
+        errorBorder: borderEnabled.copyWith(borderSide: const BorderSide(color: ColorsPeronalized.cancelColor)),
+        focusedErrorBorder: borderEnabled.copyWith(borderSide: const BorderSide(color: ColorsPeronalized.cancelColor)),
         isDense: true,
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 
 void mostrarAlerta(BuildContext context, String mensaje, Color color) {
     showDialog(
@@ -18,12 +19,12 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
-              title: Column(
+              title: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, color: color, size: 28),
-                  const SizedBox(height: 10),
-                  const Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Icon(Icons.error_outline, color: ColorsPeronalized.cancelColor, size: 28),
+                  SizedBox(height: 10),
+                  Text('Alerta', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
               content: Text(
@@ -51,7 +52,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
 
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: ColorsPeronalized.cancelColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       ),
@@ -81,7 +82,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
           title: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
+              Icon(Icons.check_circle, color: ColorsPeronalized.successColor, size: 28),
               SizedBox(height: 10),
               Text('Hecho!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ],
@@ -108,7 +109,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
                 }
               },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: ColorsPeronalized.successColor,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text(

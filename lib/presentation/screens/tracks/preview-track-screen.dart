@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/pending_track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
@@ -401,7 +402,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                           icon: const Icon(Icons.photo_library),
                           label: const Text("Seleccionar imágenes"),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.onPrimaryFixedVariant, 
+                            backgroundColor: ColorsPeronalized.infoColor, 
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -456,7 +457,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.cancel),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, 
+                      backgroundColor: ColorsPeronalized.cancelColor, 
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -479,7 +480,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                                   child: ElevatedButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     style: TextButton.styleFrom(
-                                      backgroundColor: Colors.red,
+                                      backgroundColor: ColorsPeronalized.cancelColor,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       padding: const EdgeInsets.all(12),
                                     ),
@@ -492,7 +493,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                                   child: ElevatedButton(
                                     onPressed: () => Navigator.pop(context, true),
                                     style: TextButton.styleFrom(
-                                      backgroundColor: Colors.green,
+                                      backgroundColor: ColorsPeronalized.successColor,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       padding: const EdgeInsets.all(12),
                                     ),
@@ -539,7 +540,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                   child: TextButton(
                     onPressed: null,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: ColorsPeronalized.successColor,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.all(12),
                     ),
@@ -560,7 +561,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.cloud_upload),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: ColorsPeronalized.successColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -605,7 +606,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                                   builder: (context) => AlertDialog(
                                     title: const Column(
                                       children: [
-                                        Icon(Icons.check_circle, color: Colors.green),
+                                        Icon(Icons.check_circle, color: ColorsPeronalized.successColor),
                                         SizedBox(width: 8),
                                         Text('Track subido'),
                                       ],
@@ -634,7 +635,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                                                                   
                                               },
                                               style: TextButton.styleFrom(
-                                                backgroundColor: Colors.green,
+                                                backgroundColor: ColorsPeronalized.successColor,
                                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                                 padding: const EdgeInsets.all(12),
                                               ),

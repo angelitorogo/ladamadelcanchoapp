@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
@@ -49,7 +50,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                   title: Text(_formatTimestamp(track.timestamp)),
                   subtitle: Text('📏 ${(track.distance / 1000).toStringAsFixed(2)} km'),
                   trailing: IconButton(
-                    icon: const Icon(Icons.cancel, color: Colors.red),
+                    icon: const Icon(Icons.cancel, color: ColorsPeronalized.cancelColor),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -58,7 +59,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           title: const Column(
                             children: [
-                              Icon(Icons.warning_amber_rounded, color: Colors.red),
+                              Icon(Icons.warning_amber_rounded, color: ColorsPeronalized.cancelColor),
                               SizedBox(width: 10),
                               Text('¿Eliminar track?'),
                             ],
@@ -79,7 +80,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                               child: FilledButton(
                                 onPressed: () => Navigator.of(context).pop(),
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: ColorsPeronalized.cancelColor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
@@ -92,7 +93,7 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                               height: 50,
                               child: TextButton(
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: ColorsPeronalized.successColor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
