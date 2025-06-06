@@ -28,6 +28,7 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   Widget build(BuildContext context) {
 
   int totalUserTracks = ref.watch(trackListProvider).totalTracks;
+  final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       drawer: SideMenu(scaffoldKey: GlobalKey<ScaffoldState>()),
@@ -51,6 +52,11 @@ class _UserScreenState extends ConsumerState<UserScreen> {
                   );
               },
               icon: const Icon(Icons.list),
+              style: TextButton.styleFrom(
+                backgroundColor: colors.onPrimaryFixedVariant,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.all(12),
+              ),
               label: Text('Mostrar rutas ($totalUserTracks)'),
             ),
           ],

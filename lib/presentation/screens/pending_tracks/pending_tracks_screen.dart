@@ -54,8 +54,9 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                       showDialog(
                         context: context,
                         builder: (_) => AlertDialog(
+                          insetPadding: const EdgeInsets.all(10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          title: const Row(
+                          title: const Column(
                             children: [
                               Icon(Icons.warning_amber_rounded, color: Colors.red),
                               SizedBox(width: 10),
@@ -68,20 +69,32 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                           ),
                           actionsAlignment: MainAxisAlignment.spaceAround,
                           actions: [
-                            SizedBox(
-                              width: 100,
-                              child: TextButton(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                              width: 140,
+                              height: 50,
+                              child: FilledButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Cancelar'),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 100,
-                              child: TextButton(
                                 style: TextButton.styleFrom(
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: const Text('Cancelar'),
+                              ),
+                            ),
+                            const SizedBox(width: 10,),
+                            SizedBox(
+                              width: 140,
+                              height: 50,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 onPressed: () async {
                                   Navigator.of(context).pop();
@@ -100,6 +113,9 @@ class _PendingTracksScreenState extends ConsumerState<PendingTracksScreen> {
                                 child: const Text('Eliminar'),
                               ),
                             ),
+                              ],
+                            )
+                            
                           ],
                         ),
                       );

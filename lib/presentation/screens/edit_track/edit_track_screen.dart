@@ -214,6 +214,8 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
       
     }
 
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Editar track')),
       body: SingleChildScrollView(
@@ -494,99 +496,130 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                   children: [
                     // ❌ CANCELAR
                     Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.cancel),
-                        label: const Text('Cancelar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        width: 160,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.cancel),
+                          label: const Text('Cancelar', style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold
+                          ),),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
+                          onPressed: () async {
+                        
+                            context.pop();
+                        
+                          },
                         ),
-                        onPressed: () async {
-
-                          context.pop();
-
-                        },
                       ),
                     ),
                     const SizedBox(width: 10),
 
                     // ✅ GUARDAR
                     Expanded(
-                      child: ElevatedButton.icon(
-                        icon: ref.watch(trackUploadProvider).status == TrackUploadStatus.loading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.update_outlined),
-                        label: const Text('Actualizar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () async {
-
-                          //comprobar si hay o no internet
-                          final hasInternet = await checkAndWarnIfNoInternet(context);
-
-                          if(hasInternet) {
-
-                            final name = _nameController.text.trim();
-                            final description = descriptionController.text;
-                            final images = selectedImages;
-                        
-
-                            if(serverImages.isEmpty) {
-                              final File fileCaptureMap = await captureMap();
-                              images.add(fileCaptureMap);
-                            }
-
-
-                            
-                            
-                            // ignore: use_build_context_synchronously
-                            final response = await ref.read(trackUploadProvider.notifier).updateTrack(
-                              widget.trackId,
-                              '$name.gpx',
-                              description,
-                              imagesOld: serverImages,
-                              images: images,
-                            );
-
-                            if(response.data['ok']) {
-
-                              Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName('$name.gpx');
-
-                              if( track != null){
-                                ref.read(trackProvider.notifier).updateTrack(track);
-                              }
-                                
-                              if(context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('✅ ${response.data['message']}'),
-                                    duration: const Duration(seconds: 2),
+                      child:  
+                      ref.watch(trackUploadProvider).status == TrackUploadStatus.loading
+                          ? SizedBox(
+                              width: 160,
+                              height: 50,
+                              child: TextButton(
+                                onPressed: null,
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.all(12),
+                                ),
+                                child: const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
                                   ),
-                                );
-                              }  
-                              
-                            } else {
-                              response;
-                            }
-
-
-
-                            
-
-                          } 
-
+                                ),
+                              ),
+                            )
+                      :
+                      SizedBox(
+                        width: 160,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          icon:  const Icon(Icons.update_outlined),
+                          label: const Text('Actualizar', style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold
+                          ),),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () async {
+                        
+                            //comprobar si hay o no internet
+                            final hasInternet = await checkAndWarnIfNoInternet(context);
+                        
+                            if(hasInternet) {
+                        
+                              final name = _nameController.text.trim();
+                              final description = descriptionController.text;
+                              final images = selectedImages;
                           
-                        },
+                        
+                              if(serverImages.isEmpty) {
+                                final File fileCaptureMap = await captureMap();
+                                images.add(fileCaptureMap);
+                              }
+                        
+                        
+                              
+                              
+                              // ignore: use_build_context_synchronously
+                              final response = await ref.read(trackUploadProvider.notifier).updateTrack(
+                                widget.trackId,
+                                '$name.gpx',
+                                description,
+                                imagesOld: serverImages,
+                                images: images,
+                              );
+                        
+                              if(response.data['ok']) {
+                        
+                                Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName('$name.gpx');
+                        
+                                if( track != null){
+                                  ref.read(trackProvider.notifier).updateTrack(track);
+                                }
+                                  
+                                if(context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('✅ ${response.data['message']}'),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }  
+                                
+                              } else {
+                                response;
+                              }
+                        
+                        
+                        
+                              
+                        
+                            } 
+                        
+                            
+                          },
+                        ),
                       ),
                     ),
                     

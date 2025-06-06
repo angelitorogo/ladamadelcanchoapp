@@ -29,7 +29,7 @@ class _RegisterView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -139,36 +139,36 @@ class _RegisterForm extends ConsumerWidget {
 
           const SizedBox(height: 40),
 
-          (!authState.isLoading) ?
+          
 
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SizedBox(
-                width: 150,
+                width: 160,
                 height: 50,
-                child: OutlinedButton.icon(
+                child: FilledButton.icon(
                   onPressed: () async {
                     ref.watch(authProvider.notifier).reset();
                     context.pop();
                   },
                   icon: Icon(Icons.cancel, size: 25, color: colors.primary),
                   label: Text('Cancelar', style: TextStyle(fontSize: 17, color: colors.primary)),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: colors.primary, width: 1),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    foregroundColor: const Color(0xFFEE7B7B), // Esto asegura que los estados hover/pressed también sean redAccent
                   ),
                 ),
               ),
 
               // Botón de login
+              (!authState.isLoading) ?
               SizedBox(
-                width: 150,
+                width: 160,
                 height: 50,
                 child: FilledButton.tonalIcon(
 
@@ -177,12 +177,12 @@ class _RegisterForm extends ConsumerWidget {
                       if (states.contains(WidgetState.disabled)) {
                         return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
                       }
-                      return colors.onPrimaryFixedVariant; // 🔥 Color cuando está activo
+                      return Colors.green; // 🔥 Color cuando está activo
                     }),
                     foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
                     shape: WidgetStateProperty.all(
                       RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30), // 📏 Bordes redondeados
+                        borderRadius: BorderRadius.circular(10), // 📏 Bordes redondeados
                       ),
                     ),
                     padding: WidgetStateProperty.all(
@@ -191,14 +191,6 @@ class _RegisterForm extends ConsumerWidget {
                   ),
 
                   onPressed: () async{
-
-                    /*// Validar el formulario  
-                    print('DATA:');
-                    print(registerState.fullname.value);
-                    print(registerState.email.value);
-                    print(registerState.password.value);
-                    print(registerState.password2.value);
-                    */
 
                     if(registerState.password.value != registerState.password2.value) {
                       mostrarAlerta(context, 'Contraseñas no coinciden', colors.error);
@@ -224,6 +216,8 @@ class _RegisterForm extends ConsumerWidget {
                         }
                       } else {
                         // ❌ Mostrar alerta con mensaje del backend
+
+  
                         if (context.mounted) {
                           mostrarAlerta(context, result.message!, colors.error);
                         }
@@ -242,35 +236,37 @@ class _RegisterForm extends ConsumerWidget {
                 ),
               )
 
+              :
+
+
+              SizedBox(
+                width: 160,
+                height: 50,
+                child: TextButton(
+                  onPressed: null, // 🔒 Deshabilitado mientras carga
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.green, // 🔥 Color de fondo
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white, // 🎨 Color del loading
+                      strokeWidth: 3, // 📏 Grosor del círculo
+                    ),
+                  ),
+                ),
+              ),
+
             ],
           )
 
 
           
 
-          :
-
-
-          SizedBox(
-            width: 150,
-            height: 50,
-            child: TextButton(
-              onPressed: null, // 🔒 Deshabilitado mientras carga
-              style: TextButton.styleFrom(
-                backgroundColor: colors.onPrimaryFixedVariant, // 🔥 Color de fondo
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
-              ),
-              child: const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white, // 🎨 Color del loading
-                  strokeWidth: 3, // 📏 Grosor del círculo
-                ),
-              ),
-            ),
-          ),
+          
                     
         
         ],

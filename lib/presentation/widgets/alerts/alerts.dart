@@ -7,7 +7,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
       builder: (BuildContext context) {
         return Dialog( // ⬅ Usamos `Dialog` para más control
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: SizedBox(
             width: 300, // ⬅ Define el ancho de la alerta
@@ -52,7 +52,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
                       },
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       ),
                       child: const Text(
@@ -76,7 +76,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(10),
           ),
           title: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -109,7 +109,7 @@ void mostrarAlerta(BuildContext context, String mensaje, Color color) {
               },
                 style: TextButton.styleFrom(
                   backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text(
                   'Aceptar',

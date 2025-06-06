@@ -4,7 +4,6 @@ import 'package:formz/formz.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
-import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/alerts/alerts.dart';
@@ -194,24 +193,19 @@ class ProfileScreen extends ConsumerWidget {
                                     if (states.contains(WidgetState.disabled)) {
                                       return const Color(0xFF566D79);
                                     }
-                                    return colors.onPrimaryFixedVariant;
+                                    return Colors.green;
                                   }),
                                   foregroundColor: WidgetStateProperty.all(Colors.white),
                                   shape: WidgetStateProperty.all(
                                     RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                   padding: WidgetStateProperty.all(
                                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                   ),
                                 ),
-                                /*
-                                onPressed: () async {
-                                  //await profileNotifier.updateUser(context);
-                                  await authNotifier.updateUser(profileState, ref);
-                                },
-                                */
+
                                 onPressed: authState.isLoading ||
                                   profileState.status != FormzSubmissionStatus.success
                                 ? null
@@ -230,13 +224,13 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                             )
                           : SizedBox(
-                              width: 150,
+                              width: 160,
                               height: 50,
                               child: TextButton(
                                 onPressed: null,
                                 style: TextButton.styleFrom(
-                                  backgroundColor: colors.onPrimaryFixedVariant,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.all(12),
                                 ),
                                 child: const SizedBox(

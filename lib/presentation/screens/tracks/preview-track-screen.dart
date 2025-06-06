@@ -197,6 +197,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
     final modeState = ref.watch(locationProvider).mode;
     String mode;
+    final colors = Theme.of(context).colorScheme;
 
     switch (modeState) {
       case TrackingMode.walking:
@@ -393,10 +394,19 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: _pickImages,
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text("Seleccionar imágenes"),
+                      SizedBox(
+                        width: 250,
+                        child: ElevatedButton.icon(
+                          onPressed: _pickImages,
+                          icon: const Icon(Icons.photo_library),
+                          label: const Text("Seleccionar imágenes"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colors.onPrimaryFixedVariant, 
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -440,180 +450,247 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
             children: [
               // ❌ CANCELAR
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.cancel),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red, 
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('¿Cancelar subida del track?'),
-                        content: const Text('Si existe el archivo .gpx, será eliminado del dispositivo.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('No'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Sí, cancelar'),
-                          ),
-                        ],
+                child: SizedBox(
+                  width: 160,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.cancel),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red, 
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    );
-
-                    if (confirm == true)  {
-                      final path = '/storage/emulated/0/Download/GPX/tracks/${widget.trackFile.uri.pathSegments.last}';
-                      final file = File(path);
-                      if (await file.exists()) await file.delete();
-
-                      //eliminar track pending del prefs
-                      if(widget.index != null) {
-                        await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                    ),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          title: const Text('¿Cancelar subida del track?'),
+                          content: const Text('Si existe el archivo .gpx, será eliminado del dispositivo.'),
+                          actions: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                
+                                SizedBox(
+                                  width: 120,
+                                  child: ElevatedButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      padding: const EdgeInsets.all(12),
+                                    ),
+                                    child: const Text('No'),
+                                  ),
+                                ),
+                                const SizedBox(width: 10,),
+                                SizedBox(
+                                  width: 125,
+                                  child: ElevatedButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      padding: const EdgeInsets.all(12),
+                                    ),
+                                    child: const Text('Sí, cancelar'),
+                                  ),
+                                ),
+                              ],
+                            )
+                            
+                          ],
+                        ),
+                      );
+                  
+                      if (confirm == true)  {
+                        final path = '/storage/emulated/0/Download/GPX/tracks/${widget.trackFile.uri.pathSegments.last}';
+                        final file = File(path);
+                        if (await file.exists()) await file.delete();
+                  
+                        //eliminar track pending del prefs
+                        if(widget.index != null) {
+                          await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                        }
+                        
+                  
+                        // 🔁 REINICIA el estado
+                        ref.read(locationProvider.notifier).resetState();
+                        
+                        if (context.mounted) Navigator.of(context).pop('cancelled');
                       }
-                      
-
-                      // 🔁 REINICIA el estado
-                      ref.read(locationProvider.notifier).resetState();
-                      
-                      if (context.mounted) Navigator.of(context).pop('cancelled');
-                    }
-                  },
-                  label: const Text('Cancelar'),
+                    },
+                    label: const Text('Cancelar'),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
 
               // ✅ GUARDAR
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: uploadState.status == TrackUploadStatus.loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.cloud_upload),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: 
+                uploadState.status == TrackUploadStatus.loading
+                ? SizedBox(
+                  width: 160,
+                  height: 50,
+                  child: TextButton(
+                    onPressed: null,
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.all(12),
+                    ),
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
                     ),
                   ),
-                  onPressed: uploadState.status == TrackUploadStatus.loading
-                      ? null
-                      : () async {
-
-                          //comprobar si hay o no internet
-                          final hasInternet = await checkAndWarnIfNoInternet(context);
-
-                          if(hasInternet) {
-
-                            final name = _nameController.text.trim();
-                            final description = descriptionController.text;
-                            final file = widget.trackFile;
-
-
-                            captureMap();
-                            Map<String, dynamic>? response;
-
-                            //print('✅ Images1: $selectedImages');
-
-                            final File fileCaptureMap = await captureMap();
-
-
-                            
-                            // ignore: use_build_context_synchronously
-                            response = await uploader.uploadTrack(context, name, file, ref, description, mode, distanceKm.toString(), elevationGain.toString(), fileCaptureMap, points: widget.points, images: selectedImages);
-                            
-
-                            if (response != null && context.mounted) {
-
-                              // 🔁 Reinicia el estado de ubicación
-                              ref.read(locationProvider.notifier).resetState();
-
-                              // 🔁 Recarga el listado de tracks
-                              ref.read(trackListProvider.notifier).loadTracks();
-
-                              await showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Row(
-                                    children: [
-                                      Icon(Icons.check_circle, color: Colors.green),
-                                      SizedBox(width: 8),
-                                      Text('Track subido'),
+                )
+                : 
+                SizedBox(
+                  width: 160,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.cloud_upload),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: uploadState.status == TrackUploadStatus.loading
+                        ? null
+                        : () async {
+                  
+                            //comprobar si hay o no internet
+                            final hasInternet = await checkAndWarnIfNoInternet(context);
+                  
+                            if(hasInternet) {
+                  
+                              final name = _nameController.text.trim();
+                              final description = descriptionController.text;
+                              final file = widget.trackFile;
+                  
+                  
+                              captureMap();
+                              Map<String, dynamic>? response;
+                  
+                              //print('✅ Images1: $selectedImages');
+                  
+                              final File fileCaptureMap = await captureMap();
+                  
+                  
+                              
+                              // ignore: use_build_context_synchronously
+                              response = await uploader.uploadTrack(context, name, file, ref, description, mode, distanceKm.toString(), elevationGain.toString(), fileCaptureMap, points: widget.points, images: selectedImages);
+                              
+                  
+                              if (response != null && context.mounted) {
+                  
+                                // 🔁 Reinicia el estado de ubicación
+                                ref.read(locationProvider.notifier).resetState();
+                  
+                                // 🔁 Recarga el listado de tracks
+                                ref.read(trackListProvider.notifier).loadTracks();
+                  
+                                await showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Column(
+                                      children: [
+                                        Icon(Icons.check_circle, color: Colors.green),
+                                        SizedBox(width: 8),
+                                        Text('Track subido'),
+                                      ],
+                                    ),
+                                    content: const Text('Track guardado correctamente.', textAlign: TextAlign.center,),
+                                    actions: [
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 160,
+                                            height: 50,
+                                            child: ElevatedButton(
+                                              onPressed: () async {
+                                                                  
+                                                //eliminar track pending del prefs
+                                                if(widget.index != null) {
+                                                  await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
+                                                }
+                                                                  
+                                                if(context.mounted) {
+                                                  Navigator.of(context).pop('uploaded');
+                                                  GoRouter.of(context).go('/');
+                                                }
+                                                                  
+                                              },
+                                              style: TextButton.styleFrom(
+                                                backgroundColor: Colors.green,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                padding: const EdgeInsets.all(12),
+                                              ),
+                                              child: const Text('Aceptar'),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                      
                                     ],
                                   ),
-                                  content: const Text('El track se ha guardado correctamente en el servidor.'),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () async {
-
-                                        //eliminar track pending del prefs
-                                        if(widget.index != null) {
-                                          await ref.read(pendingTracksProvider.notifier).removeTrack(widget.index!);
-                                        }
-
-                                        if(context.mounted) {
-                                          Navigator.of(context).pop('uploaded');
-                                          GoRouter.of(context).go('/');
-                                        }
-
-                                      },
-                                      child: const Text('Aceptar'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } else {
-                              if (context.mounted) {
-
-                                //guardar track pending en prefs 
-                                // Esto se probara solo cuando falle el upload
-                                await ref.read(pendingTracksProvider.notifier).addTrack(
-                                  PendingTrack(
-                                    userId: ref.read(authProvider).user!.id,
-                                    timestamp: DateTime.now(),
-                                    isTracking: false,
-                                    isPaused: false,
-                                    distance: distanceKm,
-                                    elevationGain: elevationGain,
-                                    points: widget.points,
-                                    discardedPoints: [],
-                                    mode: mode,
-                                  ),
                                 );
-
-                                ref.read(locationProvider.notifier).resetState();
-
-                                selectedImages = [];
-
-                                if(context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('❌ ${ref.watch(trackUploadProvider).message}, se ha guardado en tracks pendientes'),
-                                      behavior: SnackBarBehavior.floating,
+                              } else {
+                                if (context.mounted) {
+                  
+                                  //guardar track pending en prefs 
+                                  // Esto se probara solo cuando falle el upload
+                                  await ref.read(pendingTracksProvider.notifier).addTrack(
+                                    PendingTrack(
+                                      userId: ref.read(authProvider).user!.id,
+                                      timestamp: DateTime.now(),
+                                      isTracking: false,
+                                      isPaused: false,
+                                      distance: distanceKm,
+                                      elevationGain: elevationGain,
+                                      points: widget.points,
+                                      discardedPoints: [],
+                                      mode: mode,
                                     ),
                                   );
+                  
+                                  ref.read(locationProvider.notifier).resetState();
+                  
+                                  selectedImages = [];
+                  
+                                  if(context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('❌ ${ref.watch(trackUploadProvider).message}, se ha guardado en tracks pendientes'),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                  
                                 }
-                                
                               }
+                  
                             }
-
-                          }
-
-                          
-                        },
-                  label: Text(
-                    uploadState.status == TrackUploadStatus.loading
-                        ? 'Subiendo...'
-                        : 'Guardar',
+                  
+                            
+                          },
+                    label: Text(
+                      uploadState.status == TrackUploadStatus.loading
+                          ? 'Subiendo...'
+                          : 'Guardar',
+                    ),
                   ),
                 ),
               ),
@@ -623,11 +700,12 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       ),
     
       //Debug
-      
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDebugDialog(context, ref),
         child: const Icon(Icons.bug_report),
       ),
+      */
       
     
     );

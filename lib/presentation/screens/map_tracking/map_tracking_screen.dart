@@ -453,7 +453,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                                   context: context,
                                   builder: (_) => AlertDialog(
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                    title: const Row(
+                                    title: const Column(
                                       children: [
                                         Icon(Icons.cloud_off, color: Colors.orange),
                                         SizedBox(width: 10),
@@ -468,6 +468,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                                     actions: [
                                       SizedBox(
                                         width: 160,
+                                        height: 50,
                                         child: TextButton(
                                           onPressed: () async {
                                             await ref.read(pendingTracksProvider.notifier).loadTracks();
@@ -478,7 +479,7 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                                           }, 
                                           style: TextButton.styleFrom(
                                             backgroundColor: Colors.green,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           ),
                                           child: const Text(
                                             'Aceptar',

@@ -946,38 +946,45 @@ class _Buttons extends ConsumerWidget {
             children: [
               
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Editar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 160,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Editar', style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold
+                            ),),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  onPressed: () async {
-                    //comprobar si hay o no internet
-                    final hasInternet = await checkAndWarnIfNoInternet(context);
-
-                    if(hasInternet && context.mounted) {
-
-                      final result = await context.pushNamed(
-                        EditTrackScreen.name, // o TrackPreviewScreen.name
-                        extra: {
-                          'trackFile': track.name, // puedes cambiar por un File real si lo necesitas
-                          'points': track.points,
-                          'images': track.images,
-                          'trackId': track.id,
-                        },
-                      );
-
-                      if (result == 'uploaded') {
-                        // Track subido, eliminarlo
-                        //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                    onPressed: () async {
+                      //comprobar si hay o no internet
+                      final hasInternet = await checkAndWarnIfNoInternet(context);
+                  
+                      if(hasInternet && context.mounted) {
+                  
+                        final result = await context.pushNamed(
+                          EditTrackScreen.name, // o TrackPreviewScreen.name
+                          extra: {
+                            'trackFile': track.name, // puedes cambiar por un File real si lo necesitas
+                            'points': track.points,
+                            'images': track.images,
+                            'trackId': track.id,
+                          },
+                        );
+                  
+                        if (result == 'uploaded') {
+                          // Track subido, eliminarlo
+                          //await ref.read(pendingTracksProvider.notifier).removeTrack(index);
+                        }
+                  
                       }
-
-                    }
-                  },
+                    },
+                  ),
                 ),
               ),
 
@@ -987,13 +994,13 @@ class _Buttons extends ConsumerWidget {
 
 
                 SizedBox(
-                  width: 150,
+                  width: 160,
                   height: 50,
                   child: TextButton(
                     onPressed: null, // 🔒 Deshabilitado mientras carga
                     style: TextButton.styleFrom(
-                      backgroundColor: colors.onPrimaryFixedVariant, // 🔥 Color de fondo
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      backgroundColor: Colors.red, // 🔥 Color de fondo
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
                     ),
                     child: const SizedBox(
@@ -1010,72 +1017,79 @@ class _Buttons extends ConsumerWidget {
               :
 
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.cancel),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('¿Esta seguro de eliminar el track?'),
-                        content: const Text('Esta acción no se puede deshacer.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('No'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Sí, eliminar'),
-                          ),
-                        ],
+                child: SizedBox(
+                  width: 160,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.cancel),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    );
-
-                    if (confirm == true)  {
-
-                      final result = await ref.read(trackUploadProvider.notifier).deleteTrack(track.id);
-
-                      if (context.mounted && result.statusCode == 200) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('✅ ${result.data['message']}'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-
-                        await ref.read(trackListProvider.notifier).loadTracks(
-                          limit: 5,
-                          page: 1,
-                          append: false
-                        );
-
-                        await Future.delayed(const Duration(milliseconds: 500));
-
-                        if (context.mounted) {
-                          context.go('/');
+                    ),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('¿Esta seguro de eliminar el track?'),
+                          content: const Text('Esta acción no se puede deshacer.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('No'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Sí, eliminar'),
+                            ),
+                          ],
+                        ),
+                      );
+                  
+                      if (confirm == true)  {
+                  
+                        final result = await ref.read(trackUploadProvider.notifier).deleteTrack(track.id);
+                  
+                        if (context.mounted && result.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('✅ ${result.data['message']}'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                  
+                          await ref.read(trackListProvider.notifier).loadTracks(
+                            limit: 5,
+                            page: 1,
+                            append: false
+                          );
+                  
+                          await Future.delayed(const Duration(milliseconds: 500));
+                  
+                          if (context.mounted) {
+                            context.go('/');
+                          }
+                  
+                        } else if( context.mounted && result.statusCode == 500) {
+                  
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('❌ Servidor parece caído, intentelo mas tarde'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                  
                         }
-
-                      } else if( context.mounted && result.statusCode == 500) {
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('❌ Servidor parece caído, intentelo mas tarde'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-
+                  
                       }
-
-                    }
-
-                  },
-                  label: const Text('Eliminar'),
+                  
+                    },
+                    label: const Text('Eliminar', style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold
+                            ),),
+                  ),
                 ),
               ),
 

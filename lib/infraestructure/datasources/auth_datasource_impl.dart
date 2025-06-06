@@ -311,6 +311,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
   @override
   Future<RegisterResult> register(BuildContext context, String fullname, String email, String password, WidgetRef ref) async {
     
+
     try {
 
       // ✅ Asegura tener CSRF Token antes de login
@@ -324,16 +325,18 @@ class AuthDatasourceImpl  extends AuthDatasource{
         ),
       );
 
+      
+
       if (response.statusCode == 201 && response.data['message'] == 'Usuario registrado correctamente') {
         final msg = response.data['message'] ?? 'Usuario registrado correctamente';
         return RegisterResult(success: true, message: msg);
       } else {
-        final msg = response.data['message'] ?? 'Error al registrar usuario';
-        return RegisterResult(success: false, message: msg);
+        //msg = response.data['message'] ?? 'Error al registrar usuario';
+        return RegisterResult(success: false, message: response.data['message']);
       }
       
     } catch (e) {
-      return RegisterResult(success: false, message: e.toString());
+      return RegisterResult(success: false, message: 'Error en el registro');
     }
 
   }

@@ -27,7 +27,7 @@ class _LoginView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -105,7 +105,7 @@ class _LoginForm extends ConsumerWidget {
 
           const SizedBox(height: 40),
 
-          (!authState.isLoading) ?
+          
 
 
           // Botón de login
@@ -114,28 +114,30 @@ class _LoginForm extends ConsumerWidget {
             children: [
               
               SizedBox(
-                width: 150,
+                width: 160,
                 height: 50,
-                child: OutlinedButton.icon(
+                child: FilledButton.icon(
                   onPressed: () async {
                     ref.watch(authProvider.notifier).reset();
                     context.pop();
                   },
-                  icon: Icon(Icons.cancel, size: 25, color: colors.primary),
-                  label: Text('Cancelar', style: TextStyle(fontSize: 17, color: colors.primary)),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: colors.primary, width: 1),
+                  icon: const Icon(Icons.cancel, size: 25, color: Colors.white),
+                  label: const Text('Cancelar', style: TextStyle(fontSize: 17, color: Colors.white)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    foregroundColor: const Color(0xFFEE7B7B), // Esto asegura que los estados hover/pressed también sean redAccent
+                    //foregroundColor: const Color(0xFFEE7B7B), // Esto asegura que los estados hover/pressed también sean redAccent
                   ),
                 ),
               ),
 
+              (!authState.isLoading) ?
+
               SizedBox(
-                width: 150,
+                width: 160,
                 height: 50,
                 child: FilledButton.tonalIcon(
               
@@ -144,12 +146,12 @@ class _LoginForm extends ConsumerWidget {
                       if (states.contains(WidgetState.disabled)) {
                         return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
                       }
-                      return colors.onPrimaryFixedVariant; // 🔥 Color cuando está activo
+                      return Colors.green; // 🔥 Color cuando está activo
                     }),
                     foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
                     shape: WidgetStateProperty.all(
                       RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30), // 📏 Bordes redondeados
+                        borderRadius: BorderRadius.circular(10), // 📏 Bordes redondeados
                       ),
                     ),
                     padding: WidgetStateProperty.all(
@@ -180,33 +182,35 @@ class _LoginForm extends ConsumerWidget {
                   icon: const Icon(Icons.login, size: 25, color: Colors.white,),
                   label: const Text('Login', style: TextStyle(fontSize: 17)),
                 ),
+              )
+
+              :
+
+
+              SizedBox(
+                width: 160,
+                height: 50,
+                child: TextButton(
+                  onPressed: null, // 🔒 Deshabilitado mientras carga
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.green, // 🔥 Color de fondo
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
+                  ),
+                  child: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white, // 🎨 Color del loading
+                      strokeWidth: 3, // 📏 Grosor del círculo
+                    ),
+                  ),
+                ),
               ),
             ],
           )
 
-          :
-
-
-          SizedBox(
-            width: 150,
-            height: 50,
-            child: TextButton(
-              onPressed: null, // 🔒 Deshabilitado mientras carga
-              style: TextButton.styleFrom(
-                backgroundColor: colors.onPrimaryFixedVariant, // 🔥 Color de fondo
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
-              ),
-              child: const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white, // 🎨 Color del loading
-                  strokeWidth: 3, // 📏 Grosor del círculo
-                ),
-              ),
-            ),
-          ),
+          
                     
         
         ],
@@ -229,7 +233,7 @@ class _LoginForm extends ConsumerWidget {
               titlePadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 30),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(10),
               ),
               title: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -253,7 +257,7 @@ class _LoginForm extends ConsumerWidget {
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       ),
                       child: const Text(
