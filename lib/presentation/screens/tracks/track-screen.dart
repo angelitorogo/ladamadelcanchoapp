@@ -226,11 +226,16 @@ class _DatosWidget extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 6),
-                Text((track.description?.trim().isNotEmpty ?? false) ? '${track.description!.substring(0, 25)}...' : 'No hay descripción')
+                Text(
+                  (track.description?.trim().isNotEmpty ?? false)
+                      ? (track.description!.length > 25
+                          ? '${track.description!.substring(0, 25)}...'
+                          : track.description!)
+                      : 'No hay descripción'
+                )
 
               ],
               
-      
               if (track.type != null) ...[
                 const SizedBox(height: 16),
                 Text(
@@ -1031,62 +1036,99 @@ class _Buttons extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
+                    
+                    onPressed: () {
+                      showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('¿Esta seguro de eliminar el track?'),
-                          content: const Text('Esta acción no se puede deshacer.'),
+                        builder: (_) => AlertDialog(
+                          insetPadding: const EdgeInsets.all(10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          title: const Column(
+                            children: [
+                              Icon(Icons.warning_amber_rounded, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text('¿Eliminar track?'),
+                            ],
+                          ),
+                          content: const Text(
+                            '¿Seguro que deseas eliminar este track?\nEsta acción no se puede deshacer.',
+                            textAlign: TextAlign.center,
+                          ),
+                          actionsAlignment: MainAxisAlignment.spaceAround,
                           actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('No'),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                              width: 140,
+                              height: 50,
+                              child: FilledButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: const Text('Cancelar'),
+                              ),
                             ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Sí, eliminar'),
+                            const SizedBox(width: 10,),
+                            SizedBox(
+                              width: 140,
+                              height: 50,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onPressed: () async {
+                                  Navigator.of(context).pop();
+                                  
+                                  final result = await ref.read(trackUploadProvider.notifier).deleteTrack(track.id);
+                                  
+                                  if (context.mounted && result.statusCode == 200) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('✅ ${result.data['message']}'),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                            
+                                    await ref.read(trackListProvider.notifier).loadTracks(
+                                      limit: 5,
+                                      page: 1,
+                                      append: false
+                                    );
+                            
+                                    await Future.delayed(const Duration(milliseconds: 500));
+                            
+                                    if (context.mounted) {
+                                      context.go('/');
+                                    }
+                            
+                                  } else if( context.mounted && result.statusCode == 500) {
+                            
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('❌ Servidor parece caído, intentelo mas tarde'),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                            
+                                  }
+
+                                },
+                                child: const Text('Eliminar'),
+                              ),
                             ),
+                              ],
+                            )
+                            
                           ],
                         ),
                       );
-                  
-                      if (confirm == true)  {
-                  
-                        final result = await ref.read(trackUploadProvider.notifier).deleteTrack(track.id);
-                  
-                        if (context.mounted && result.statusCode == 200) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('✅ ${result.data['message']}'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                  
-                          await ref.read(trackListProvider.notifier).loadTracks(
-                            limit: 5,
-                            page: 1,
-                            append: false
-                          );
-                  
-                          await Future.delayed(const Duration(milliseconds: 500));
-                  
-                          if (context.mounted) {
-                            context.go('/');
-                          }
-                  
-                        } else if( context.mounted && result.statusCode == 500) {
-                  
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('❌ Servidor parece caído, intentelo mas tarde'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                  
-                        }
-                  
-                      }
-                  
                     },
                     label: const Text('Eliminar', style: TextStyle(
                               fontSize: 16,
