@@ -214,8 +214,6 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
       
     }
 
-    final colors = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Editar track')),
       body: SingleChildScrollView(

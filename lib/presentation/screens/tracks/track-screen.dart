@@ -936,7 +936,6 @@ class _Buttons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final TrackUploadState trackStatus = ref.watch(trackUploadProvider);
-    final colors = Theme.of(context).colorScheme;
 
     return SafeArea(
         minimum: const EdgeInsets.only(bottom: 8),

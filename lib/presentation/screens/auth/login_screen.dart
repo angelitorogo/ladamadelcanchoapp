@@ -62,8 +62,6 @@ class _LoginForm extends ConsumerWidget {
     final authState = ref.watch(authProvider); //estado
     final authNotifier = ref.read(authProvider.notifier); //notifier
 
-    final colors = Theme.of(context).colorScheme;
-
     ref.listen(authProvider, (previous, next) {
       if (previous?.errorMessage != next.errorMessage && next.errorMessage != null) {
         mostrarAlerta(context, next.errorMessage!);
