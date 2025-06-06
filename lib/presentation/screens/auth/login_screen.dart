@@ -69,7 +69,6 @@ class _LoginForm extends ConsumerWidget {
       }
     });
 
-    const colors = ColorsPeronalized;
 
     return Form(
       autovalidateMode: AutovalidateMode.onUserInteraction, // Validación en tiempo real

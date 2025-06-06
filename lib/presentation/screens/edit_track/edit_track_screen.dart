@@ -219,7 +219,6 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
 
     final mode = ref.watch(trackProvider)!.type;
 
-    final colors = Theme.of(context).colorScheme;
 
 
     return Scaffold(

@@ -197,7 +197,6 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
     final modeState = ref.watch(locationProvider).mode;
     String mode;
-    final colors = Theme.of(context).colorScheme;
 
     switch (modeState) {
       case TrackingMode.walking:

@@ -28,7 +28,6 @@ class _UserScreenState extends ConsumerState<UserScreen> {
   Widget build(BuildContext context) {
 
   int totalUserTracks = ref.watch(trackListProvider).totalTracks;
-  final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       drawer: SideMenu(scaffoldKey: GlobalKey<ScaffoldState>()),
