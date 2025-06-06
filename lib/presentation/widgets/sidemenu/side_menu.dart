@@ -163,9 +163,21 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           child: Column(
             children: [
 
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('La Dama del Cancho', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/icono.png',
+                      width: 30, // Opcional: tamaño deseado
+                      height: 30,
+                      fit: BoxFit.contain, // O BoxFit.cover, según prefieras
+                    ),
+                    const SizedBox(width: 20,),
+                    const Text('La Dama del Cancho', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
 
               // SECCIÓN SCROLLABLE CON TODAS LAS EXPANSIONTILES
