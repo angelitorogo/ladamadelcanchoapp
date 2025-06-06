@@ -116,6 +116,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
                       _DatosWidget(track: track),
                       _Map(track: track),
                       _Perfil(track: track),
+                      _Description(track: track,),
+                      const SizedBox(height: 20),
                       if (track.images != null && track.images!.isNotEmpty)
                         _Card(track: track)
                       else
@@ -204,6 +206,7 @@ class _DatosWidget extends ConsumerWidget {
 
       
               const SizedBox(width: 8),
+              
       
               Text(
                 '⬆️ Des:',
@@ -215,7 +218,7 @@ class _DatosWidget extends ConsumerWidget {
               ),
       
               
-      
+              
               if (track.description != null) ...[
                 const SizedBox(height: 16),
                 Text(
@@ -223,9 +226,10 @@ class _DatosWidget extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 6),
-                Text((track.description?.trim().isNotEmpty ?? false) ? track.description! : 'No hay descripción')
+                Text((track.description?.trim().isNotEmpty ?? false) ? '${track.description!.substring(0, 25)}...' : 'No hay descripción')
 
               ],
+              
       
               if (track.type != null) ...[
                 const SizedBox(height: 16),
@@ -1097,5 +1101,54 @@ class _Buttons extends ConsumerWidget {
           ),
         ),
       );
+  }
+}
+
+class _Description extends StatelessWidget {
+
+  final Track track;
+
+  const _Description({required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            Text(
+              '📝 Descripción:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.primary),
+            ),
+
+            const SizedBox(height: 12),
+
+             Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.transparent),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Text(
+                track.description?.trim().isNotEmpty == true
+                    ? track.description!
+                    : 'Sin descripción.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+
+          ],
+        ),
+      ),
+    );
   }
 }

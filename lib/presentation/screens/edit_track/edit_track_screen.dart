@@ -9,10 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
-import 'package:ladamadelcanchoapp/infraestructure/datasources/location_datasource_impl.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
-import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -58,6 +56,24 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
   double maxElevation = 0;
   double minElevation = 0;
   List<String> serverImages = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    loadTrack();
+  }
+
+  Future<void> loadTrack() async {
+
+    final defaultName = widget.trackFile.replaceAll('.gpx', '');
+
+    Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(defaultName);
+
+    if( track != null){
+      ref.read(trackProvider.notifier).loadTrack(track);
+    }
+
+  }
 
 
   @override
@@ -198,21 +214,13 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
     //final uploadState = ref.watch(trackUploadProvider);
     //final uploader = ref.read(trackUploadProvider.notifier);
 
-    final modeState = ref.watch(locationProvider).mode;
-    String mode;
+    final String? description = ref.watch(trackProvider)?.description;
+    final descriptionController = TextEditingController(text: description ?? '');
 
-    switch (modeState) {
-      case TrackingMode.walking:
-        mode = 'Senderismo';
-        break;
-      case TrackingMode.cycling:
-        mode = 'Ciclismo';
-        break;
-      case TrackingMode.driving:
-        mode = 'Conduciendo';
-        break;
-      
-    }
+    final mode = ref.watch(trackProvider)!.type;
+
+    final colors = Theme.of(context).colorScheme;
+
 
     return Scaffold(
       appBar: AppBar(title: const Text('Editar track')),
@@ -356,7 +364,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                     const SizedBox(height: 8), // 👈 añadido para separación uniforme
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(mode),
+                      child: Text(mode!),
                     ),
                   ],
                 ),
@@ -375,7 +383,6 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                       controller: descriptionController,
                       maxLines: 4,
                       decoration: const InputDecoration(
-                        hintText: 'Escribe aquí una descripción opcional...',
                         border: OutlineInputBorder(),
                         filled: true,
                         fillColor: Colors.white10,
@@ -396,10 +403,19 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: _pickImages,
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text("Seleccionar imágenes"),
+                      SizedBox(
+                        width: 250,
+                        child: ElevatedButton.icon(
+                          onPressed: _pickImages,
+                          icon: const Icon(Icons.photo_library),
+                          label: const Text("Seleccionar imágenes"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colors.onPrimaryFixedVariant, 
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -370,6 +370,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical:10),
                     child: TextFormField(
                       controller: descriptionController,
+                      
                       maxLines: 4,
                       decoration: const InputDecoration(
                         hintText: 'Escribe aquí una descripción opcional...',
