@@ -77,9 +77,9 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
 
           if(direction == 'asc') {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'desc', userId);
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'distance', 'desc', userId);
           } else {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('distance', 'asc', userId);
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'distance', 'asc', userId);
           }
         }
       ),
@@ -94,9 +94,9 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           final userId = isUserTracksScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
           
           if(direction == 'asc') {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'desc', userId);
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'elevation_gain', 'desc', userId);
           } else {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('elevation_gain', 'asc', userId);
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'elevation_gain', 'asc', userId);
           }
         }
       ),
@@ -112,9 +112,9 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           final userId = isUserTracksScreen ? ref.read(sideMenuStateProvider).userScreen?.id : null;
 
           if(direction == 'asc') {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', userId);
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'created_at', 'desc', userId);
           } else {
-            ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'asc', userId);
+            ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'created_at', 'asc', userId);
           }
         }
       ),
@@ -201,7 +201,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                             onTap: () async {
                               ref.read(trackListProvider.notifier).reset();
                               ref.read(sideMenuStateProvider.notifier).resetUserScreen();
-                              ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', null);
+                              ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'created_at', 'desc', null);
 
                               if(context.mounted) {
                                 context.go(appMenuItems[0].link!);

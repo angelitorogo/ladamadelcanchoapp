@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
+import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/domain/repositories/track_repository.dart';
 
 class TrackRepositoryImpl extends TrackRepository {
@@ -18,8 +19,8 @@ class TrackRepositoryImpl extends TrackRepository {
   }
   
   @override
-  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int page = 0, String? userId, String? orderBy, String? direction}) {
-    return datasource.loadAllTracks(limit: limit, page:page, userId: userId, orderBy: orderBy, direction: direction);
+  Future<Map<String, dynamic>> loadAllTracks(WidgetRef ref, {int limit = 10, int page = 0, String? loggedUser, String? userId, String? orderBy, String? direction}) {
+    return datasource.loadAllTracks(ref, limit: limit, page:page, loggedUser: loggedUser,  userId: userId, orderBy: orderBy, direction: direction);
   }
   
   @override
@@ -39,14 +40,24 @@ class TrackRepositoryImpl extends TrackRepository {
 
 
   @override
-  Future<Response<dynamic>> deleteTrack(String id) {
-    return datasource.deleteTrack(id);
+  Future<Response<dynamic>> deleteTrack(WidgetRef ref, String id) {
+    return datasource.deleteTrack(ref, id);
   }
 
 
   @override
-  Future<Response<dynamic>> updateTrack(String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []}) {
-    return datasource.updateTrack(id, name, description, imagesOld: imagesOld, images: images);
+  Future<Response<dynamic>> updateTrack(WidgetRef ref, String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []}) {
+    return datasource.updateTrack(ref, id, name, description, imagesOld: imagesOld, images: images);
+  }
+  
+  @override
+  Future<void> addFavorite(WidgetRef ref, String trackId, UserEntity userLogged) {
+    return datasource.addFavorite(ref, trackId, userLogged);
+  }
+  
+  @override
+  Future<void> removeFavorite(WidgetRef ref, String trackId, UserEntity userLogged) {
+    return datasource.removeFavorite(ref, trackId, userLogged);
   }
 
  

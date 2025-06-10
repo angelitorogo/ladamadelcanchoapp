@@ -15,6 +15,7 @@ class Track {
   final DateTime updatedAt;
   final UserEntity? user;
   final double? distanceFromCurrent;
+  final bool isFavorite;
 
   Track({
     required this.id,
@@ -29,7 +30,8 @@ class Track {
     required this.createdAt,
     required this.updatedAt,
     this.user,
-    this.distanceFromCurrent
+    this.distanceFromCurrent,
+    required this.isFavorite
   });
 
   factory Track.fromJson(Map<String, dynamic> json) => Track(
@@ -45,24 +47,62 @@ class Track {
     createdAt: DateTime.parse(json['created_at']),
     updatedAt: DateTime.parse(json['updated_at']),
     user: UserEntity.fromJson(json['user']),
-    distanceFromCurrent: json['distanceFromCurrent']
+    distanceFromCurrent: json['distanceFromCurrent'],
+    isFavorite: json['isFavorite'] ?? false,
   );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userId': userId,
-        'name': name,
-        'distance': distance,
-        'elevation_gain': elevationGain,
-        'description': description,
-        'type': type,
-        'images': images,
-        'points': points?.map((p) => p.toMap()).toList(),
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-        'user': user?.toJson(),
-        'distanceFromCurrent': distanceFromCurrent
-      };
+    'id': id,
+    'userId': userId,
+    'name': name,
+    'distance': distance,
+    'elevation_gain': elevationGain,
+    'description': description,
+    'type': type,
+    'images': images,
+    'points': points?.map((p) => p.toMap()).toList(),
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+    'user': user?.toJson(),
+    'distanceFromCurrent': distanceFromCurrent,
+    'isFavorite': isFavorite,
+  };
+
+    Track copyWith({
+    String? id,
+    String? userId,
+    String? name,
+    String? distance,
+    String? elevationGain,
+    String? description,
+    String? type,
+    List<String>? images,
+    List<LocationPoint>? points,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    UserEntity? user,
+    double? distanceFromCurrent,
+    bool? isFavorite,
+  }) {
+    return Track(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      distance: distance ?? this.distance,
+      elevationGain: elevationGain ?? this.elevationGain,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      images: images ?? this.images,
+      points: points ?? this.points,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      user: user ?? this.user,
+      distanceFromCurrent: distanceFromCurrent ?? this.distanceFromCurrent,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
+
+
 }
 
 

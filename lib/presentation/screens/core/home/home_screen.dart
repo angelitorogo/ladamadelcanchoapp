@@ -21,7 +21,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (index == 0) {
       ref.read(trackListProvider.notifier).reset();
       ref.read(sideMenuStateProvider.notifier).resetUserScreen();
-      ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', null);
+      ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'created_at', 'desc', null);
       
     }
 

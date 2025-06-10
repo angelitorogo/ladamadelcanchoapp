@@ -59,8 +59,14 @@ class PendingTracksNotifier extends StateNotifier<List<PendingTrack>> {
     state = updatedList;
   }
 
-  void resetState() {
-    state = []; // Estado por defecto
+  
+  List<PendingTrack> reset() {
+    return const []; // Estado inicial
   }
+
+  Future<void> resetState() async {
+    state = reset();
+  }
+
 
 }

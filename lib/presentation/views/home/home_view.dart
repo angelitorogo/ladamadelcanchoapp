@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
+//import 'package:ladamadelcanchoapp/presentation/extra/show_debug.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/track-screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -26,43 +28,60 @@ class _HomeViewState extends ConsumerState<HomeView> {
   final ScrollController _scrollController = ScrollController();
   final int limit = 5;
 
+
   @override
   void initState() {
     super.initState();
 
-    
 
     // Scroll listener
     _scrollController.addListener(() {
       final state = ref.read(trackListProvider);
       final notifier = ref.read(trackListProvider.notifier);
+      final userId = ref.read(authProvider).user?.id;
 
+      
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
         if (state.status != TrackListStatus.loading && state.currentPage < state.totalPages) {
           final nextPage = state.currentPage + 1;
           notifier.loadTracks(
+            ref,
             limit: limit,
             page: nextPage,
             append: true,
-            //userId: ref.read(authProvider).user?.id,
+            loggedUser: userId
           );
         }
       }
     });
 
     //Carga inicial
+    
     Future.microtask(() async {
+      //print('✅ carga inicial...');
       // ignore: use_build_context_synchronously
       final hasInternet = await checkAndWarnIfNoInternet(context);
+
       if (hasInternet) {
+        final userLogged = ref.read(authProvider).user?.id;
+        //print('LOGGEDUSER dentro de microtask: $userLogged');
+
         await ref.read(trackListProvider.notifier).loadTracks(
-              limit: limit,
-              page: 1,
-              append: false
-            );
+          ref,
+          limit: limit,
+          page: 1,
+          loggedUser: userLogged,
+          append: false
+        );
       }
-      
     });
+    
+    
+
+    // Esperar a que el usuario se cargue
+   
+
+
   }
 
 
@@ -84,6 +103,30 @@ class _HomeViewState extends ConsumerState<HomeView> {
     Future.microtask(() {
       ref.watch(sideMenuStateProvider.notifier).resetUserScreen();
     });
+
+    
+    ref.listen(authProvider, (previous, next) async {
+
+      
+      if (!next.isAuthenticated && previous?.isAuthenticated == true) {
+        
+        //print('👤 cambio en usuario, recargando.... ${next.isAuthenticated}');
+        
+        final hasInternet = await checkAndWarnIfNoInternet(context);
+        if (hasInternet) {
+          await ref.read(trackListProvider.notifier).loadTracks(
+            ref,
+            limit: limit,
+            page: 1,
+            append: false,
+          );
+        }
+      
+      }
+      
+    });
+    
+  
 
 
     return Scaffold(
@@ -135,10 +178,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   final hasInternet = await checkAndWarnIfNoInternet(context);
                   if (hasInternet) {
                     await ref.read(trackListProvider.notifier).loadTracks(
-                          limit: limit,
-                          page: 1,
-                          append: false,
-                        );
+                      ref,
+                      limit: limit,
+                      page: 1,
+                      append: false,
+                      loggedUser: ref.read(authProvider).user?.id
+                    );
                     if (context.mounted) {
                       const Center(child: CircularProgressIndicator());
                     }
@@ -160,10 +205,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   final hasInternet = await checkAndWarnIfNoInternet(context);
                   if (hasInternet) {
                     await ref.read(trackListProvider.notifier).loadTracks(
-                          limit: limit,
-                          page: 1,
-                          append: false,
-                        );
+                      ref,
+                      limit: limit,
+                      page: 1,
+                      append: false,
+                      loggedUser: ref.read(authProvider).user?.id
+                    );
                     if (context.mounted) {
                       const Center(child: CircularProgressIndicator());
                     }
@@ -183,11 +230,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
               onRefresh: () async {
                 final hasInternet = await checkAndWarnIfNoInternet(context);
                 if (hasInternet) {
+                  //print('🔄 Refrescando rutas...');
                   await ref.read(trackListProvider.notifier).loadTracks(
-                        limit: limit,
-                        page: 1,
-                        append: false,
-                      );
+                    ref,
+                    limit: limit,
+                    page: 1,
+                    append: false,
+                    loggedUser: ref.read(authProvider).user?.id
+                  );
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -238,11 +288,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
                       child: FadeInUp(
+
                         child: _Card(
                           imageTrackUrl: imageTrackUrl, 
                           track: track, 
                           icon: icon
                         ),
+
                       )
                     ),
                   );
@@ -259,12 +311,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
         child: const Icon(Icons.bug_report),
       ),
       */
+      
     );
   }
 }
 
 
-class _Card extends StatelessWidget {
+class _Card extends ConsumerWidget {
   final String imageTrackUrl;
   final Track track;
   final IconData icon;
@@ -272,7 +325,7 @@ class _Card extends StatelessWidget {
   const _Card({required this.imageTrackUrl, required this.track, required this.icon});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     timeago.setLocaleMessages('es', timeago.EsMessages());
 
     return Card(
@@ -282,20 +335,58 @@ class _Card extends StatelessWidget {
         height: 120,
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.29,
-                height: double.infinity,
-                child: Image.network(
-                  imageTrackUrl,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                  },
-                  errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
-                ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.29,
+              height: double.infinity,
+              child: Stack(
+                children: [
+                  
+                  
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.29,
+                      height: double.infinity,
+                      child: Image.network(
+                        imageTrackUrl,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                        },
+                        errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+                      ),
+                    ),
+                  ),
+
+                  if( ref.watch(authProvider).isAuthenticated)
+                  Positioned(
+                    top: 5,
+                    left: 5,
+                    child: GestureDetector(
+                      onTap: () async {
+                        await ref.read(trackUploadProvider.notifier).toggleFavorite(ref, track.id, track.isFavorite, ref.read(authProvider).user!);
+                        // Actualiza el valor localmente en la lista
+                        ref.read(trackListProvider.notifier).updateFavoriteStatus(track.id, !track.isFavorite);
+                        
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        child: Icon(
+                          track.isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: track.isFavorite ? Colors.red : Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+    
+                ],            
               ),
             ),
             Expanded(

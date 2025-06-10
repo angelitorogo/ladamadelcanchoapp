@@ -5,6 +5,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
+import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 
@@ -30,14 +31,18 @@ class TrackDatasourceImpl implements TrackDatasource {
 
   }
 
-  Future<void> checkCookies() async {
-    final jar = await _cookieJar;
-    /*final cookies = */await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+  Future<void> checkCookies(WidgetRef ref) async {
+    //final jar = await _cookieJar;
+    //final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+
+    final jar = await ref.read(authProvider.notifier).jar();
+    /*final cookies = */await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+
     //print('🍪 Cookies guardadas track: $cookies');
   }
 
   /// ✅ Obtener CSRF token (reutilizable)
-  Future<void> _fetchCsrfToken() async {
+  Future<void> _fetchCsrfToken(WidgetRef ref) async {
 
 
     try {
@@ -58,7 +63,7 @@ class TrackDatasourceImpl implements TrackDatasource {
 
       if (response.statusCode == 200) {
         _csrfToken = response.data['csrfToken'];
-        await checkCookies();
+        await checkCookies(ref);
         return;
       } 
 
@@ -74,7 +79,7 @@ class TrackDatasourceImpl implements TrackDatasource {
   @override
   Future<Map<String, dynamic>> uploadTrack(WidgetRef ref, String name, File gpxFile, String description, String type, String distance, String elevationGain, {List<File> images = const[]}) async {
     
-    await _fetchCsrfToken(); // ✅ CSRF requerido
+    await _fetchCsrfToken(ref); // ✅ CSRF requerido
 
     //print('✅ Images3: $images');
 
@@ -122,9 +127,9 @@ class TrackDatasourceImpl implements TrackDatasource {
   }
   
   @override
-  Future<Map<String, dynamic>> loadAllTracks({int limit = 10, int page = 1, String? userId, String? orderBy, String? direction}) async {
+  Future<Map<String, dynamic>> loadAllTracks(WidgetRef ref, {int limit = 10, int page = 1, String? loggedUser,  String? userId, String? orderBy, String? direction}) async {
 
-    await _fetchCsrfToken(); // ✅ CSRF requerido
+    await _fetchCsrfToken(ref); // ✅ CSRF requerido
 
     try {
       final response = await _dio.get(
@@ -134,6 +139,7 @@ class TrackDatasourceImpl implements TrackDatasource {
         'page': page,
         'orderBy': orderBy,
         'direction': direction,
+        if ( loggedUser != null ) 'loggedUser': loggedUser,
         if (userId != null) 'userId': userId,
       },
         options: Options(
@@ -169,9 +175,9 @@ class TrackDatasourceImpl implements TrackDatasource {
   }
 
   @override
-  Future<Response<dynamic>> deleteTrack(String id) async {
+  Future<Response<dynamic>> deleteTrack(WidgetRef ref, String id) async {
 
-    await _fetchCsrfToken(); // ✅ CSRF requerido
+    await _fetchCsrfToken(ref); // ✅ CSRF requerido
 
     try {
       final response = await _dio.delete(
@@ -259,11 +265,11 @@ class TrackDatasourceImpl implements TrackDatasource {
 
 
   @override
-  Future<Response<dynamic>> updateTrack(String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []}) async {
+  Future<Response<dynamic>> updateTrack(WidgetRef ref, String id, String name, String description, {List<String> imagesOld = const[], List<File> images = const []}) async {
 
     try {
 
-      await _fetchCsrfToken(); // ✅ CSRF requerido
+      await _fetchCsrfToken(ref); // ✅ CSRF requerido
 
       final formData = FormData.fromMap({
         'name': name,
@@ -299,6 +305,58 @@ class TrackDatasourceImpl implements TrackDatasource {
       
     }
 
+
+  }
+  
+  @override
+  Future<void> addFavorite(WidgetRef ref, String trackId, UserEntity userLogged) async {
+
+    await _fetchCsrfToken(ref); // ✅ CSRF requerido
+
+    final response = await _dio.post(
+      '/favorites/$trackId',
+      queryParameters: {
+        'loggedUser': userLogged.id
+      },
+      options: Options(
+        headers: {
+          'X-CSRF-Token': _csrfToken,
+        },
+      ),
+    );
+
+    if( response.statusCode == 200) {
+      print('✅ Favorito añadido: $trackId');
+    } else {
+      throw Exception('❌ Error al añadir favorito: ${response.statusCode}');
+
+    }
+
+  }
+  
+  @override
+  Future<void> removeFavorite(WidgetRef ref, String trackId, UserEntity userLogged) async {
+
+    await _fetchCsrfToken(ref); // ✅ CSRF requerido
+
+    final response = await _dio.delete(
+      '/favorites/$trackId',
+      queryParameters: {
+        'loggedUser': userLogged.id
+      },
+      options: Options(
+        headers: {
+          'X-CSRF-Token': _csrfToken,
+        },
+      ),
+    );
+
+    if( response.statusCode == 200) {
+      print('✅ Favorito eliminado: $trackId');
+    } else {
+      throw Exception('❌ Error al eliminar favorito: ${response.statusCode}');
+
+    }
 
   }
 

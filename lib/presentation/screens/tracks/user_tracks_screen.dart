@@ -36,19 +36,26 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
     _scrollController.addListener(() async {
       final state = ref.read(trackListProvider);
       final notifier = ref.read(trackListProvider.notifier);
-      await notifier.changeOrdersAndDirection('created_at', 'desc', widget.user.id);
+      await notifier.changeOrdersAndDirection(ref, 'created_at', 'desc', widget.user.id);
 
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-        if (state.status != TrackListStatus.loading && state.currentPage < state.totalPages) {
-          final nextPage = state.currentPage + 1;
-          notifier.loadTracks(
-            limit: limit,
-            page: nextPage,
-            append: true,
-            userId: widget.user.id,
-          );
+
+      if(_scrollController.hasClients) {
+
+        if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+          if (state.status != TrackListStatus.loading && state.currentPage < state.totalPages) {
+            final nextPage = state.currentPage + 1;
+            notifier.loadTracks(
+              ref,
+              limit: limit,
+              page: nextPage,
+              append: true,
+              userId: widget.user.id,
+            );
+          }
         }
+
       }
+      
     });
 
   }
@@ -81,11 +88,12 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
           final hasInternet = await checkAndWarnIfNoInternet(context);
           if (hasInternet) {
             await ref.read(trackListProvider.notifier).loadTracks(
-                  limit: limit,
-                  page: 1,
-                  append: false,
-                  userId: widget.user.id,
-                );
+              ref,
+              limit: limit,
+              page: 1,
+              append: false,
+              userId: widget.user.id,
+            );
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

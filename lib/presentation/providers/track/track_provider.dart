@@ -5,8 +5,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
+import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/gpx_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/auth_repository_impl.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/location/location_provider.dart';
 
@@ -204,12 +206,12 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
   }
 
 
-  Future<Response<dynamic>> deleteTrack(String id) async {
+  Future<Response<dynamic>> deleteTrack(WidgetRef ref, String id) async {
 
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
     try {
-      final result = await repository.deleteTrack(id);
+      final result = await repository.deleteTrack(ref, id);
       state = const TrackUploadState(status: TrackUploadStatus.success);
       return result;
     } catch (e) {
@@ -221,11 +223,11 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
     }
   }
 
-  Future<Response<dynamic>> updateTrack(String id, String name, String description, { List<String> imagesOld = const[] ,List<File> images = const[] }) async {
+  Future<Response<dynamic>> updateTrack(WidgetRef ref, String id, String name, String description, { List<String> imagesOld = const[] ,List<File> images = const[] }) async {
 
     state = const TrackUploadState(status: TrackUploadStatus.loading);
     try {
-      final result = await repository.updateTrack(id, name, description, imagesOld: imagesOld, images: images);
+      final result = await repository.updateTrack(ref, id, name, description, imagesOld: imagesOld, images: images);
       state = const TrackUploadState(status: TrackUploadStatus.success);
       return result;
     } catch (e) {
@@ -237,6 +239,32 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
     }
 
   } 
+
+
+  Future<void> toggleFavorite(WidgetRef ref, String trackId, bool isCurrentlyFavorite, UserEntity userLogged) async {
+
+
+    late UserEntity loggedUser;
+
+    if(userLogged.id.isNotEmpty) {
+      loggedUser = userLogged;
+    } else {
+      loggedUser = ref.read(authProvider).user!;
+    }
+
+
+
+    
+    try {
+      if (isCurrentlyFavorite) {
+        await repository.removeFavorite(ref, trackId, loggedUser);
+      } else {
+        await repository.addFavorite(ref, trackId, loggedUser);
+      }
+    } catch (e) {
+      debugPrint('Error al alternar favorito: $e');
+    }
+  }
 
   void reset() {
     state = const TrackUploadState();

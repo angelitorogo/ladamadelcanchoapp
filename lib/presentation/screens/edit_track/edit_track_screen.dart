@@ -596,6 +596,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                               
                               // ignore: use_build_context_synchronously
                               final response = await ref.read(trackUploadProvider.notifier).updateTrack(
+                                ref,
                                 widget.trackId,
                                 '$name.gpx',
                                 description,

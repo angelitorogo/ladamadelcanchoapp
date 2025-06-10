@@ -89,8 +89,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
         //print('✅ volviendo desde TrackScreen');
         ref.read(trackListProvider.notifier).reset();
         ref.read(sideMenuStateProvider.notifier).resetUserScreen();
-        await ref.read(trackListProvider.notifier).changeOrdersAndDirection('created_at', 'desc', null);
+        await ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref,'created_at', 'desc', null);
         await ref.read(trackListProvider.notifier).loadTracks(
+          ref,
           limit: 5,
           page: 1,
           append: false,
@@ -173,6 +174,7 @@ class _DatosWidget extends ConsumerWidget {
                 onTap: () async {
 
                   await ref.read(trackListProvider.notifier).loadTracks(
+                    ref,
                     limit: 5,
                     page: 1,
                     userId: track.user!.id,
@@ -1086,7 +1088,7 @@ class _Buttons extends ConsumerWidget {
                                 onPressed: () async {
                                   Navigator.of(context).pop();
                                   
-                                  final result = await ref.read(trackUploadProvider.notifier).deleteTrack(track.id);
+                                  final result = await ref.read(trackUploadProvider.notifier).deleteTrack(ref, track.id);
                                   
                                   if (context.mounted && result.statusCode == 200) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1097,6 +1099,7 @@ class _Buttons extends ConsumerWidget {
                                     );
                             
                                     await ref.read(trackListProvider.notifier).loadTracks(
+                                      ref,
                                       limit: 5,
                                       page: 1,
                                       append: false

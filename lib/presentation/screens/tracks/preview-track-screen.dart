@@ -598,7 +598,13 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
                                 ref.read(locationProvider.notifier).resetState();
                   
                                 // 🔁 Recarga el listado de tracks
-                                ref.read(trackListProvider.notifier).loadTracks();
+                                //ref.read(trackListProvider.notifier).loadTracks(ref);
+                                ref.read(trackListProvider.notifier).loadTracks(
+                                  ref,
+                                  limit: 5,
+                                  page: 1,
+                                  append: false,
+                                );
                   
                                 await showDialog(
                                   context: context,

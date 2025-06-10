@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/track_repository_impl.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_repository_provider.dart';
 
 
@@ -63,26 +64,40 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
 
   TrackListNotifier(this.trackListRepository) : super(const TrackListState());
 
+  
   TrackListState reset() {
+    //print('✅ Reset state');
     return const TrackListState(); // Estado inicial
   }
 
-  Future<void> loadTracks({int limit = 5, int page = 1, String? userId, bool append = false}) async {
+  Future<void> resetState() async {
+    state = reset();
+  }
+
+  Future<void> resetStatusInitial() async {
+    state = state.copyWith(status: TrackListStatus.initial, changeSetting: false);
+  }
+
+  Future<void> loadTracks(WidgetRef ref, {int limit = 10, int page = 1, String? loggedUser, String? userId, bool append = false}) async {
     
     
     if (state.totalPages != 0 && page > state.totalPages) return;// ❌ No más páginas
 
     state = state.copyWith(status: TrackListStatus.loading);
 
+    final String? loggedUser = ref.read(authProvider).user?.id;
+    //print('LOGGEDUSER: $loggedUser');
+
     try {
       final response = await trackListRepository.loadAllTracks(
+        ref,
         limit: limit,
         page: page, 
+        loggedUser: loggedUser,
         userId: userId,
         orderBy: state.orderBy,
         direction: state.direction,
       );
-
       
 
       final tracks = (response['tracks'] as List).map((trackJson) {
@@ -112,7 +127,7 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
     }
   }
 
-  Future<void> changeOrdersAndDirection(String orderBy, String direction, String? userId) async {
+  Future<void> changeOrdersAndDirection(WidgetRef ref, String orderBy, String direction, String? userId) async {
 
     reset();
 
@@ -125,9 +140,30 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
       changeSetting: true,
     );
 
-    loadTracks(userId: userId);
+    //loadTracks(ref, userId: userId);
+    await ref.read(trackListProvider.notifier).loadTracks(
+      ref,
+      page: 1,
+      append: false,
+      userId: userId,
+      loggedUser: ref.read(authProvider).user?.id
+    );
 
   }
+
+  void updateFavoriteStatus(String trackId, bool isFavorite) {
+    final updatedTracks = state.tracks.map((track) {
+      if (track.id == trackId) {
+        return track.copyWith(isFavorite: isFavorite);
+      }
+      return track;
+    }).toList();
+
+    state = state.copyWith(tracks: updatedTracks);
+  }
+
+
+  
 
 
 }

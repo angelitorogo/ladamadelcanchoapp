@@ -6,6 +6,7 @@ import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/login_notifier.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/widgets.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -79,7 +80,7 @@ class _LoginForm extends ConsumerWidget {
             label: 'Correo electrónico',
             prefixIcon: Icons.email,
             onChanged: loginNotifier.emailChanged,
-            //initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
+            initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
             validator: (_) {
               return loginState.emailTouched
                   ? Email.emailErrorMessage(loginState.email.error)
@@ -95,7 +96,7 @@ class _LoginForm extends ConsumerWidget {
             prefixIcon: Icons.password,
             obscureText: true,
             onChanged: loginNotifier.passwordChanged,
-            //initialValue: 'Rod00gom!', //Eliminar linea
+            initialValue: 'Rod00gom!', //Eliminar linea
             validator: (_) {
               return loginState.passwordTouched
                   ? Password.passwordErrorMessage(loginState.password.error)
@@ -119,7 +120,7 @@ class _LoginForm extends ConsumerWidget {
                 child: FilledButton.icon(
                   onPressed: () async {
                     ref.watch(authProvider.notifier).reset();
-                    context.pop();
+                    GoRouter.of(context).go('/');
                   },
                   icon: const Icon(Icons.cancel, size: 25, color: Colors.white),
                   label: const Text('Cancelar', style: TextStyle(fontSize: 17, color: Colors.white)),
@@ -165,13 +166,25 @@ class _LoginForm extends ConsumerWidget {
                     final hasInternet = await checkAndWarnIfNoInternet(context);
                     if(hasInternet) {
               
-                      await authNotifier.login(
+                      final result = await authNotifier.login(
                         // ignore: use_build_context_synchronously
                         context,
                         loginState.email.value,
                         loginState.password.value,
                         ref
                       );
+
+                      if(result) {
+                        final userLogged = ref.read(authProvider).user;
+                        //Future.delayed(const Duration(milliseconds: 1000));
+                        await ref.read(trackListProvider.notifier).loadTracks(
+                          ref,
+                          page: 1,
+                          append: false,
+                          loggedUser: userLogged?.id
+                        );
+                       
+                      } 
               
                     }
               

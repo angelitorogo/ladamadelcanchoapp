@@ -153,7 +153,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
       // ✅ Asegura tener CSRF Token antes de hacer logout
       await fetchCsrfToken();
 
-      /*final response = */await _dio.post(
+      await _dio.post(
         '/logout',
         options: Options(
           headers: {'X-CSRF-Token': _csrfToken},
@@ -166,6 +166,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
       await jar.deleteAll();
       //print("Cookies eliminadas correctamente");
       
+      //await checkCookies();
       
     } catch (e) {
       throw Exception('Error en login: $e');

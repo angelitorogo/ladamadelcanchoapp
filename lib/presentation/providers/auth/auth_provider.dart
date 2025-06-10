@@ -11,6 +11,7 @@ import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_p
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/register_notifier.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/pendings/pending_tracks_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
@@ -62,13 +63,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   // ✅ Cargar sesión almacenada en SharedPreferences
   Future<void> loadSession() async {
+
+    //print('✅ Cargando sesion...');
+
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
     final isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
 
     if (userJson != null && isAuthenticated) {
-      final user = UserEntity.fromJson(jsonDecode(userJson)); // Asegúrate de que `UserEntity` tenga un método `fromJson`
+      final user = UserEntity.fromJson(jsonDecode(userJson)); 
       state = state.copyWith(isAuthenticated: true, user: user);
+      //print('✅ Hay usuario: ${user.fullname}');
+    } else {
+      state = state.copyWith(isAuthenticated: false, user: null);
+      //print('❌ No Hay usuario');
     }
 
   }
@@ -112,12 +120,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (error) {
       if(error.toString().contains('El teléfono solo puede contener números')){
         state = state.copyWith(isLoading: false, errorMessage: 'El teléfono solo puede contener números');
+      } else if(error.toString().contains('502')){
+        state = state.copyWith(isLoading: false, errorMessage: 'Servidor no disponible, inténtelo mas tarde');
+      } else {
+        // Extrae solo el mensaje limpio de la Exception
+        final cleanedMessage = error.toString().startsWith('Exception: ')
+            ? error.toString().replaceFirst('Exception: ', '')
+            : error.toString();
+        state = state.copyWith(isLoading: false, errorMessage: cleanedMessage);
       }
-      // Extrae solo el mensaje limpio de la Exception
-      final cleanedMessage = error.toString().startsWith('Exception: ')
-          ? error.toString().replaceFirst('Exception: ', '')
-          : error.toString();
-      state = state.copyWith(isLoading: false, errorMessage: cleanedMessage);
+
+      
+      
     }
 
   }
@@ -138,13 +152,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return await authRepository.cookieJar();
   }
 
-  Future<void> login(BuildContext context, String email, String password, WidgetRef ref) async {
+  Future<bool> login(BuildContext context, String email, String password, WidgetRef ref) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     //email = 'pepe2@pepe.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    //email = 'angelitorogo@hotmail.com';
+    email = 'angelitorogo@hotmail.com';
     //email = 'crysmaldonado20@gmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    //password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
+    password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
    
 
@@ -156,11 +170,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (result) {
         await verifyUser();
         formNotifier.resetForm();
-        state = state.copyWith(isAuthenticated: true, isLoading: false);
-        ref.watch(pendingTracksProvider.notifier).loadTracks();
+
+        await ref.read(trackListProvider.notifier).resetState();
+        Future.delayed(const Duration(milliseconds: 500));
+        await ref.read(pendingTracksProvider.notifier).loadTracks();
+        Future.delayed(const Duration(milliseconds: 500));
+        await ref.read(trackListProvider.notifier).loadTracks(
+          ref,
+          page: 1,
+          loggedUser: state.user?.id,
+          append: false
+        );
+        Future.delayed(const Duration(milliseconds: 500));
         if (context.mounted) {
+
           GoRouter.of(context).go('/');
         }
+        return true;
       } else {
         // ✅ Asegurar que el estado de autenticación es FALSO si el login falla
         state = state.copyWith(
@@ -168,6 +194,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           isLoading: false,
           errorMessage: 'Usuario o contraseña incorrectos',
         );
+
+        return false;
       }
 
 
@@ -178,6 +206,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         errorMessage: 'Error al iniciar sesión',
       );
+      return false;
     }
   }
 
@@ -220,13 +249,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await authRepository.logout();
 
       await clearSession(); // ✅ Limpiar sesión en SharedPreferences
-
+      
 
       // ✅ Primero, resetear completamente el estado
       state = const AuthState();
 
-      state = state.copyWith(isLoading: false, user: null, isAuthenticated: false);
-      ref.read(pendingTracksProvider.notifier).resetState();
+      //state = state.copyWith(isLoading: false, user: null, isAuthenticated: false);
+      ref.read(pendingTracksProvider.notifier).reset();
+      ref.read(trackListProvider.notifier).reset();
+
+
+      await ref.read(trackListProvider.notifier).loadTracks(
+        ref,
+        limit: 10,
+        page: 1,
+        append: false,
+      );
+
 
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: 'Error al verificar usuario');
