@@ -95,7 +95,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       subtitle: 'La Dama del Cancho está registrando tu recorrido.',
       description: 'Tu posición se guarda en segundo plano.',
       onTapBringToFront: true,
-      iconName: 'ic_flutter',
+      iconName: 'ic_launcher',
     );
 
     await location.enableBackgroundMode(enable: true);

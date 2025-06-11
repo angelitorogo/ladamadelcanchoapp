@@ -1,4 +1,3 @@
-
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -358,6 +357,11 @@ class _Perfil extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
+    final points = track.points!;
+    final flSpots = buildElevationProfile(track.points!, double.parse(track.distance));
+    print('📏 Distancia final en el gráfico: ${flSpots.last.x}');
+    //print('📄 Distancia guardada en el track: ${track.distance} km');
+
     final elevations = track.points!.map((p) => p.elevation).toList();
     
     final minElevation = elevations.reduce(min);
@@ -374,14 +378,20 @@ class _Perfil extends ConsumerWidget {
     double intervalElevation;
     double intervalDistance;
 
-    if(double.parse(track.distance) <=5) {
+
+    final distanceKm = flSpots.last.x / 1000;
+
+
+    if(distanceKm <=5) {
       intervalDistance = 500;
-    } else if(double.parse(track.distance) <= 10) {
+    } else if(distanceKm <= 10) {
       intervalDistance = 1000;
-    } else if( double.parse(track.distance) <= 20) {
+    } else if( distanceKm <= 20) {
       intervalDistance = 2000;
+    } else if(distanceKm <= 30) {
+      intervalDistance = 4000;
     } else {
-      intervalDistance = 3000;
+      intervalDistance = 5000;
     }
 
     if (diffElevation <= 50) {
@@ -423,7 +433,7 @@ class _Perfil extends ConsumerWidget {
     }
 
 
-    final points = track.points!;
+    
 
     return SizedBox(
       height: 230,
@@ -446,7 +456,8 @@ class _Perfil extends ConsumerWidget {
                   LineChartData(
                     backgroundColor: const Color.fromARGB(255, 106, 186, 223),
                     minX: 0,
-                    maxX: double.parse(track.distance) * 1000, // asegúrate de que esté en metros si usas intervalos en metros
+                    //maxX: double.parse(track.distance) * 1000, // asegúrate de que esté en metros si usas intervalos en metros
+                    maxX: flSpots.last.x,
                     minY: minY.toDouble(),
                     maxY: maxY.toDouble(),
                 
@@ -510,7 +521,7 @@ class _Perfil extends ConsumerWidget {
                     
                     lineBarsData: [
                       LineChartBarData(
-                        spots: buildElevationProfile(track.points!), // este debe tener x = distancia acumulada en metros
+                        spots: flSpots, // este debe tener x = distancia acumulada en metros
                         isCurved: true,
                         color: Colors.black,
                         barWidth: 2,
@@ -540,7 +551,7 @@ class _Perfil extends ConsumerWidget {
                           getTitlesWidget: (value, meta) {
                             if (value % intervalElevation != 0) return const SizedBox.shrink();
 
-                            return Text('${value.toInt()}m', style: const TextStyle(fontSize: 10));
+                            return Text('${value.toInt()}', style: const TextStyle(fontSize: 10));
                           },
 
                         ),
@@ -551,37 +562,20 @@ class _Perfil extends ConsumerWidget {
                           reservedSize: 30,
                           interval: intervalDistance,
                           getTitlesWidget: (value, meta) {
-                            final totalDistance = double.parse(track.distance) * 1000; // en metros
+                            // solo mostrar si el valor es múltiplo del intervalo
+                            if (value % intervalDistance != 0) return const SizedBox.shrink();
 
-                            // 🔥 Omitimos si el valor está demasiado cerca del final (último label forzado)
-                            if (totalDistance - value < (intervalDistance / 5)) {
-                              return const SizedBox.shrink();
-                            
-                            }
-
-                            if( value < intervalDistance ) {
-                              return const Padding(
-                              padding: EdgeInsets.fromLTRB(20, 5, 5, 5),
-                              child: Text('0km', style: TextStyle(fontSize: 10)),
-                            );
-                            }
-
-                            String km = '';
-
-                            if (value % 1000 == 0) {
-                              km = (value / 1000).toStringAsFixed(0);
-                            } else {
-                              km = (value / 1000).toStringAsFixed(1);
-                            }
-                              
-                            
-                            
+                            final finalKm = (value / 1000) < 5 
+                            ?
+                              (value / 1000).toStringAsFixed(1)
+                            :
+                              (value / 1000).toStringAsFixed(0);
 
                             return Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 5, 5, 5),
-                              child: Text('${km}km', style: const TextStyle(fontSize: 10)),
+                              padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
+                              child: Text(finalKm == '0.0' ? '0': finalKm, style: const TextStyle(fontSize: 10)),
                             );
-                          },
+                          }
 
                         ),
                       ),

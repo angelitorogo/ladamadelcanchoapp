@@ -102,21 +102,39 @@ Future<List<Map<String, dynamic>>> loadOfflineSnapshots() async {
 
 // Método para construir los datos del gráfico
 
-List<FlSpot> buildElevationProfile(List<LocationPoint> points) {
-  double totalDistance = 0.0;
+List<FlSpot> buildElevationProfile(List<LocationPoint> points, double totalDistanceKm) {
+  if (points.isEmpty) return [];
+
+  final totalDistanceMeters = totalDistanceKm * 1000;
+  final int pointCount = points.length;
+  double accumulatedDistance = 0;
   List<FlSpot> spots = [];
 
-  for (int i = 0; i < points.length; i++) {
+  for (int i = 0; i < pointCount; i++) {
     if (i > 0) {
-      totalDistance += calculateDistance(points[i - 1], points[i]); // en metros
+      accumulatedDistance = totalDistanceMeters * (i / (pointCount - 1));
     }
-
-    spots.add(FlSpot(totalDistance, points[i].elevation));
+    spots.add(FlSpot(accumulatedDistance, points[i].elevation));
   }
 
   return spots;
 }
 
+double getDistanceMeters(double lat1, double lon1, double lat2, double lon2) {
+  const double earthRadius = 6371000; // en metros
+
+  final dLat = _toRadians(lat2 - lat1);
+  final dLon = _toRadians(lon2 - lon1);
+
+  final a = sin(dLat / 2) * sin(dLat / 2) +
+      cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
+      sin(dLon / 2) * sin(dLon / 2);
+
+  final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  return earthRadius * c;
+}
+
+double _toRadians(double degree) => degree * pi / 180;
 
 /*
 List<FlSpot> buildElevationProfile(List<LocationPoint> points) {
