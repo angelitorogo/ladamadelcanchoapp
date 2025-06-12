@@ -9,20 +9,27 @@ import 'package:intl/intl.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/location_point.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
+import 'package:ladamadelcanchoapp/infraestructure/mappers/icons_weather_mapper.dart';
+import 'package:ladamadelcanchoapp/infraestructure/mappers/nominatim_mapper.dart';
+import 'package:ladamadelcanchoapp/infraestructure/mappers/weather_mapper.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/utils_track.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/city_name/city_name_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/side_menu/side_menu_state_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/hovered_point_index_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/only_track_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_nearest_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_provider.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/weather/weather_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/edit_track/edit_track_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/full_screen_carousel_view.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
+
+
 
 
 
@@ -52,11 +59,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
 
   Future<void> loadTrack() async {
 
-    
-
-  
     try {
-
 
       Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(widget.trackName);
 
@@ -122,8 +125,11 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
                         _Card(track: track)
                       else
                         const Text('No hay imágenes disponibles.'),
+                      const SizedBox(height: 20),
+                      _WeatherData(firstPoint: track.points!.first),
                       _Nearest(track: track),
                       const SizedBox(height: 0),
+                      
 
                       if(authState != null && authState.id == track.user!.id)
                         _Buttons(track: track,),
@@ -1188,6 +1194,185 @@ class _Description extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+class _WeatherData extends ConsumerStatefulWidget {
+  final LocationPoint firstPoint;
+  const _WeatherData({required this.firstPoint,});
+
+  @override
+  ConsumerState<_WeatherData> createState() => _WeatherDataState();
+}
+
+class _WeatherDataState extends ConsumerState<_WeatherData> {
+  WeatherResponse? localWeatherData;
+  NominatimResponse? dataLocationPoint;
+  String cityName = 'Cargando...';
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() async {
+      localWeatherData = await ref.read(weatherProvider.notifier).fetchWeatherData(widget.firstPoint);
+      dataLocationPoint = await ref.read(cityNameProvider.notifier).fetchCityName(widget.firstPoint);
+
+      if(dataLocationPoint?.address.city != '') {
+        cityName = dataLocationPoint!.address.city;
+      } else if( dataLocationPoint?.displayName != '') {
+        cityName = dataLocationPoint!.displayName;
+      } else {
+        cityName = 'Indeterminado';
+      }
+
+
+      setState(() {}); // actualiza la vista con los datos
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '🌤️ El Tiempo:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                Text(
+                  cityName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (localWeatherData != null)
+              WeatherTable(daily: localWeatherData!.daily)
+            else
+              const CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+class WeatherTable extends StatelessWidget {
+  final Daily daily;
+
+  const WeatherTable({required this.daily, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+
+    const daysToShow = 4;
+
+    return Table(
+      columnWidths: const {
+        0: FixedColumnWidth(50),
+      },
+      border: TableBorder.all(color: Colors.grey.shade300),
+      children: [
+        // 🗓️ Cabecera: días de la semana
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Center(child: Text('Dia', style: TextStyle(fontSize: 11))),
+            ), // celda vacía arriba a la izquierda
+            for (final date in daily.time.take(daysToShow))
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Text('${DateFormat.E('es_ES').format(date)} ${date.day}' , style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        // ☁️ ICONO TIEMPO
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Icon(Icons.wb_cloudy, size: 18),
+            ), // icono de clima
+            for (final code in daily.weathercode.take(daysToShow))
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(child: Text(WeatherEmoji.getEmoji(code), style: const TextStyle(fontSize: 18))),
+              )
+          ],
+        ),
+        // 💧 PRECIPITACIÓN
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Center(child: Icon(Icons.grain)),
+            ), // icono lluvia
+            for (final prec in daily.precipitationSum.take(daysToShow))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+                child: Center(child:
+                (prec.toStringAsFixed(1) == '0.0') ? const Text('-', style: TextStyle(fontSize: 12),) : Text('${prec.toStringAsFixed(1)} mm', style: const TextStyle(fontSize: 12))
+                ),
+              ),
+          ],
+        ),
+        // 🔥 TEMP MÁX
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Center(child: Icon(Icons.thermostat)),
+            ), // icono temperatura
+            for (final max in daily.temperature2MMax.take(daysToShow))
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Center(child: Text('${max.toStringAsFixed(0)}°', style: const TextStyle(fontSize: 12),)),
+              ),
+          ],
+        ),
+        // ❄️ TEMP MÍN
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Center(child: Icon(Icons.ac_unit)),
+            ), // icono frío
+            for (final min in daily.temperature2MMin.take(daysToShow))
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Center(child: Text('${min.toStringAsFixed(0)}°', style: const TextStyle(fontSize: 12),)),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
