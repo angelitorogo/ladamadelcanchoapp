@@ -3,19 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/infraestructure/inputs/inputs.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/secure_storage_helper.dart';
 import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/login_notifier.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/widgets.dart';
+import 'package:local_auth/local_auth.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerWidget {
   static const name = 'login-screen';
 
   const LoginScreen({super.key});
 
+  
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return const Scaffold(
       body: _LoginView(),
     );
@@ -41,7 +45,7 @@ class _LoginView extends StatelessWidget {
                 fit: BoxFit.contain, // O BoxFit.cover, según prefieras
               ),
               const SizedBox(height: 40),
-              const _LoginForm(),
+              _LoginForm(),
               const SizedBox(height: 20),
             ],
           ),
@@ -53,7 +57,37 @@ class _LoginView extends StatelessWidget {
 
 
 class _LoginForm extends ConsumerWidget {
-  const _LoginForm();
+
+ _LoginForm();
+
+  final LocalAuthentication auth = LocalAuthentication();
+
+  Future<void> _checkBiometricAndLogin(WidgetRef ref, BuildContext context) async {
+    final available = await auth.canCheckBiometrics;
+    final isDeviceSupported = await auth.isDeviceSupported();
+    final authenticated = await auth.authenticate(
+      localizedReason: 'Inicia sesión con huella',
+      options: const AuthenticationOptions(biometricOnly: true),
+    );
+
+    if (available && isDeviceSupported && authenticated) {
+      final credentials = await SecureStorageHelper.readCredentials();
+      final email = credentials['email'];
+      final password = credentials['password'];
+
+      if (email != null && password != null) {
+        // ignore: use_build_context_synchronously
+        ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref);
+      } else {
+        if(context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se encontraron credenciales guardadas')),
+          );
+        }
+        
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -80,7 +114,7 @@ class _LoginForm extends ConsumerWidget {
             label: 'Correo electrónico',
             prefixIcon: Icons.email,
             onChanged: loginNotifier.emailChanged,
-            initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
+            //initialValue: 'angelitorogo@hotmail.com', //eliminar linea.
             validator: (_) {
               return loginState.emailTouched
                   ? Email.emailErrorMessage(loginState.email.error)
@@ -96,7 +130,8 @@ class _LoginForm extends ConsumerWidget {
             prefixIcon: Icons.password,
             obscureText: true,
             onChanged: loginNotifier.passwordChanged,
-            initialValue: 'Rod00gom!', //Eliminar linea
+            //x
+            //initialValue: 'Rod00gom!', //Eliminar linea
             validator: (_) {
               return loginState.passwordTouched
                   ? Password.passwordErrorMessage(loginState.password.error)
@@ -110,116 +145,152 @@ class _LoginForm extends ConsumerWidget {
 
 
           // Botón de login
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
             children: [
-              
-              SizedBox(
-                width: 160,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    ref.watch(authProvider.notifier).reset();
-                    GoRouter.of(context).go('/');
-                  },
-                  icon: const Icon(Icons.cancel, size: 25, color: Colors.white),
-                  label: const Text('Cancelar', style: TextStyle(fontSize: 17, color: Colors.white)),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: ColorsPeronalized.cancelColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    //foregroundColor: const Color(0xFFEE7B7B), // Esto asegura que los estados hover/pressed también sean redAccent
-                  ),
-                ),
-              ),
-
-              (!authState.isLoading) ?
-
-              SizedBox(
-                width: 160,
-                height: 50,
-                child: FilledButton.tonalIcon(
-              
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                      if (states.contains(WidgetState.disabled)) {
-                        return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
-                      }
-                      return ColorsPeronalized.successColor; // 🔥 Color cuando está activo
-                    }),
-                    foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10), // 📏 Bordes redondeados
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  
+                  SizedBox(
+                    width: 160,
+                    height: 50,
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        ref.watch(authProvider.notifier).reset();
+                        GoRouter.of(context).go('/');
+                      },
+                      icon: const Icon(Icons.cancel, size: 25, color: Colors.white),
+                      label: const Text('Cancelar', style: TextStyle(fontSize: 17, color: Colors.white)),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: ColorsPeronalized.cancelColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        //foregroundColor: const Color(0xFFEE7B7B), // Esto asegura que los estados hover/pressed también sean redAccent
                       ),
                     ),
-                    padding: WidgetStateProperty.all(
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  ),
+              
+                  (!authState.isLoading) ?
+              
+                  SizedBox(
+                    width: 160,
+                    height: 50,
+                    child: FilledButton.tonalIcon(
+                  
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return const Color(0xFF566D79); // 🔘 Color cuando está deshabilitado
+                          }
+                          return ColorsPeronalized.successColor; // 🔥 Color cuando está activo
+                        }),
+                        foregroundColor: WidgetStateProperty.all(Colors.white), // 🎨 Color del texto e icono
+                        shape: WidgetStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10), // 📏 Bordes redondeados
+                          ),
+                        ),
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                      ),
+                  
+                      //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
+                      onPressed: () async {
+                  
+                        final hasInternet = await checkAndWarnIfNoInternet(context);
+                        if(hasInternet) {
+                  
+                          final result = await authNotifier.login(
+                            // ignore: use_build_context_synchronously
+                            context,
+                            loginState.email.value,
+                            loginState.password.value,
+                            ref
+                          );
+              
+                          if(result) {
+                            final userLogged = ref.read(authProvider).user;
+                            //Future.delayed(const Duration(milliseconds: 1000));
+                            await ref.read(trackListProvider.notifier).loadTracks(
+                              ref,
+                              page: 1,
+                              append: false,
+                              loggedUser: userLogged?.id
+                            );
+                           
+                          } 
+                  
+                        }
+                  
+                        
+                      
+                      },
+                  
+                      icon: const Icon(Icons.login, size: 25, color: Colors.white,),
+                      label: const Text('Login', style: TextStyle(fontSize: 17)),
+                    ),
+                  )
+              
+                  :
+              
+              
+                  SizedBox(
+                    width: 160,
+                    height: 50,
+                    child: TextButton(
+                      onPressed: null, // 🔒 Deshabilitado mientras carga
+                      style: TextButton.styleFrom(
+                        backgroundColor: ColorsPeronalized.successColor, // 🔥 Color de fondo
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
+                      ),
+                      child: const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white, // 🎨 Color del loading
+                          strokeWidth: 3, // 📏 Grosor del círculo
+                        ),
+                      ),
                     ),
                   ),
               
-                  //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login. quitar esto y descomentar lo de abajo
-                  onPressed: () async {
               
-                    final hasInternet = await checkAndWarnIfNoInternet(context);
-                    if(hasInternet) {
-              
-                      final result = await authNotifier.login(
-                        // ignore: use_build_context_synchronously
-                        context,
-                        loginState.email.value,
-                        loginState.password.value,
-                        ref
-                      );
+                ],
+              ),
 
-                      if(result) {
-                        final userLogged = ref.read(authProvider).user;
-                        //Future.delayed(const Duration(milliseconds: 1000));
-                        await ref.read(trackListProvider.notifier).loadTracks(
-                          ref,
-                          page: 1,
-                          append: false,
-                          loggedUser: userLogged?.id
-                        );
-                       
-                      } 
+              const SizedBox( height: 200,),
               
-                    }
-              
-                    
-                  
-                  },
-              
-                  icon: const Icon(Icons.login, size: 25, color: Colors.white,),
-                  label: const Text('Login', style: TextStyle(fontSize: 17)),
-                ),
-              )
-
-              :
-
-
-              SizedBox(
-                width: 160,
-                height: 50,
-                child: TextButton(
-                  onPressed: null, // 🔒 Deshabilitado mientras carga
-                  style: TextButton.styleFrom(
-                    backgroundColor: ColorsPeronalized.successColor, // 🔥 Color de fondo
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.all(12), // 📏 Tamaño del botón
+              // 👉 Botón de huella
+              GestureDetector(
+                onTap: () => _checkBiometricAndLogin(ref, context),
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer, // azul claro
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white, // 🎨 Color del loading
-                      strokeWidth: 3, // 📏 Grosor del círculo
+                  child: const Center(
+                    child: Icon(
+                      Icons.fingerprint,
+                      size: 40,
+                      color: Colors.white,
                     ),
                   ),
                 ),
               ),
+
             ],
           )
 

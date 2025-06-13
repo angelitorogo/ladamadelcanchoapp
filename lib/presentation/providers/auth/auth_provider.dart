@@ -7,6 +7,7 @@ import 'package:ladamadelcanchoapp/domain/entities/user.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/register_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/auth_repository_impl.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/secure_storage_helper.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_repository_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/profile_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/forms/register_notifier.dart';
@@ -156,9 +157,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     //email = 'pepe2@pepe.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    email = 'angelitorogo@hotmail.com';
+    //email = 'angelitorogo@hotmail.com';
     //email = 'crysmaldonado20@gmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
-    password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
+    //password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
    
 
@@ -170,6 +171,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (result) {
         await verifyUser();
         formNotifier.resetForm();
+
+        await SecureStorageHelper.saveCredentials(email, password);
 
         await ref.read(trackListProvider.notifier).resetState();
         Future.delayed(const Duration(milliseconds: 500));
