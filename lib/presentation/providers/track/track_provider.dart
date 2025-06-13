@@ -45,11 +45,13 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
   TrackUploadNotifier(this.repository, this.repository2) : super(const TrackUploadState());
 
-  Future<Track?> existsTrackForName(String name) async {
+  Future<Track?> existsTrackForName(String name, WidgetRef ref) async {
+
+    final UserEntity? userLogged = ref.read(authProvider).user;
 
     try {
 
-      final result = await repository.existsTrack(name);
+      final result = await repository.existsTrack(name, userLogged?.id);
       return result;
 
     } catch (e) {
@@ -177,7 +179,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
       repository2.fetchCsrfToken(); //cogerlo si se puede del authState
 
       //SABER SI YA HAY UN TRACK CON ESE NAME Peticion a back track:name
-      final track = await existsTrackForName(name);
+      final track = await existsTrackForName(name, ref);
 
       if( track != null) {
 

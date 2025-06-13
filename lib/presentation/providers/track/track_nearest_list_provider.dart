@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/infraestructure/repositories/track_repository_impl.dart';
+import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_repository_provider.dart';
 
 enum TrackListStatus { initial, loading, loaded, error }
@@ -41,11 +42,13 @@ class TrackNearestListNotifier extends StateNotifier<TrackNearestListState> {
     return const TrackNearestListState(); // Estado inicial
   }
 
-  Future<void> loadNearestTracks(String trackId, {int limit = 5}) async {
+  Future<void> loadNearestTracks(WidgetRef ref, String trackId, {int limit = 5}) async {
     state = state.copyWith(status: TrackListStatus.loading);
 
+    final String? loggedUser = ref.read(authProvider).user?.id;
+
     try {
-      final tracks = await trackListRepository.getNearestTracks(trackId, limit: limit);
+      final tracks = await trackListRepository.getNearestTracks(trackId, loggedUser, limit: limit);
       state = state.copyWith(tracks: tracks, status: TrackListStatus.loaded);
     } catch (e) {
       state = state.copyWith(

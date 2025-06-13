@@ -204,7 +204,7 @@ class TrackDatasourceImpl implements TrackDatasource {
   }
   
   @override
-  Future<Track?> existsTrack(String name) async {
+  Future<Track?> existsTrack(String name, String? loggedUser) async {
 
     final finalName = name.replaceAll('.gpx', '');
 
@@ -212,6 +212,9 @@ class TrackDatasourceImpl implements TrackDatasource {
     try {
       final response = await _dio.get(
         '/track/$finalName' ,
+        queryParameters: {
+          'loggedUser': loggedUser
+        },
         options: Options(
           headers: {
             'X-CSRF-Token': _csrfToken,
@@ -254,9 +257,11 @@ class TrackDatasourceImpl implements TrackDatasource {
   }
 
   @override
-  Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}) async {
-    final response = await _dio.get('/nearest/$trackId', queryParameters: {
+  Future<List<Track>> getNearestTracks(String trackId, String? loggedUser, {int limit = 5}) async {
+    final response = await _dio.get('/nearest/$trackId', 
+    queryParameters: {
       'limit': limit,
+      if ( loggedUser != null ) 'loggedUser': loggedUser,
     });
 
     final List<dynamic> data = response.data;

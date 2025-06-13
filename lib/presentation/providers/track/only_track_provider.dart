@@ -12,13 +12,21 @@ class TrackNotifier extends StateNotifier<Track?> {
   }
 
   void updateTrack(Track updatedTrack) {
-    state = updatedTrack;
+
+    final track = updatedTrack.copyWith(isFavorite: !!updatedTrack.isFavorite!);
+
+    state = track;
   }
 
-  void clearTrack() {
-    state = null;
+  void toggleFavoriteLocal() {
+    if (state == null) return;
+    state = state!.copyWith(isFavorite: !state!.isFavorite!); // ← aquí sí lo inviertes
   }
-}
+
+    void clearTrack() {
+      state = null;
+    }
+  }
 
 final trackProvider = StateNotifierProvider<TrackNotifier, Track?>(
   (ref) => TrackNotifier(),

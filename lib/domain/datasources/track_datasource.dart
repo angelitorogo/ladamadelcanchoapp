@@ -10,11 +10,11 @@ abstract class TrackDatasource {
 
   Future<Map<String, dynamic>> loadAllTracks(WidgetRef ref, { int limit = 10, int page = 0, String? loggedUser, String? userId, String? orderBy, String? direction });
 
-  Future<Track?> existsTrack(String name);
+  Future<Track?> existsTrack(String name, String? loggedUser);
 
   Future<Track> loadTrack(String id);
 
-  Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}); 
+  Future<List<Track>> getNearestTracks(String trackId, String? loggedUser, {int limit = 5}); 
 
   Future<Response<dynamic>> deleteTrack(WidgetRef ref, String id);
 

@@ -15,7 +15,7 @@ class Track {
   final DateTime updatedAt;
   final UserEntity? user;
   final double? distanceFromCurrent;
-  final bool isFavorite;
+  final bool? isFavorite;
 
   Track({
     required this.id,
@@ -31,7 +31,7 @@ class Track {
     required this.updatedAt,
     this.user,
     this.distanceFromCurrent,
-    required this.isFavorite
+    this.isFavorite
   });
 
   factory Track.fromJson(Map<String, dynamic> json) => Track(
@@ -48,7 +48,7 @@ class Track {
     updatedAt: DateTime.parse(json['updated_at']),
     user: UserEntity.fromJson(json['user']),
     distanceFromCurrent: json['distanceFromCurrent'],
-    isFavorite: json['isFavorite'] ?? false,
+    isFavorite: json['isFavorite'],
   );
 
   Map<String, dynamic> toJson() => {

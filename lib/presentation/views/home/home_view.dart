@@ -365,9 +365,9 @@ class _Card extends ConsumerWidget {
                     left: 5,
                     child: GestureDetector(
                       onTap: () async {
-                        await ref.read(trackUploadProvider.notifier).toggleFavorite(ref, track.id, track.isFavorite, ref.read(authProvider).user!);
+                        await ref.read(trackUploadProvider.notifier).toggleFavorite(ref, track.id, track.isFavorite!, ref.read(authProvider).user!);
                         // Actualiza el valor localmente en la lista
-                        ref.read(trackListProvider.notifier).updateFavoriteStatus(track.id, !track.isFavorite);
+                        ref.read(trackListProvider.notifier).updateFavoriteStatus(track.id, !track.isFavorite!);
                         
                       },
                       child: Container(
@@ -378,8 +378,8 @@ class _Card extends ConsumerWidget {
                         ),
                         padding: const EdgeInsets.all(2),
                         child: Icon(
-                          track.isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: track.isFavorite ? Colors.red : Colors.white,
+                          track.isFavorite! ? Icons.favorite : Icons.favorite_border,
+                          color: track.isFavorite! ? Colors.red : Colors.white,
                           size: 20,
                         ),
                       ),

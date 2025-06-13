@@ -67,7 +67,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
 
     final defaultName = widget.trackFile.replaceAll('.gpx', '');
 
-    Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(defaultName);
+    Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(defaultName, ref);
 
     if( track != null){
       ref.read(trackProvider.notifier).loadTrack(track);
@@ -606,7 +606,7 @@ class _EditTrackScreenState extends ConsumerState<EditTrackScreen> {
                         
                               if(response.data['ok']) {
                         
-                                Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName('$name.gpx');
+                                Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName('$name.gpx', ref);
                         
                                 if( track != null){
                                   ref.read(trackProvider.notifier).updateTrack(track);

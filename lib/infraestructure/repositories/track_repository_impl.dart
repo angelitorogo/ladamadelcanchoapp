@@ -24,8 +24,8 @@ class TrackRepositoryImpl extends TrackRepository {
   }
   
   @override
-  Future<Track?> existsTrack(String name) {
-    return datasource.existsTrack(name);
+  Future<Track?> existsTrack(String name, String? loggedUser) {
+    return datasource.existsTrack(name, loggedUser);
   }
 
   @override
@@ -34,8 +34,8 @@ class TrackRepositoryImpl extends TrackRepository {
   }
 
   @override
-  Future<List<Track>> getNearestTracks(String trackId, {int limit = 5}) {
-    return datasource.getNearestTracks(trackId, limit: limit);
+  Future<List<Track>> getNearestTracks(String trackId, String? loggedUser, {int limit = 5}) {
+    return datasource.getNearestTracks(trackId, loggedUser, limit: limit);
   }
 
 

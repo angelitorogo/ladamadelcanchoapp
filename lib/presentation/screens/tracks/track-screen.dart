@@ -45,6 +45,7 @@ class TrackScreen extends ConsumerStatefulWidget {
 class _TrackScreenState extends ConsumerState<TrackScreen> {
   bool _isLoading = true;
   late List<Track> tracks;
+  Track? track;
 
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>(); 
   
@@ -61,10 +62,10 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
 
     try {
 
-      Track? track = await ref.read(trackUploadProvider.notifier).existsTrackForName(widget.trackName);
+      track = await ref.watch(trackUploadProvider.notifier).existsTrackForName(widget.trackName, ref);
 
       if( track != null){
-        ref.read(trackProvider.notifier).loadTrack(track);
+        ref.read(trackProvider.notifier).loadTrack(track!);
       }
 
       setState(() {
@@ -83,7 +84,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   Widget build(BuildContext context) {
 
     final authState = ref.watch(authProvider).user;
-    final track = ref.watch(trackProvider);
+    Track? track = ref.watch(trackProvider);
 
     // ignore: deprecated_member_use
     return WillPopScope(
@@ -108,6 +109,46 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           scrolledUnderElevation: 0,
           title: Text(track != null ? track.name.split('.').first : 'Cargando...'),
+          actions: [
+
+            (authState != null) ?
+            IconButton(
+              onPressed: () async {
+                if (track == null) return;
+
+                // 1. Toggle local inmediato (actualiza el icono)
+                ref.read(trackProvider.notifier).toggleFavoriteLocal();
+
+                try {
+                  // 2. Backend toggle
+                  await ref.read(trackUploadProvider.notifier).toggleFavorite(
+                    ref,
+                    track.id,
+                    track.isFavorite!, // ¡Importante! Enviamos el valor original (ya invertido localmente)
+                    authState,
+                  );
+                } catch (e) {
+                  // 3. Si falla, revertimos el cambio
+                  ref.read(trackProvider.notifier).toggleFavoriteLocal();
+
+
+                }
+              },
+
+              icon: Icon(
+                track != null && track.isFavorite! ? Icons.favorite : Icons.favorite_border,
+                color: track != null &&  track.isFavorite! ? Colors.red : Colors.white,
+                size: 25,
+              ),
+
+
+
+            ) 
+          :
+
+          const SizedBox()
+
+          ],
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -823,7 +864,7 @@ class _NearestState extends ConsumerState<_Nearest> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(trackNearestListProvider.notifier).loadNearestTracks(widget.track.id);
+      ref.read(trackNearestListProvider.notifier).loadNearestTracks(ref, widget.track.id);
     });
   }
 
@@ -1255,17 +1296,20 @@ class _WeatherDataState extends ConsumerState<_WeatherData> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                Text(
-                  cityName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.primary,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                  child: Text(
+                    cityName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 5),
             if (localWeatherData != null)
               WeatherTable(daily: localWeatherData!.daily)
             else
@@ -1276,9 +1320,6 @@ class _WeatherDataState extends ConsumerState<_WeatherData> {
     );
   }
 }
-
-
-
 
 class WeatherTable extends StatelessWidget {
   final Daily daily;
