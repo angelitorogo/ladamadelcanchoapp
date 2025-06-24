@@ -212,6 +212,9 @@ class _RegisterForm extends ConsumerWidget {
 
                       if (result.success) {
                         // ✅ Registro OK, ya se redirige dentro del notifier
+
+                        registerNotifier.resetForm();
+                        
                         if (context.mounted) {
                           mostrarAlertaSuccess(context, result.message!, redirectRoute: '/');
                         }

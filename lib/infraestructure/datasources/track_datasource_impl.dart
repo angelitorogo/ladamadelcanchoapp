@@ -81,7 +81,7 @@ class TrackDatasourceImpl implements TrackDatasource {
     
     await _fetchCsrfToken(ref); // ✅ CSRF requerido
 
-    //print('✅ Images3: $images');
+    //print('✅ Distance: $distance');
 
     final formData = FormData.fromMap({
       'user': ref.watch(authProvider).user!.id,

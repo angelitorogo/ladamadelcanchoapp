@@ -341,6 +341,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                           final hasInternet = await checkAndWarnIfNoInternet(context);
                           if (hasInternet) {
                             ref.read(authProvider.notifier).logout(ref);
+                            ref.read(pendingTracksProvider.notifier).resetState();
                             widget.scaffoldKey.currentState?.closeDrawer();
                           }
                         },

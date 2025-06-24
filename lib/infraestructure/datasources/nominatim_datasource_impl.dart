@@ -5,14 +5,18 @@ import 'package:ladamadelcanchoapp/infraestructure/mappers/nominatim_mapper.dart
 
 class NominatimDatasourceImpl implements NominatimDatasource {
 
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: 'https://nominatim.openstreetmap.org',
+      headers: {
+        'User-Agent': 'ladamadelcanchoapp/1.0 (angel@tucorreo.com)'  // Usa tu email real si quieres cumplir con sus políticas
+      },
+    ),
+  );
 
   @override
   Future<NominatimResponse> fecthNominatim(LocationPoint point) async {
     
-
-    const url = 'https://nominatim.openstreetmap.org/reverse';
-
     final params = {
       'lat': point.latitude,
       'lon': point.longitude,
@@ -20,7 +24,7 @@ class NominatimDatasourceImpl implements NominatimDatasource {
     };
 
     try {
-      final response = await _dio.get(url, queryParameters: params);
+      final response = await _dio.get('/reverse', queryParameters: params);
 
       if (response.statusCode == 200) {
         final finalResponse = NominatimResponse.fromJson(response.data);

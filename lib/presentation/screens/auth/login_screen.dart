@@ -62,6 +62,7 @@ class _LoginForm extends ConsumerWidget {
 
   final LocalAuthentication auth = LocalAuthentication();
 
+
   Future<void> _checkBiometricAndLogin(WidgetRef ref, BuildContext context) async {
     final available = await auth.canCheckBiometrics;
     final isDeviceSupported = await auth.isDeviceSupported();
@@ -76,8 +77,9 @@ class _LoginForm extends ConsumerWidget {
       final password = credentials['password'];
 
       if (email != null && password != null) {
+        //print('${email.trim()} ${password.trim()}');
         // ignore: use_build_context_synchronously
-        ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref);
+        ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref); 
       } else {
         if(context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -90,13 +92,14 @@ class _LoginForm extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref)  {
 
     final loginState = ref.watch(loginProvider); //estado
     final loginNotifier = ref.read(loginProvider.notifier); //notifier
 
     final authState = ref.watch(authProvider); //estado
     final authNotifier = ref.read(authProvider.notifier); //notifier
+
 
     ref.listen(authProvider, (previous, next) {
       if (previous?.errorMessage != next.errorMessage && next.errorMessage != null) {
@@ -202,6 +205,9 @@ class _LoginForm extends ConsumerWidget {
                   
                         final hasInternet = await checkAndWarnIfNoInternet(context);
                         if(hasInternet) {
+
+
+                          print('${loginState.email.value} ${loginState.password.value}');
                   
                           final result = await authNotifier.login(
                             // ignore: use_build_context_synchronously
@@ -220,6 +226,8 @@ class _LoginForm extends ConsumerWidget {
                               append: false,
                               loggedUser: userLogged?.id
                             );
+
+                            loginNotifier.resetForm();
                            
                           } 
                   

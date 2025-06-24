@@ -13,6 +13,9 @@ class CityNameNotifier extends StateNotifier<String> {
 
   Future<NominatimResponse> fetchCityName(LocationPoint point) async {
     try {
+
+      print(point);
+
       final response = await repository.fecthNominatim(point);
       return response;
     } catch (e) {
