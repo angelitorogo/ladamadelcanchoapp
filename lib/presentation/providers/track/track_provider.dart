@@ -104,6 +104,8 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
 
 }
 
+  
+
   Future<Map<String, dynamic>?> uploadTrack(BuildContext context, String name, File file, WidgetRef ref, String description, String type, String distance, String elevationGain, File captureMap, { List<LocationPoint> points = const[], List<File> images = const []} ) async {
     state = const TrackUploadState(status: TrackUploadStatus.loading);
 
@@ -171,7 +173,7 @@ class TrackUploadNotifier extends StateNotifier<TrackUploadState> {
     
        } else {
 
-        uploadFile = File(originalFileName);
+        uploadFile = file;
 
       }
 

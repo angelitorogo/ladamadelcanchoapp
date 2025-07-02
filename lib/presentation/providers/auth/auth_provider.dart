@@ -170,6 +170,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (result) {
         await verifyUser();
+
+        /*
+        // 🔥 Refrescar las cookies de Dio
+        final jar = await authRepository.cookieJar();
+        await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+
+        print("🍪 Cookies después de refrescar manualmente:");
+        final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+        for (var cookie in cookies) {
+          print("→ ${cookie.name}: ${cookie.value}");
+        }
+        */
+
         formNotifier.resetForm();
 
         await SecureStorageHelper.saveCredentials(email, password);
@@ -178,6 +191,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         Future.delayed(const Duration(milliseconds: 500));
         await ref.read(pendingTracksProvider.notifier).loadTracks();
         Future.delayed(const Duration(milliseconds: 500));
+
+        //despues de hacer login refrescamos las cookies
+        
+
         await ref.read(trackListProvider.notifier).loadTracks(
           ref,
           page: 1,
@@ -261,13 +278,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ref.read(pendingTracksProvider.notifier).reset();
       ref.read(trackListProvider.notifier).reset();
 
-
+      
       await ref.read(trackListProvider.notifier).loadTracks(
         ref,
         limit: 10,
         page: 1,
         append: false,
       );
+      
 
 
     } catch (e) {

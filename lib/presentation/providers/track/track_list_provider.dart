@@ -78,6 +78,15 @@ class TrackListNotifier extends StateNotifier<TrackListState> {
     state = state.copyWith(status: TrackListStatus.initial, changeSetting: false);
   }
 
+  void setLoading() {
+    state = state.copyWith(
+      status: TrackListStatus.loading,
+      tracks: [],
+      currentPage: 1,
+      totalPages: 1,
+    );
+  }
+
   Future<void> loadTracks(WidgetRef ref, {int limit = 10, int page = 1, String? loggedUser, String? userId, bool append = false}) async {
     
     

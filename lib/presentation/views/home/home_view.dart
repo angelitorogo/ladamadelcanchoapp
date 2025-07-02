@@ -58,7 +58,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     //Carga inicial
     
     Future.microtask(() async {
-      //print('✅ carga inicial...');
+      //print('✅ Home - carga inicial...');
       // ignore: use_build_context_synchronously
       final hasInternet = await checkAndWarnIfNoInternet(context);
 
@@ -307,10 +307,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
       /*
       floatingActionButton: FloatingActionButton(
-        onPressed: () => showDebugDialog(context, ref),
+        onPressed: () async {
+          final jar = await ref.read(authProvider.notifier).jar();
+          /*final cookies = */await jar?.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+          //print('🍪 Cookies guardadas track: $cookies');
+        },//=> showDebugDialog(context, ref),
         child: const Icon(Icons.bug_report),
       ),
       */
+      
       
     );
   }

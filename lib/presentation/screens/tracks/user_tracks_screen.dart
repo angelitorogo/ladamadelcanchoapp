@@ -15,7 +15,7 @@ import 'package:timeago/timeago.dart' as timeago;
 class UserTracksScreen extends ConsumerStatefulWidget {
   static const name = 'user-tracks-screen';
 
-  final UserEntity user;
+  final UserEntity? user;
 
   const UserTracksScreen({super.key, required this.user});
 
@@ -27,7 +27,7 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
   final ScrollController _scrollController = ScrollController();
   final int limit = 5;
 
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>(); 
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -36,28 +36,42 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
     _scrollController.addListener(() async {
       final state = ref.read(trackListProvider);
       final notifier = ref.read(trackListProvider.notifier);
-      await notifier.changeOrdersAndDirection(ref, 'created_at', 'desc', widget.user.id);
 
-
-      if(_scrollController.hasClients) {
-
+      if (_scrollController.hasClients) {
         if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
           if (state.status != TrackListStatus.loading && state.currentPage < state.totalPages) {
+            //print('✅ User - carga secundaria...');
             final nextPage = state.currentPage + 1;
             notifier.loadTracks(
               ref,
               limit: limit,
               page: nextPage,
               append: true,
-              userId: widget.user.id,
+              userId: widget.user?.id,
             );
           }
         }
-
       }
-      
     });
 
+    Future.microtask(() async {
+      ref.read(trackListProvider.notifier).resetState();
+      ref.read(trackListProvider.notifier).setLoading();
+
+      //print('✅ User - carga inicial...');
+      // ignore: use_build_context_synchronously
+      final hasInternet = await checkAndWarnIfNoInternet(context);
+
+      if (hasInternet) {
+        await ref.read(trackListProvider.notifier).loadTracks(
+          ref,
+          limit: limit,
+          page: 1,
+          append: false,
+          userId: widget.user?.id,
+        );
+      }
+    });
   }
 
   @override
@@ -68,91 +82,101 @@ class _UserTracksScreenState extends ConsumerState<UserTracksScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    Future.microtask(() {
-      ref.read(sideMenuStateProvider.notifier).serUserScreen(widget.user);
-    });
-
     final trackState = ref.watch(trackListProvider);
 
-    return Scaffold(
-      key: scaffoldKey,
-      drawer: SideMenu(scaffoldKey: scaffoldKey),
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        scrolledUnderElevation: 0,
-        title: Text(widget.user.fullname),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          final hasInternet = await checkAndWarnIfNoInternet(context);
-          if (hasInternet) {
-            await ref.read(trackListProvider.notifier).loadTracks(
-              ref,
-              limit: limit,
-              page: 1,
-              append: false,
-              userId: widget.user.id,
-            );
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ Rutas actualizadas'),
-                  duration: Duration(seconds: 2),
-                ),
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async {
+        await ref.read(trackListProvider.notifier).resetState();
+        ref.read(sideMenuStateProvider.notifier).resetUserScreen();
+        await ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref, 'created_at', 'desc', null);
+        return true;
+      },
+      child: Scaffold(
+        key: scaffoldKey,
+        drawer: SideMenu(scaffoldKey: scaffoldKey),
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          scrolledUnderElevation: 0,
+          title: Text(widget.user!.fullname),
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            final hasInternet = await checkAndWarnIfNoInternet(context);
+            if (hasInternet) {
+              await ref.read(trackListProvider.notifier).loadTracks(
+                ref,
+                limit: limit,
+                page: 1,
+                append: false,
+                userId: widget.user?.id,
               );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✅ Rutas actualizadas'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
             }
-          }
-        },
-        child: ListView.builder(
-          key: const PageStorageKey('trackListScroll'),
-          controller: _scrollController,
-          itemCount: trackState.tracks.length + 1,
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            if (index == trackState.tracks.length) {
-              return (trackState.status == TrackListStatus.loading &&
-                      trackState.tracks.isNotEmpty &&
-                      trackState.currentPage < trackState.totalPages)
-                  ? const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : const SizedBox.shrink();
+          },
+          child: Builder(builder: (_) {
+            if (trackState.status == TrackListStatus.loading && trackState.tracks.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
             }
 
-            final track = trackState.tracks[index];
+            return ListView.builder(
+              key: const PageStorageKey('trackListScroll'),
+              controller: _scrollController,
+              itemCount: trackState.tracks.length + 1,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                if (index == trackState.tracks.length) {
+                  return (trackState.status == TrackListStatus.loading &&
+                          trackState.tracks.isNotEmpty &&
+                          trackState.currentPage < trackState.totalPages)
+                      ? const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox.shrink();
+                }
 
-            final icon = switch (track.type) {
-              'Senderismo' => Icons.directions_walk,
-              'Ciclismo' => Icons.directions_bike,
-              'Conduciendo' => Icons.directions_car,
-              _ => Icons.help_outline,
-            };
+                final track = trackState.tracks[index];
 
-            final imageTrackUrl = (track.images?.isNotEmpty ?? false)
-                ? "${Environment.apiUrl}/files/tracks/${track.images!.first}"
-                : 'https://upload.wikimedia.org/wikipedia/en/6/60/No_Picture.jpg';
+                final icon = switch (track.type) {
+                  'Senderismo' => Icons.directions_walk,
+                  'Ciclismo' => Icons.directions_bike,
+                  'Conduciendo' => Icons.directions_car,
+                  _ => Icons.help_outline,
+                };
 
-            return GestureDetector(
-              onTap: () {
-                context.pushNamed(
-                  TrackScreen.name,
-                  extra: {'trackIndex': index , 'trackName': track.name},
+                final imageTrackUrl = (track.images?.isNotEmpty ?? false)
+                    ? "${Environment.apiUrl}/files/tracks/${track.images!.first}"
+                    : 'https://upload.wikimedia.org/wikipedia/en/6/60/No_Picture.jpg';
+
+                return GestureDetector(
+                  onTap: () {
+                    context.pushNamed(
+                      TrackScreen.name,
+                      extra: {'trackIndex': index, 'trackName': track.name},
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                    child: FadeInUp(
+                      child: _Card(
+                        imageTrackUrl: imageTrackUrl,
+                        track: track,
+                        icon: icon,
+                      ),
+                    ),
+                  ),
                 );
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                child: FadeInUp(
-                  child: _Card(
-                    imageTrackUrl: imageTrackUrl,
-                    track: track,
-                    icon: icon,
-                  ),
-                ), 
-              )
-                  );
-          },
+            );
+          }),
         ),
       ),
     );

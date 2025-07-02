@@ -10,6 +10,7 @@ import 'package:ladamadelcanchoapp/presentation/screens/auth/user_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/home/home_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/core/profile/profile_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/edit_track/edit_track_screen.dart';
+import 'package:ladamadelcanchoapp/presentation/screens/gpx/import_gpx_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/map_tracking/map_tracking_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/pending_tracks/pending_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/preview-track-screen.dart';
@@ -108,6 +109,14 @@ final appRouter = GoRouter(
         name: MapTrackingScreen.name,
         builder: (context, state) {
           return const CheckAuthScreen(child: MapTrackingScreen());
+        },
+      ),
+
+      GoRoute(
+        path: '/import-gpx',
+        name: ImportGpxScreen.name,
+        builder: (context, state) {
+          return const CheckAuthScreen(child: ImportGpxScreen());
         },
       ),
 

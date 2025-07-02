@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ladamadelcanchoapp/config/constants/environment.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
+import 'package:ladamadelcanchoapp/presentation/extra/check_connectivity.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/track/track_list_provider.dart';
 import 'package:ladamadelcanchoapp/presentation/screens/tracks/user_tracks_screen.dart';
 import 'package:ladamadelcanchoapp/presentation/widgets/sidemenu/side_menu.dart';
@@ -22,7 +23,28 @@ class UserScreen extends ConsumerStatefulWidget {
 class _UserScreenState extends ConsumerState<UserScreen> {
 
   
-  
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() async {
+      ref.read(trackListProvider.notifier).resetState();
+      ref.read(trackListProvider.notifier).setLoading();
+
+      // ignore: use_build_context_synchronously
+      final hasInternet = await checkAndWarnIfNoInternet(context);
+
+      if (hasInternet) {
+        await ref.read(trackListProvider.notifier).loadTracks(
+          ref,
+          page: 1,
+          append: false,
+          userId: widget.user.id,
+        );
+      }
+    });
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,21 +65,22 @@ class _UserScreenState extends ConsumerState<UserScreen> {
           children: [
             _Data(user: widget.user),
             const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.pushNamed(
-                    UserTracksScreen.name,
-                    extra: widget.user,
-                  );
-              },
-              icon: const Icon(Icons.list),
-              style: TextButton.styleFrom(
-                backgroundColor: ColorsPeronalized.infoColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.all(12),
+            if( totalUserTracks != 0 )
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.pushNamed(
+                      UserTracksScreen.name,
+                      extra: widget.user,
+                    );
+                },
+                icon: const Icon(Icons.list),
+                style: TextButton.styleFrom(
+                  backgroundColor: ColorsPeronalized.infoColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.all(12),
+                ),
+                label: const Text('Mostrar rutas'),
               ),
-              label: Text('Mostrar rutas ($totalUserTracks)'),
-            ),
           ],
         ),
       ),

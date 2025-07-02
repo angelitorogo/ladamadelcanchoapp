@@ -78,8 +78,9 @@ class _LoginForm extends ConsumerWidget {
 
       if (email != null && password != null) {
         //print('${email.trim()} ${password.trim()}');
-        // ignore: use_build_context_synchronously
-        ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref); 
+        if( context.mounted) {
+          ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref); 
+        }
       } else {
         if(context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -207,7 +208,7 @@ class _LoginForm extends ConsumerWidget {
                         if(hasInternet) {
 
 
-                          print('${loginState.email.value} ${loginState.password.value}');
+                          //print('${loginState.email.value} ${loginState.password.value}');
                   
                           final result = await authNotifier.login(
                             // ignore: use_build_context_synchronously

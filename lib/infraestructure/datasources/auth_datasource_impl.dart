@@ -13,6 +13,7 @@ import 'package:ladamadelcanchoapp/infraestructure/mappers/auth_verify_user_mapp
 import 'package:ladamadelcanchoapp/infraestructure/models/auth_verify_user_response.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/register_result.dart';
 import 'package:ladamadelcanchoapp/infraestructure/models/user_updated_response.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/dio_global.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 
 class AuthDatasourceImpl  extends AuthDatasource{
@@ -77,6 +78,24 @@ class AuthDatasourceImpl  extends AuthDatasource{
     
   }
 
+  /*
+  // ✅ Refrescar cookies y mostrarlas por consola
+  Future<void> refreshCookies() async {
+    final jar = await _cookieJar;
+
+    // 🔄 Limpia y vuelve a añadir el interceptor
+    _dio.interceptors.clear();
+    _dio.interceptors.add(CookieManager(jar));
+
+    // 💬 Cargar cookies actuales para el dominio y mostrarlas
+    final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    print('🍪 Cookies refrescadas:');
+    for (final cookie in cookies) {
+      print('→ ${cookie.name}: ${cookie.value}');
+    }
+  }
+  */
+
   @override
   Future<bool> login(BuildContext context, String email, String password ,WidgetRef ref) async {
     try {
@@ -94,12 +113,33 @@ class AuthDatasourceImpl  extends AuthDatasource{
         ),
       );
 
+      
+
       //print("📡 Respuesta del servidor: ${response.data}");
 
-      // 🧪 Log para debug
-      final jar = await _cookieJar;
-      /*final cookies =*/await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
-      //print("🍪 Cookies después de login: $cookies");
+      if (response.headers.map.containsKey('set-cookie')) {
+        final cookiesHeader = response.headers.map['set-cookie']!;
+        final cookies = cookiesHeader.map((header) => Cookie.fromSetCookieValue(header)).toList();
+
+        final uri = Uri.parse('https://cookies.argomez.com');
+
+        final jar = await _cookieJar;
+        await jar.saveFromResponse(uri, cookies);
+
+        /*
+        print('🍪 Cookies guardadas manualmente desde set-cookie:');
+        for (final cookie in cookies) {
+          print('→ ${cookie.name}: ${cookie.value}');
+        }
+        */
+
+        await refreshDioInterceptors(_dio);
+
+        //print('✅ Interceptores de AuthDatasource actualizados');
+
+      }
+
+      
 
       if (response.statusCode == 201 && response.data['message'] == 'Login exitoso') {
         return true;

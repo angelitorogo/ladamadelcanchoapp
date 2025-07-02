@@ -65,6 +65,30 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         icon: Icons.save_as
       ),
 
+      const MenuItem(
+        title: 'Importar GPX',
+        link: '/import-gpx',
+        icon: Icons.import_export
+      ),
+      
+      
+      MenuItem(
+        title: 'Mis tracks',
+        link: '/mis-tracks',
+        icon: Icons.track_changes,
+        onTap: (ref) async {
+          
+          if( context.mounted) {
+            context.pushNamed(
+              UserTracksScreen.name,
+              extra: ref.read(authProvider).user,
+            );
+          }
+          
+        }
+
+      ),
+
       MenuItem(
         title: 'Distancia',
         link: '/distance',
@@ -229,6 +253,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                       ),
 
                       /// --- TRACKS ---
+                      if (ref.read(authProvider).user != null)
                       ExpansionTile(
                         initiallyExpanded: sideMenuState.isTracksExpanded,
                         onExpansionChanged: (expanded) {
@@ -281,6 +306,23 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
+                          ListTile(
+                            leading: Icon(appMenuItems[5].icon),
+                            title: Text(appMenuItems[5].title),
+                            onTap: () {
+                              context.push(appMenuItems[5].link!);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
+                          
+                          ListTile(
+                            leading: Icon(appMenuItems[6].icon),
+                            title: Text(appMenuItems[6].title),
+                            onTap: () {
+                              appMenuItems[6].onTap?.call(ref);
+                              widget.scaffoldKey.currentState?.closeDrawer();
+                            },
+                          ),
                         ],
                       ),
 
@@ -295,29 +337,29 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                         tilePadding: const EdgeInsets.fromLTRB(28, 0, 16, 0),
                         children: [
                           ListTile(
-                            leading: Icon(appMenuItems[5].icon),
+                            leading: Icon(appMenuItems[7].icon),
                             title: const Text('Distancia'),
                             trailing: order == 'distance' ? Icon(iconOrder, size: 20) : null,
                             onTap: () {
-                              appMenuItems[5].onTap?.call(ref);
+                              appMenuItems[7].onTap?.call(ref);
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
                           ListTile(
-                            leading: Icon(appMenuItems[6].icon),
+                            leading: Icon(appMenuItems[8].icon),
                             title: const Text('Desnivel'),
                             trailing: order == 'elevation_gain' ? Icon(iconOrder, size: 20) : null,
                             onTap: () {
-                              appMenuItems[6].onTap?.call(ref);
+                              appMenuItems[8].onTap?.call(ref);
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
                           ListTile(
-                            leading: Icon(appMenuItems[7].icon),
+                            leading: Icon(appMenuItems[9].icon),
                             title: const Text('Fecha'),
                             trailing: order == 'created_at' ? Icon(iconOrder, size: 20) : null,
                             onTap: () {
-                              appMenuItems[7].onTap?.call(ref);
+                              appMenuItems[9].onTap?.call(ref);
                               widget.scaffoldKey.currentState?.closeDrawer();
                             },
                           ),
@@ -335,13 +377,16 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                 padding: const EdgeInsets.only(left: 12, right: 12, bottom: 20),
                 child: auth.isAuthenticated
                     ? ListTile(
-                        leading: Icon(appMenuItems[8].icon),
-                        title: Text(appMenuItems[8].title),
+                        leading: Icon(appMenuItems[10].icon),
+                        title: Text(appMenuItems[10].title),
                         onTap: () async {
                           final hasInternet = await checkAndWarnIfNoInternet(context);
                           if (hasInternet) {
                             ref.read(authProvider.notifier).logout(ref);
                             ref.read(pendingTracksProvider.notifier).resetState();
+                            await ref.read(trackListProvider.notifier).resetState();
+                            ref.read(sideMenuStateProvider.notifier).resetUserScreen();
+                            //await ref.read(trackListProvider.notifier).changeOrdersAndDirection(ref,'created_at', 'desc', null);
                             widget.scaffoldKey.currentState?.closeDrawer();
                           }
                         },
@@ -352,13 +397,13 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                           Expanded(
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                              leading: Icon(appMenuItems[9].icon),
+                              leading: Icon(appMenuItems[11].icon),
                               title: Text(
-                                appMenuItems[9].title,
+                                appMenuItems[11].title,
                                 style: const TextStyle(fontSize: 14),
                               ),
                               onTap: () {
-                                context.push(appMenuItems[9].link!);
+                                context.push(appMenuItems[11].link!);
                                 widget.scaffoldKey.currentState?.closeDrawer();
                               },
                             ),
@@ -366,13 +411,13 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                           Expanded(
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                              leading: Icon(appMenuItems[10].icon),
+                              leading: Icon(appMenuItems[12].icon),
                               title: Text(
-                                appMenuItems[10].title,
+                                appMenuItems[12].title,
                                 style: const TextStyle(fontSize: 14),
                               ),
                               onTap: () {
-                                context.push(appMenuItems[10].link!);
+                                context.push(appMenuItems[12].link!);
                                 widget.scaffoldKey.currentState?.closeDrawer();
                               },
                             ),

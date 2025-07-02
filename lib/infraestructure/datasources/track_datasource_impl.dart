@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ladamadelcanchoapp/domain/datasources/track_datasource.dart';
 import 'package:ladamadelcanchoapp/domain/entities/track.dart';
 import 'package:ladamadelcanchoapp/domain/entities/user.dart';
+import 'package:ladamadelcanchoapp/infraestructure/utils/dio_global.dart';
 import 'package:ladamadelcanchoapp/infraestructure/utils/global_cookie_jar.dart';
 import 'package:ladamadelcanchoapp/presentation/providers/auth/auth_provider.dart';
+import 'package:http_parser/http_parser.dart';
 
 class TrackDatasourceImpl implements TrackDatasource {
   
@@ -25,11 +27,45 @@ class TrackDatasourceImpl implements TrackDatasource {
 
   TrackDatasourceImpl() {
     
-    _cookieJar.then((jar) {
-      _dio.interceptors.add(CookieManager(jar));
-    });
+    _setupInterceptors();
 
   }
+
+  void _setupInterceptors() async {
+    final jar = await _cookieJar;
+
+    _dio.interceptors.add(CookieManager(jar));
+
+    /*
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        print('➡️ PETICIÓN');
+        print('--> URL: ${options.baseUrl}${options.path}');
+        print('--> Método: ${options.method}');
+        print('--> Headers: ${options.headers}');
+        print('--> Query: ${options.queryParameters}');
+        print('--> Data: ${options.data}');
+        print('--> Extra: ${options.extra}');
+        handler.next(options);
+      },
+      onResponse: (response, handler) {
+        print('✅ RESPUESTA');
+        print('<-- Status: ${response.statusCode}');
+        print('<-- Data: ${response.data}');
+        handler.next(response);
+      },
+      onError: (DioError e, handler) {
+        print('❌ ERROR');
+        print('<-- Status: ${e.response?.statusCode}');
+        print('<-- Error: ${e.error}');
+        print('<-- Data: ${e.response?.data}');
+        handler.next(e);
+      },
+    ));
+    */
+  }
+
+  
 
   Future<void> checkCookies(WidgetRef ref) async {
     //final jar = await _cookieJar;
@@ -83,29 +119,43 @@ class TrackDatasourceImpl implements TrackDatasource {
 
     //print('✅ Distance: $distance');
 
-    final formData = FormData.fromMap({
-      'user': ref.watch(authProvider).user!.id,
-      'name': name,
-      'distance': distance,
-      'elevation_gain': elevationGain,
-      'description': description,
-      'type': type,
-      'gpx': await MultipartFile.fromFile(
-        gpxFile.path,
-        filename: gpxFile.uri.pathSegments.last,
-      ),
-      if (images.isNotEmpty)
-        'images': await Future.wait(images.map((img) async {
-          return await MultipartFile.fromFile(img.path, filename: img.uri.pathSegments.last);
-        })),
-    });
-
-    //ver exactamente qué cookies se van a enviar en una petición con Dio y dio_cookie_manager
-
+    final gpxBytes = await gpxFile.readAsBytes();
 
     try {
+      final formData = FormData.fromMap({
+        'user': ref.watch(authProvider).user!.id,
+        'name': name,
+        'distance': distance,
+        'elevation_gain': elevationGain,
+        'description': description,
+        'type': type,
+        'gpx': MultipartFile.fromBytes(
+          gpxBytes,
+          filename: 'garmin_track.gpx',
+          contentType: MediaType('application', 'octet-stream'),
+        ),
+        if (images.isNotEmpty)
+          'images': await Future.wait(images.map((img) async {
+            return await MultipartFile.fromFile(img.path, filename: img.uri.pathSegments.last);
+          })),
+      });
 
-      
+      //ver exactamente qué cookies se van a enviar en una petición con Dio y dio_cookie_manager
+
+      await refreshDioInterceptors(_dio);
+
+      /*
+      print('✅ Interceptores de TrackDatasource actualizados');
+
+      // 💬 Cargar cookies actuales para la ruta real y mostrarlas
+      final jar = await _cookieJar;
+      final cookies = await jar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+      print('🍪 Cookies para https://cookies.argomez.com:');
+      for (final cookie in cookies) {
+        print('→ ${cookie.name}: ${cookie.value}');
+      }
+      */
+
       final response = await _dio.post(
         '/upload',
         data: formData,
@@ -121,9 +171,14 @@ class TrackDatasourceImpl implements TrackDatasource {
       } else {
         throw Exception('Error al subir el track: ${response.data['message']}');
       }
+
     } catch (e) {
-      throw Exception('❌ Error en uploadTrack: $e');
+
+      throw Exception('❌ ${e.toString()}');
+
     }
+
+  
   }
   
   @override
