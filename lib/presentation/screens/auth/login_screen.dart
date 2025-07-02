@@ -64,33 +64,67 @@ class _LoginForm extends ConsumerWidget {
 
 
   Future<void> _checkBiometricAndLogin(WidgetRef ref, BuildContext context) async {
+    
+    // Instancia de LocalAuthentication (si no la tienes global)
+    final auth = LocalAuthentication();
+
+    // Verificar si el dispositivo puede usar biometría
     final available = await auth.canCheckBiometrics;
     final isDeviceSupported = await auth.isDeviceSupported();
-    final authenticated = await auth.authenticate(
-      localizedReason: 'Inicia sesión con huella',
-      options: const AuthenticationOptions(biometricOnly: true),
-    );
 
-    if (available && isDeviceSupported && authenticated) {
+    if (!available || !isDeviceSupported) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('La autenticación biométrica no está disponible')),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Intentar autenticar con biometría
+      final authenticated = await auth.authenticate(
+        localizedReason: 'Inicia sesión con huella',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true, // Mantiene la autenticación si se va a otra app
+        ),
+      );
+
+      if (!authenticated) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Autenticación cancelada o fallida')),
+          );
+        }
+        return;
+      }
+
+      // Leer credenciales guardadas
       final credentials = await SecureStorageHelper.readCredentials();
       final email = credentials['email'];
       final password = credentials['password'];
 
       if (email != null && password != null) {
-        //print('${email.trim()} ${password.trim()}');
-        if( context.mounted) {
-          ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref); 
+        if (context.mounted) {
+          ref.read(authProvider.notifier).login(context, email.trim(), password.trim(), ref);
         }
       } else {
-        if(context.mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No se encontraron credenciales guardadas')),
           );
         }
-        
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al usar huella: $e')),
+        );
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref)  {

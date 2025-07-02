@@ -863,7 +863,8 @@ class _NearestState extends ConsumerState<_Nearest> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(trackNearestListProvider.notifier).resetState();
       ref.read(trackNearestListProvider.notifier).loadNearestTracks(ref, widget.track.id);
     });
   }
@@ -872,10 +873,7 @@ class _NearestState extends ConsumerState<_Nearest> {
   Widget build(BuildContext context) {
     final tracksNearest = ref.watch(trackNearestListProvider);
 
-    if(tracksNearest.tracks.isEmpty) {
-      return const SizedBox();
-    }
-
+    
     
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 20),
@@ -896,6 +894,9 @@ class _NearestState extends ConsumerState<_Nearest> {
             ),
 
             const SizedBox(height: 12),
+
+            if(tracksNearest.tracks.isEmpty)
+              const Center(child: CircularProgressIndicator(strokeWidth: 2)),
 
             SizedBox(
               height: 200, // altura de las miniaturas
@@ -1239,7 +1240,6 @@ class _Description extends StatelessWidget {
   }
 }
 
-
 class _WeatherData extends ConsumerStatefulWidget {
   final LocationPoint firstPoint;
   const _WeatherData({required this.firstPoint,});
@@ -1251,7 +1251,7 @@ class _WeatherData extends ConsumerStatefulWidget {
 class _WeatherDataState extends ConsumerState<_WeatherData> {
   WeatherResponse? localWeatherData;
   NominatimResponse? dataLocationPoint;
-  String cityName = 'Cargando...';
+  String cityName = '';
 
   @override
   void initState() {
@@ -1313,7 +1313,10 @@ class _WeatherDataState extends ConsumerState<_WeatherData> {
             if (localWeatherData != null)
               WeatherTable(daily: localWeatherData!.daily)
             else
-              const CircularProgressIndicator(),
+              const Center(child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(),
+              )),
           ],
         ),
       ),
